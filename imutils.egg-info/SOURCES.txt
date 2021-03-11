@@ -1,0 +1,8 @@
+README.md
+setup.py
+imutils/__init__.py
+imutils/functions.py
+imutils.egg-info/PKG-INFO
+imutils.egg-info/SOURCES.txt
+imutils.egg-info/dependency_links.txt
+imutils.egg-info/top_level.txt

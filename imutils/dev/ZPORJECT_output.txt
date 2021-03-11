@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "ZPROJECT_V4.py", line 5, in <module>
+    import tifffile as tiff
+ModuleNotFoundError: No module named 'tifffile'
