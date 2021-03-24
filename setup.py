@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="imutils",
-    version="0.0.1.1",
+    version="0.0.1.2",
     author="Ulises Rey",
     author_email="ulises.rey@imp.ac.at",
     description="A small package with image processing utilities",
