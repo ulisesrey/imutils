@@ -71,3 +71,32 @@ def add_zeros_to_filename(path, len_max_number=6):
         #new filename= img string+number+ dot + extension
         new_filename='img'+number+'.'+file_extension
         os.rename(os.path.join(path, filename), os.path.join(path, new_filename))
+
+def images2stack(path, output_filename):
+    """
+    Convert the images in one folder into a stack, keeping their filenames
+    Parameters:
+    -------------
+    path: str, path to the input_folder
+    output_filename: str, name of the output stack
+    """
+    with tiff.TiffWriter(output_filename, bigtiff=True) as tif_writer:
+        for idx, filename in enumerate(natsorted(os.listdir(path))):
+            img=tiff.imread(os.path.join(path,filename),name=filename)
+            tif_writer.save(img, photometric='minisblack', description=filename, metadata=None)
+            
+def stack2images(input_filename, output_path):
+    """
+    Convert a stack into a folder with all the images
+    Parameters:
+    -------------
+    input_filename:str, name of the input stack
+    output_path: str, path to the directory where it will be saved
+    """
+    try: os.mkdir(output_path) # creates the subdirectory where it should be stored
+    except: print('Output Directory already exists, might overwrite')
+    with tiff.TiffFile(input_filename, multifile=True) as tif:
+        for page in tif.pages:
+            img=page.asarray()
+            description=page.description
+            tiff.imsave(file=os.path.join(output_path,description), data=img, photometric='minisblack')
