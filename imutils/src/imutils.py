@@ -8,7 +8,7 @@ import csv
 import os
 from natsort import natsorted
 import re
-import argparse
+
 
 def extract_frames(input_image, output_folder, frames_list):
     """
@@ -36,7 +36,7 @@ def extract_frames(input_image, output_folder, frames_list):
             if i in frames_list:
                 img=page.asarray()
                 #print(os.path.join(output_folder,'img'+str(i)+'.'+str(file_format)))
-                tiff.imwrite(os.path.join(output_folder,'img'+str(i)+'.tiff'),img)
+                tiff.imwrite(os.path.join(output_folder,'img'+str(i)+'.tif'),img)
                 
 def add_zeros_to_filename(path, len_max_number=6):
     """
@@ -72,6 +72,18 @@ def add_zeros_to_filename(path, len_max_number=6):
         new_filename='img'+number+'.'+file_extension
         os.rename(os.path.join(path, filename), os.path.join(path, new_filename))
 
+def images2stack_RAM(path, output_filename):
+    """
+    Convert the images in one folder into a stack, keeping their filenames in the metadata.
+    It is not an object to it needs to allocate all the memory for the stack
+    Parameters:
+    -------------
+    path: str, path to the input_folder
+    output_filename: str, name of the output stack
+    """
+    files = os.listdir(path)#tifffile.natural_sorted(output_path)
+    image = tifffile.imread(os.path.join(path,files))
+
 def images2stack(path, output_filename):
     """
     Convert the images in one folder into a stack, keeping their filenames
@@ -80,10 +92,14 @@ def images2stack(path, output_filename):
     path: str, path to the input_folder
     output_filename: str, name of the output stack
     """
-    with tiff.TiffWriter(output_filename, bigtiff=True) as tif_writer:
-        for idx, filename in enumerate(natsorted(os.listdir(path))):
-            img=tiff.imread(os.path.join(path,filename),name=filename)
-            tif_writer.save(img, photometric='minisblack', description=filename, metadata=None)
+    files = natsorted(os.listdir(path))
+    metadata = {'Info': '\n'.join(files)}
+
+    with tiff.TiffWriter(output_filename, imagej=True) as tif:
+        for filename in files:
+            image = tiff.imread(os.path.join(path,filename))
+            tif.write(image, contiguous=True, photometric='minisblack', metadata=metadata)
+            metadata = None
             
 def stack2images(input_filename, output_path):
     """
@@ -92,11 +108,21 @@ def stack2images(input_filename, output_path):
     -------------
     input_filename:str, name of the input stack
     output_path: str, path to the directory where it will be saved
+
+
+    If it does not work check here: https://forum.image.sc/t/keep-image-description-metadata-in-a-stack-after-modifying-it/50625/4
     """
     try: os.mkdir(output_path) # creates the subdirectory where it should be stored
     except: print('Output Directory already exists, might overwrite')
-    with tiff.TiffFile(input_filename, multifile=True) as tif:
-        for page in tif.pages:
-            img=page.asarray()
-            description=page.description
-            tiff.imsave(file=os.path.join(output_path,description), data=img, photometric='minisblack')
+    with tiff.TiffFile(input_filename) as tif:
+        files = tif.imagej_metadata['Info'].split('\n')
+        image = tif.asarray()
+
+    for i, fname in enumerate(files):
+        tiff.imsave(os.path.join(output_path, fname), image[i])
+
+
+
+
+
+
