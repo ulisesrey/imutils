@@ -103,12 +103,11 @@ def images2stack(path, output_filename):
             
 def stack2images(input_filename, output_path):
     """
-    Convert a stack into a folder with all the images
+    Convert a stack into a folder with all the images, saving each image with its original name
     Parameters:
     -------------
     input_filename:str, name of the input stack
     output_path: str, path to the directory where it will be saved
-
 
     If it does not work check here: https://forum.image.sc/t/keep-image-description-metadata-in-a-stack-after-modifying-it/50625/4
     """
@@ -116,10 +115,10 @@ def stack2images(input_filename, output_path):
     except: print('Output Directory already exists, might overwrite')
     with tiff.TiffFile(input_filename) as tif:
         files = tif.imagej_metadata['Info'].split('\n')
-        image = tif.asarray()
-
-    for i, fname in enumerate(files):
-        tiff.imsave(os.path.join(output_path, fname), image[i])
+        for idx,page in enumerate(tif.pages):
+            img=page.asarray()
+            filename=files[idx]
+            tiff.imsave(os.path.join(output_path, filename), img)         
 
 
 
