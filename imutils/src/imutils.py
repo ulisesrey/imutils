@@ -131,18 +131,14 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
 
     output_filepath: str,
 
-    fold_increase: int, (it could be float, but code should be tested)
+    fold_increase: int, (it can't be float, so the ratio dimensions xyz are not exactly real)
         Expands the z dimension so that the image has crrect dimensions. Depends on the ratio between xy pixel size and z-step size.
     nplanes: int,
 
     """
-    print('creating writer object..')
     with tiff.TiffWriter(output_filepath, bigtiff=True) as output_tif:
-        print('creating reader object..')
         with tiff.TiffFile(input_filepath) as tif:
-            print('looping through reader object..')
-            for idx, page in enumerate(tif.pages):#enumerate(tif.series):#enumerate(tif.series[0].pages):
-                if idx%3300==0: print(idx)
+            for idx, page in enumerate(tif.pages):
                 img=page.asarray()
                 #if it is the first plane of the volume create an empty img_stack shape=(w, h, z)
                 if idx%nplanes==0:
@@ -158,33 +154,22 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     max1 = np.max(img_stack, axis=1)
                     max2 = np.max(img_stack, axis=2)
 
-
-
                     # extends the YZ and XZ max projection for better visualization based on input fold_increase variable
                     max0= np.repeat(max0, fold_increase, axis=1)
-                    # rotates IM_MAX_2
+                    # rotates max0
                     max0=np.transpose(max0)
                     max1 = np.repeat(max1, fold_increase, axis=1)
 
-                    #defines corner array
-                    corner_matrix=np.full((fold_increase*img_stack.shape[2],fold_increase*img_stack.shape[2]),100, dtype='uint16')
+                    #defines corner array dimensions and fill value of the corner matrix
+                    fill_value=100
+                    corner_matrix=np.full((fold_increase*img_stack.shape[2],fold_increase*img_stack.shape[2]),fill_value, dtype='uint16')
 
-    #                 # concatenate the different max projections into one image
-    #                 plt.imshow(rep_max1)
-    #                 plt.title('repmax1')
-    #                 plt.show()
+                    # concatenate the different max projections into one image
+
                     vert_conc_1 = cv2.hconcat([max2,max1])
-    #                 plt.imshow(vert_conc_1)
-    #                 plt.title('repmax1,max2')
-    #                 plt.show()
-                    #np.concatenate((max0, rep_max1), axis=0)
-                    vert_conc2 = cv2.hconcat([max0, corner_matrix])#np.concatenate((rep_rot_max0, corner_matrix), axis=0)
-                    final_img = cv2.vconcat([vert_conc_1,vert_conc2])#np.concatenate((vert_conc_1, vert_conc2), axis=1)
-                    #print(final_image.shape)
-    #                 plt.figure(dpi=300)
-    #                 plt.imshow(final_image)
-    #                 plt.show()
-                    #break
+                    vert_conc2 = cv2.hconcat([max0, corner_matrix])
+                    final_img = cv2.vconcat([vert_conc_1,vert_conc2])
+                    
                     #save the 3 max projection image
                     output_tif.save(final_img, photometric='minisblack')
 
