@@ -39,6 +39,7 @@ parser_d.add_argument("-i", "--input_filepath", required=True, help="path to the
 parser_d.add_argument("-o", "--output_filepath", required=True, help="path to the output image")
 parser_d.add_argument("-fold_increase", "--fold_increase", type=int)
 parser_d.add_argument("-nplanes", "--nplanes", type=int)
+parser_d.add_argument("-flip", "--flip", type=bool)
 
 #create the parser for another function
 

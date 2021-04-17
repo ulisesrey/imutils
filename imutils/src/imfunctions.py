@@ -21,7 +21,7 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
         Path to the tiff file
     avi_path: str
         Path to the output file
-    fourcc: fourcc code
+    fourcc: str, fourcc code
         0 means no coompression, other codecs will have some compression
         To learn more visit: https://www.fourcc.org/
     fps: float (should it be int?)
@@ -77,8 +77,8 @@ def ometiff2bigtiff(path):
     else:
         output_filename=path+'/'+re.split('/',path)[-1]+'bigtiff.btf'
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
+        print(f'list of files is {os.listdir(path)}')
         for file in natsorted(os.listdir(path)):
-            print(f'list is {os.listdir(path)}')
             print(os.path.join(path,file))
             if file.endswith('ome.tif') and 'bg' not in file:
                 print(os.path.join(path,file))
@@ -134,11 +134,11 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
 
                     # if num_frames is not None and i > num_frames: break
 
-def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=20):
+def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=20, flip=False):
 
     """
     Create a visualization image of a volume, with the 3 max projections possible.
-
+    To improve: Make another function that does the same but in a figure. Then the fold increase would not have to be int.
     Parameters:
     ------------
     input_filepath: str,
@@ -177,7 +177,10 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     #defines corner array dimensions and fill value of the corner matrix
                     fill_value=100
                     corner_matrix=np.full((fold_increase*img_stack.shape[2],fold_increase*img_stack.shape[2]),fill_value, dtype='uint16')
-
+                    
+                    #flip if needed (for Green Channel, since the image is mirrored compared to red channel)
+                    if flip==True:max2=cv2.flip(max2,1)
+                    
                     # concatenate the different max projections into one image
 
                     vert_conc_1 = cv2.hconcat([max2,max1])
@@ -267,6 +270,7 @@ def images2stack_RAM(path, output_filename):
 def images2stack(path, output_filename):
     """
     Convert the images in one folder into a stack, keeping their filenames
+    Images have to be .tif, can't be PNG.
     Parameters:
     -------------
     path: str, path to the input_folder
