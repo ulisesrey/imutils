@@ -179,8 +179,9 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     corner_matrix=np.full((fold_increase*img_stack.shape[2],fold_increase*img_stack.shape[2]),fill_value, dtype='uint16')
                     
                     #flip if needed (for Green Channel, since the image is mirrored compared to red channel)
-                    if flip==True:max2=cv2.flip(max2,1)
-                    
+                    if flip==True:
+                        max2=cv2.flip(max2,1)
+                        max0=cv2.flip(max0,1)
                     # concatenate the different max projections into one image
 
                     vert_conc_1 = cv2.hconcat([max2,max1])
