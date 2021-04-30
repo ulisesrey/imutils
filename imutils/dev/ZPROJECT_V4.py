@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#This works on .stk files that contain single volumes. Use max_projection_3d in imfunctions for ometiff data
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
