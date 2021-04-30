@@ -85,7 +85,7 @@ def ometiff2bigtiff(path):
                 with tiff.TiffFile(os.path.join(path,file), multifile=False) as tif:
                     for page in tif.pages:
                         img = page.asarray()
-                        output_tif.save(img, photometric='minisblack')#, description=omexmlMetadataString)
+                        output_tif.write(img, photometric='minisblack', contiguous=True)#, description=omexmlMetadataString)
 
 
 def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None):
@@ -120,14 +120,14 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
                     total_num_frames += 1
                     if num_slices is None:
                         if actually_write:
-                            output_tif.save(img, photometric='minisblack')
+                            output_tif.write(img, photometric='minisblack')
                     else:
                         buffer.append(img)
                         if len(buffer) >= num_slices:
                             print(f"Writing {num_slices} frames from buffer...")
                             for img in buffer:
                                 if actually_write:
-                                    output_tif.save(img, photometric='minisblack')
+                                    output_tif.write(img, photometric='minisblack', contiguous=True)
                             buffer = []
             if len(buffer)>0:
                 print(f"{len(buffer)} frames not written")
@@ -189,7 +189,7 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     final_img = cv2.vconcat([vert_conc_1,vert_conc2])
                     
                     #save the 3 max projection image
-                    output_tif.save(final_img, photometric='minisblack')
+                    output_tif.write(final_img, photometric='minisblack', contiguous=True)
 
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
 
