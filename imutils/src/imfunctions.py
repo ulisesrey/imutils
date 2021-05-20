@@ -303,4 +303,38 @@ def stack2images(input_filename, output_path):
         for idx,page in enumerate(tif.pages):
             img=page.asarray()
             filename=files[idx]
-            tiff.imsave(os.path.join(output_path, filename), img)         
+            tiff.imsave(os.path.join(output_path, filename), img)
+
+def contours_length(img):
+    """
+    Return length of contours in an image
+
+    Parameters
+    -------------
+    img: numpy_array,
+    name of the input stack
+
+    Returns
+    ------------
+    contours_len: numpy array,
+    contains the length of the contours
+    contours_peri: numpy array,
+    contains the perimeter of the contours
+  
+    """
+    _,cnts,hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours_peri=[]
+    
+    for cnt in cnts:
+        contours_peri.append(cv2.arcLength(cnt, True))
+    
+    contours_peri=np.array(contours_peri)
+    contours_len=contours_peri/2
+    
+    return  contours_len, contours_peri
+
+
+
+
+
+
