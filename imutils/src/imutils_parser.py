@@ -4,7 +4,8 @@ from imutils.src import imfunctions
 FUNCTION_MAP = {'tiff2avi' : imfunctions.tiff2avi,
                 'ometiff2bigtiff' : imfunctions.ometiff2bigtiff,
                 'ometiff2bigtiffZ' : imfunctions.ometiff2bigtiffZ,
-                'max_projection_3d': imfunctions.max_projection_3d}
+                'max_projection_3d': imfunctions.max_projection_3d,
+                'z_projection_parser': imfunctions.z_projection_parser}
 
 
 # create the top-level parser
@@ -40,6 +41,12 @@ parser_d.add_argument("-o", "--output_filepath", required=True, help="path to th
 parser_d.add_argument("-fold_increase", "--fold_increase", type=int)
 parser_d.add_argument("-nplanes", "--nplanes", type=int)
 parser_d.add_argument("-flip", "--flip", type=bool)
+
+#parser for z_projection
+parser_e= subparsers.add_parser('z_projection_parser', help='z_projection_parser help')
+parser_e.add_argument("-i", "--img_path", required=True, help="path to the input image")
+parser_e.add_argument("-o", "--output_path", required=True, help="path to the output image")
+parser_e.add_argument("-type", "--projection_type", required=True, type=str, help="string containing the projection type")
 
 #create the parser for another function
 

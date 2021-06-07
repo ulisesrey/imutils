@@ -333,6 +333,39 @@ def contours_length(img):
     
     return  contours_len, contours_peri
 
+def z_projection(img,projection_type):
+    """
+    Parameters:
+    ------------
+    img, 3-D numpy array
+    Image stack that needs to be projected across the z dimension
+    
+    projection type, str
+    String containing one of the 4 projections options: max, min, mean or median.
+    
+    Returns:
+    ------------
+    projected_img, numpy array
+    Contains the projected img
+    """
+    if projection_type == 'max':
+        projected_img = np.max(img, axis=0)
+    if projection_type == 'min':
+        projected_img = np.min(img, axis=0)
+    if projection_type == 'mean':
+        projected_img = np.mean(img, axis=0)
+    if projection_type == 'median':
+        projected_img = np.median(img, axis=0)
+
+    return projected_img
+
+
+def z_projection_parser(img_path, output_path, projection_type):
+    img=tiff.imread(img_path)
+    projected_img=z_projection(img, projection_type)
+    tiff.imwrite(output_path,projected_img)
+    return None
+
 
 
 
