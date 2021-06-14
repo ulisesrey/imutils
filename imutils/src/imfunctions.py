@@ -303,10 +303,11 @@ def stack2images(input_filename, output_path):
         try:
             files = tif.imagej_metadata['Info'].split('\n')
             metadata=True
-        except: metadata=False
+        except:
+            metadata=False
         for idx,page in enumerate(tif.pages):
             img=page.asarray()
-            #if metadata name according to metadata, else name image1.tif,etc.
+            #if metadata is True: name according to metadata, else name image1.tif,etc.
             if metadata==True: filename=files[idx]
             else: filename='image'+str(idx)+'.tif'
             tiff.imwrite(os.path.join(output_path, filename), img)
