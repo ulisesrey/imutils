@@ -305,6 +305,7 @@ def stack2images(input_filename, output_path):
             metadata=True
         except:
             metadata=False
+        metadata=False
         for idx,page in enumerate(tif.pages):
             img=page.asarray()
             #if metadata is True: name according to metadata, else name image1.tif,etc.
@@ -374,6 +375,53 @@ def z_projection_parser(img_path, output_path, projection_type):
     tiff.imwrite(output_path,projected_img)
     return None
 
+def draw_some_contours(img,contour_size,tolerance,inner_contour_area_to_fill):
+    """
+    Return img with drawn contours based on size, filling contours below inner_contour_area_to_fill
+    Parameters:
+    -----------
+    img, numpy array
+    image from where the contours will be taken
+    contour_size, float
+        expected area of the contour to be extracted
+    tolerance, float
+        tolerance around which other contours will be accepted. e.g. contour_size 100 and tolerance 0.1 will include contours from 90 to 110.
+    inner_contour_area_to_fill, float
+        area of inner contours that will be filled
+        
+    Returns:
+    -----------
+    img_contours, numpy array
+        image with drawn contours
+    """
+
+    #get contours
+    _,cnts,hierarchy = cv2.findContours(new_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
+    #good contours index
+    cnts_idx=[]#np.array([])
+    #create empty image
+    img_contours=np.zeros(img.shape)
+
+    for cnt_idx, cnt in enumerate(cnts):
+        cnt_area=cv2.contourArea(cnt)
+        #if the contour area is between the expected values with tolerance, save contour in cnts_idx and draw it
+        if (contour_size*(1-tolerance) <cnt_area<contour_size*(1+tolerance)):
+            cnts_idx.append(np.array(cnt_idx))
+            cv2.drawContours(img_contours,cnts, cnt_idx, color=255, thickness=-1, hierarchy=hierarchy, maxLevel=1)
+        
+        #if the current cnt_idx has as a parent a contour in good countours (cnts_idx)
+        if hierarchy[0][cnt_idx][3] in cnts_idx:
+            #(and) if it is smaller than inner contour, draw it
+            if cnt_area<inner_contour_area_to_fill:
+            #print(cv2.contourArea(contours[j]))
+                cv2.drawContours(img_contours,cnts, cnt_idx, color=255, thickness=-1)
+    
+    #convert the resulting image into a 8 binary numpy array
+    img_contours=np.array(img_contours, dtype=np.uint8)
+
+    return img_contours
+    
 
 
 
