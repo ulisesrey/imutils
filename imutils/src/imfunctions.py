@@ -299,15 +299,22 @@ def stack2images(input_filename, output_path):
     try: os.mkdir(output_path) # creates the subdirectory where it should be stored
     except: print('Output Directory already exists, might overwrite')
     with tiff.TiffFile(input_filename) as tif:
-        files = tif.imagej_metadata['Info'].split('\n')
+        #try to get metadata from imageJ
+        try:
+            files = tif.imagej_metadata['Info'].split('\n')
+            metadata=True
+        except: metadata=False
         for idx,page in enumerate(tif.pages):
             img=page.asarray()
-            filename=files[idx]
-            tiff.imsave(os.path.join(output_path, filename), img)
+            #if metadata name according to metadata, else name image1.tif,etc.
+            if metadata==True: filename=files[idx]
+            else: filename='image'+str(idx)+'.tif'
+            tiff.imwrite(os.path.join(output_path, filename), img)
 
 def contours_length(img):
     """
-    Return length of contours in an image
+    Return length and perimeter of the contours in an image.
+    Length is assumed to be half of the perimeter. Only valid for elongated contours.
 
     Parameters
     -------------
