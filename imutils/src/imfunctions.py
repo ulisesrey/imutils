@@ -408,7 +408,7 @@ def draw_some_contours(img,contour_size,tolerance,inner_contour_area_to_fill):
     """
 
     #get contours
-    _,cnts,hierarchy = cv2.findContours(new_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _,cnts,hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     #good contours index
     cnts_idx=[]#np.array([])
@@ -483,8 +483,34 @@ def make_contour_based_binary(btf_input_filepath, btf_output_filepath, median_bl
                
                 #apply threshold
                 ret, new_img = cv2.threshold(img,lower_threshold,higher_threshold,cv2.THRESH_BINARY)
-                worm_contour_img=imfunctions.draw_some_contours(new_img,contour_size=contour_size,tolerance=tolerance, inner_contour_area_to_fill=inner_contour_area_to_fill)
+                #draw_some_contours does not need imfunctions.draw_some_contours in here. But outside this file.
+                worm_contour_img=draw_some_contours(new_img,contour_size=contour_size,tolerance=tolerance, inner_contour_area_to_fill=inner_contour_area_to_fill)
             
-                tiff_writer.write(btf_output_filepath,worm_contour_img)
+                tif_writer.write(worm_contour_img, contiguous=True)
 
+def btf_substrack_background(input_filepath, output_filepath, background_img_filepath):
+    """
+    Substract the background image from a btf stack
+    Parameters:
+    ----------
+    input_filepath, str
+    input path to the tiff file
+    output_filepath, str
+    path to where the file will be written
+    background_img_filepath, str
+    path to the background image
+    Returns:
+    ----------
+    """
+    #background
+
+    bg_img=tiff.imread(background_img_filepath)
+
+    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+        with tiff.TiffFile(input_filepath, multifile=False) as tif:
+            for i, page in enumerate(tif.pages):
+                img=page.asarray()
+                inv_img=cv2.bitwise_not(img)
+                new_img=cv2.subtract(inv_img,bg_img)
+                tif_writer.write(new_img, contiguous=True)
 
