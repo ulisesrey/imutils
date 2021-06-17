@@ -6,7 +6,7 @@ FUNCTION_MAP = {'tiff2avi' : imfunctions.tiff2avi,
                 'ometiff2bigtiffZ' : imfunctions.ometiff2bigtiffZ,
                 'max_projection_3d': imfunctions.max_projection_3d,
                 'z_projection_parser': imfunctions.z_projection_parser,
-                'stack_substract_background':imfunctions.btf_substract_background,
+                'stack_substract_background':imfunctions.stack_substract_background,
                 'make_contour_based_binary': imfunctions.make_contour_based_binary}
 
 
@@ -52,20 +52,20 @@ parser_e.add_argument("-type", "--projection_type", required=True, type=str, hel
 
 #parser for stack_substract_background
 parser_f= subparsers.add_parser('stack_substract_background', help='stack_substract_background help')
-parser_f.add_argument("-i", "--input_filepath", required=True, help="path to the input image")
-parser_f.add_argument("-o", "--output_filepath", required=True, help="path to the output image")
+parser_f.add_argument("-i", "--input_filepath", required=True, type=str, help="path to the input image")
+parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
 parser_f.add_argument("-bg", "--background_img_filepath", required=True, type=str, help="string with the background_img_filepath")
 
-#parser for stack_substract_background
-parser_g= subparsers.add_parser('stack_substract_background', help='stack_substract_background help')
+#parser for make_contour_based_binary
+parser_g= subparsers.add_parser('make_contour_based_binary', help='stack_substract_background help')
 parser_g.add_argument("-i", "--stack_input_filepath", required=True, help="path to the input image")
 parser_g.add_argument("-o", "--stack_output_filepath", required=True, help="path to the output image")
-parser_g.add_argument("-blur", "--median_blur", required=True, type=str, help="median blur that will be applied")
-parser_g.add_argument("-lt", "--lower_threshold", required=True, type=str, help="lower_threshold")
-parser_g.add_argument("-ht", "--higher_threshold", required=True, type=str, help="higher_threshold")
-parser_g.add_argument("-cs", "--contour_size", required=True, type=str, help="contour_size")
-parser_g.add_argument("-t", "--tolerance", required=True, type=str, help="tolerance, percentage from which the contours can deviate from contour size")
-parser_g.add_argument("-ics", "--inner_contour_area_to_fill", required=True, type=str, help="inner_contour_area_to_fill")
+parser_g.add_argument("-blur", "--median_blur", required=True, type=int, help="median blur that will be applied")
+parser_g.add_argument("-lt", "--lower_threshold", required=True, type=float, help="lower_threshold")
+parser_g.add_argument("-ht", "--higher_threshold", required=True, type=float, help="higher_threshold")
+parser_g.add_argument("-cs", "--contour_size", required=True, type=float, help="contour_size")
+parser_g.add_argument("-t", "--tolerance", required=True, type=float, help="tolerance, percentage from which the contours can deviate from contour size")
+parser_g.add_argument("-ics", "--inner_contour_area_to_fill", required=True, type=float, help="inner_contour_area_to_fill")
 
 
 #create below the parser for another function
