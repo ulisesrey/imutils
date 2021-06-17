@@ -370,6 +370,18 @@ def z_projection(img,projection_type):
 
 
 def z_projection_parser(img_path, output_path, projection_type):
+   
+    """
+    parser do run the z_projection function
+    Parameters:
+    ----------
+    img_path, str
+    output_path, str
+    projection_type, str
+    Returns:
+    ----------
+    Writes the projection. Function itself returns None
+    """
     img=tiff.imread(img_path)
     projected_img=z_projection(img, projection_type)
     tiff.imwrite(output_path,projected_img)
@@ -450,5 +462,29 @@ def extract_contours_with_children(img):
     return contours_with_children
 
 
+def make_contour_based_binary(btf_input_filepath, btf_output_filepath, median_blur, lower_threshold, higher_threshold, contour_size, tolerance, inner_contour_area_to_fill):
+    """
+    Function to produce a binary image based on contour and inner contour sizes.
+    better than the make_binary before which was on centerline package
+    Parameters:
+    -----------
+    A lot, too many?
+
+    Returns:
+    --------
+    """
+    with tiff.TiffWriter(btf_output_filepath, bigtiff=True) as tif_writer:
+        with tiff.TiffFile(btf_input_filepath, multifile=False) as tif:
+            for i, page in enumerate(tif.pages):
+                #loads the first frame and inverts it
+                img=page.asarray()
+                #median Blur
+                img=cv2.medianBlur(img,median_blur)
+               
+                #apply threshold
+                ret, new_img = cv2.threshold(img,lower_threshold,higher_threshold,cv2.THRESH_BINARY)
+                worm_contour_img=imfunctions.draw_some_contours(new_img,contour_size=contour_size,tolerance=tolerance, inner_contour_area_to_fill=inner_contour_area_to_fill)
+            
+                tiff_writer.write(btf_output_filepath,worm_contour_img)
 
 
