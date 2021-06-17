@@ -191,6 +191,69 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     #save the 3 max projection image
                     output_tif.write(final_img, photometric='minisblack', contiguous=True)
 
+
+def stack_substract_background(input_filepath, output_filepath, background_img_filepath):
+    """
+    Substract the background image from a btf stack
+    Parameters:
+    ----------
+    input_filepath, str
+    input path to the tiff file
+    output_filepath, str
+    path to where the file will be written
+    background_img_filepath, str
+    path to the background image
+    Returns:
+    ----------
+    """
+    #load background image
+    bg_img=tiff.imread(background_img_filepath)
+
+    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+        with tiff.TiffFile(input_filepath, multifile=False) as tif:
+            for i, page in enumerate(tif.pages):
+                img=page.asarray()
+                inv_img=cv2.bitwise_not(img)
+                new_img=cv2.subtract(inv_img,bg_img)
+                tif_writer.write(new_img, contiguous=True)
+
+def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, lower_threshold, higher_threshold, contour_size, tolerance, inner_contour_area_to_fill):
+    """
+    Function to produce a binary image based on contour and inner contour sizes.
+    better than the make_binary before which was on centerline package
+    Parameters:
+    -----------
+    A lot, too many?
+
+    Returns:
+    --------
+    """
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
+        with tiff.TiffFile(stack_input_filepath, multifile=False) as tif:
+            for i, page in enumerate(tif.pages):
+                #loads the first frame and inverts it
+                img=page.asarray()
+                #median Blur
+                img=cv2.medianBlur(img,median_blur)
+               
+                #apply threshold
+                ret, new_img = cv2.threshold(img,lower_threshold,higher_threshold,cv2.THRESH_BINARY)
+                #draw_some_contours does not need imfunctions.draw_some_contours in here. But outside this file.
+                worm_contour_img=draw_some_contours(new_img,contour_size=contour_size,tolerance=tolerance, inner_contour_area_to_fill=inner_contour_area_to_fill)
+            
+                tif_writer.write(worm_contour_img, contiguous=True)
+
+
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
+####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
 
 
@@ -460,57 +523,4 @@ def extract_contours_with_children(img):
             #make the crop
             #cnt_img=img[y:y+h,x:x+w]
     return contours_with_children
-
-
-def make_contour_based_binary(btf_input_filepath, btf_output_filepath, median_blur, lower_threshold, higher_threshold, contour_size, tolerance, inner_contour_area_to_fill):
-    """
-    Function to produce a binary image based on contour and inner contour sizes.
-    better than the make_binary before which was on centerline package
-    Parameters:
-    -----------
-    A lot, too many?
-
-    Returns:
-    --------
-    """
-    with tiff.TiffWriter(btf_output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(btf_input_filepath, multifile=False) as tif:
-            for i, page in enumerate(tif.pages):
-                #loads the first frame and inverts it
-                img=page.asarray()
-                #median Blur
-                img=cv2.medianBlur(img,median_blur)
-               
-                #apply threshold
-                ret, new_img = cv2.threshold(img,lower_threshold,higher_threshold,cv2.THRESH_BINARY)
-                #draw_some_contours does not need imfunctions.draw_some_contours in here. But outside this file.
-                worm_contour_img=draw_some_contours(new_img,contour_size=contour_size,tolerance=tolerance, inner_contour_area_to_fill=inner_contour_area_to_fill)
-            
-                tif_writer.write(worm_contour_img, contiguous=True)
-
-def btf_substrack_background(input_filepath, output_filepath, background_img_filepath):
-    """
-    Substract the background image from a btf stack
-    Parameters:
-    ----------
-    input_filepath, str
-    input path to the tiff file
-    output_filepath, str
-    path to where the file will be written
-    background_img_filepath, str
-    path to the background image
-    Returns:
-    ----------
-    """
-    #background
-
-    bg_img=tiff.imread(background_img_filepath)
-
-    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(input_filepath, multifile=False) as tif:
-            for i, page in enumerate(tif.pages):
-                img=page.asarray()
-                inv_img=cv2.bitwise_not(img)
-                new_img=cv2.subtract(inv_img,bg_img)
-                tif_writer.write(new_img, contiguous=True)
 
