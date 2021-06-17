@@ -422,7 +422,32 @@ def draw_some_contours(img,contour_size,tolerance,inner_contour_area_to_fill):
 
     return img_contours
     
-
+def extract_contours_with_children(img):
+    """
+    Find the contours that have a children in the given image and return them as list
+    
+    Parameters:
+    -----------
+    img, np.array
+    Returns:
+    -----------
+    contours that have a children, list of contours with children
+    Important does not return the children, only the contour that has children.
+    """
+    _, cnts, hierarchy=cv2.findContours(img,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    #print(len(cnts))
+    #print(hierarchy)
+    contours_with_children=[]
+    for cnt_idx, cnt in enumerate(cnts):
+    # draw contours with children: last column in the array is -1 if an external contour, column 2 is different than -1 meaning it has children
+        if hierarchy[0][cnt_idx][3] == -1 and hierarchy[0][cnt_idx][2]!=-1:
+            contours_with_children.append(cnt)
+            # not needed, do it outside this function
+            #get coords of boundingRect
+            #x,y,w,h = cv2.boundingRect(cnt)
+            #make the crop
+            #cnt_img=img[y:y+h,x:x+w]
+    return contours_with_children
 
 
 
