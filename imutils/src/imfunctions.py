@@ -10,6 +10,8 @@ import re
 import pandas as pd
 import csv
 
+from imutils.src.model import *
+
 def tiff2avi(tiff_path, avi_path, fourcc, fps):
     """
     Convert tiff file into avi file with the specified fourcc codec and fps
@@ -219,7 +221,7 @@ def stack_substract_background(input_filepath, output_filepath, background_img_f
 
 def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, lower_threshold, higher_threshold, contour_size, tolerance, inner_contour_area_to_fill):
     """
-    Function to produce a binary image based on contour and inner contour sizes.
+    Produce a binary image based on contour and inner contour sizes.
     better than the make_binary before which was on centerline package
     Parameters:
     -----------
@@ -243,6 +245,59 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
             
                 tif_writer.write(worm_contour_img, contiguous=True)
 
+
+
+def unet_segmentation_contours_with_children(input_filepath, output_filepath, weights_path):
+    """
+    Run through the unet segmentation the contours with children.
+    TO DO: It would be more efficient to do a list of frames.
+    Parameters:
+    -----------
+    input_filepath, str
+    output_filepath, str
+    weights_path, str
+    Returns:
+    -----------
+
+    """
+
+    model=unet()
+    model.load_weights(weights_path)
+
+    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+            with tiff.TiffFile(input_filepath, multifile=False) as tif:
+                for i, page in enumerate(tif.pages):
+                    img=page.asarray()
+                    
+                    #find contours with children
+                    contours_with_children=extract_contours_with_children(img)
+
+                    #make a copy of the original image here in order to paste more than one contour with children
+                    new_img=img.copy()
+                    for cnt_idx,cnt in enumerate(contours_with_children):
+                            x,y,w,h = cv2.boundingRect(cnt)
+                            #make the crop
+                            cnt_img=img[y:y+h,x:x+w]
+
+                            #run U-Net network:
+                            cnt_img=cv2.resize(cnt_img, (256,256))
+                            cnt_img=np.reshape(cnt_img,cnt_img.shape+(1,))
+                            cnt_img=np.reshape(cnt_img,(1,)+cnt_img.shape)
+
+                            #normalize to 1 by dividing by 255
+                            cnt_img=cnt_img/255
+                            results = model.predict(cnt_img)
+                            #reshape results
+                            results_reshaped=results.reshape(256,256)
+                            #resize results
+                            results_reshaped=cv2.resize(results_reshaped, (w,h))
+                            #multiply it by 255
+                            results_reshaped=results_reshaped*255
+
+                            #paste it into the original image
+                            new_img[y:y+h,x:x+w]=results_reshaped
+
+                    tif_writer.write(new_img, contiguous=True)
 
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:

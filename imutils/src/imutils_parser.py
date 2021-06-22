@@ -7,7 +7,8 @@ FUNCTION_MAP = {'tiff2avi' : imfunctions.tiff2avi,
                 'max_projection_3d': imfunctions.max_projection_3d,
                 'z_projection_parser': imfunctions.z_projection_parser,
                 'stack_substract_background':imfunctions.stack_substract_background,
-                'make_contour_based_binary': imfunctions.make_contour_based_binary}
+                'make_contour_based_binary': imfunctions.make_contour_based_binary,
+                'unet_segmentation_contours_with_children': imfunctions.unet_segmentation_contours_with_children}
 
 
 # create the top-level parser
@@ -66,6 +67,12 @@ parser_g.add_argument("-ht", "--higher_threshold", required=True, type=float, he
 parser_g.add_argument("-cs", "--contour_size", required=True, type=float, help="contour_size")
 parser_g.add_argument("-t", "--tolerance", required=True, type=float, help="tolerance, percentage from which the contours can deviate from contour size")
 parser_g.add_argument("-ics", "--inner_contour_area_to_fill", required=True, type=float, help="inner_contour_area_to_fill")
+
+#parser for unet_segmentation_contours_with_children
+parser_f= subparsers.add_parser('unet_segmentation_contours_with_children', help='unet_segmentation_contours_with_children help')
+parser_f.add_argument("-i", "--input_filepath", required=True, type=str, help="path to the input image")
+parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
+parser_f.add_argument("-w", "--weights_path", required=True, type=str, help="string with the Unet weights filepath")
 
 
 #create below the parser for another function
