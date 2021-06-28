@@ -352,15 +352,16 @@ def erode(binary_input_filepath, output_filepath):
 
 def extract_frames(input_image, output_folder, frames_list):
     """
-    Extract the frames from an stack (image) given a list, and save them in the output_folder
+    Extract the frames from an stack (image) and save them as single images given a list.
+    #TODO name of the output file has the basename of the original image
 
     Parameters:
     -----------
     input_image: str,
         Path to the input_image (stack)
     output_folder: str
-        Path to the folder where the images will be saved
-    frames_list: list?
+        Path to the folder where the images will be saved (It will be created if it does not exist)
+    frames_list: list, numpy array or int
         list of integers, frames that will be extracted
     """
     if not os.path.exists(output_folder):
