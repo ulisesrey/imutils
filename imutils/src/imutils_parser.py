@@ -8,7 +8,8 @@ FUNCTION_MAP = {'tiff2avi' : imfunctions.tiff2avi,
                 'z_projection_parser': imfunctions.z_projection_parser,
                 'stack_substract_background':imfunctions.stack_substract_background,
                 'make_contour_based_binary': imfunctions.make_contour_based_binary,
-                'unet_segmentation_contours_with_children': imfunctions.unet_segmentation_contours_with_children}
+                'unet_segmentation_contours_with_children': imfunctions.unet_segmentation_contours_with_children,
+                'erode':imfunctions.erode}
 
 
 # create the top-level parser
@@ -70,9 +71,16 @@ parser_g.add_argument("-ics", "--inner_contour_area_to_fill", required=True, typ
 
 #parser for unet_segmentation_contours_with_children
 parser_f= subparsers.add_parser('unet_segmentation_contours_with_children', help='unet_segmentation_contours_with_children help')
-parser_f.add_argument("-i", "--input_filepath", required=True, type=str, help="path to the input image")
+parser_f.add_argument("-bi", "--binary_input_filepath", required=True, type=str, help="path to the binary input image")
+parser_f.add_argument("-ri", "--raw_input_filepath", required=True, type=str, help="path to the raw input image")
 parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
 parser_f.add_argument("-w", "--weights_path", required=True, type=str, help="string with the Unet weights filepath")
+
+#parser for eroding
+parser_g= subparsers.add_parser('erode', help='erode help')
+parser_g.add_argument("-i", "--binary_input_filepath", required=True, type=str, help="path to the binary input image")
+parser_g.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
+
 
 
 #create below the parser for another function
