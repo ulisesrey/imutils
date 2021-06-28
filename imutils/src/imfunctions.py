@@ -90,7 +90,6 @@ def ometiff2bigtiff(path):
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
         #print(f'list of files is {os.listdir(path)}')
         for file in natsorted(os.listdir(path)):
-            print(os.path.join(path,file))
             #print(os.path.join(path,file))
             if file.endswith('ome.tif'):
                 #print(os.path.join(path,file))
@@ -365,19 +364,17 @@ def extract_frames(input_image, output_folder, frames_list):
         list of integers, frames that will be extracted
     """
     if not os.path.exists(output_folder):
-        
         print('making ', output_folder, ' directory')
         os.makedirs(output_folder)
     else: print(output_folder, 'already exists')
 
     
     with tiff.TiffFile(input_image, multifile=False) as tif:
-        for i, page in enumerate(tif.pages):
-            #if the image is not on the frames_list then skip
-            if i in frames_list:
-                img=page.asarray()
-                #print(os.path.join(output_folder,'img'+str(i)+'.'+str(file_format)))
-                tiff.imwrite(os.path.join(output_folder,'img'+str(i)+'.tif'),img)
+        #iterate over the frames in the list
+        for i, page in enumerate(tif.pages[frames_list]):
+            img=page.asarray()
+            #print(os.path.join(output_folder,'img'+str(i)+'.'+str(file_format)))
+            tiff.imwrite(os.path.join(output_folder,'img'+str(i)+'.tif'),img)
                 
 def add_zeros_to_filename(path, len_max_number=6):
     """
