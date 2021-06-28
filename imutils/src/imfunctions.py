@@ -10,6 +10,8 @@ import re
 import pandas as pd
 import csv
 
+from skimage.morphology import binary_erosion
+
 from imutils.src.model import *
 
 def tiff2avi(tiff_path, avi_path, fourcc, fps):
@@ -48,8 +50,15 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     with tiff.TiffFile(tiff_path, multifile=False) as tif:
         #print(tif)
         frameSize=tif.pages[0].shape
-        frame_height, frame_width=tif.pages[0].shape
-        video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps, frameSize=(frame_width,frame_height), isColor=False)
+        #if image has channels get height and width (ignore 3rd output)
+        if len(frameSize)==3:
+            frame_height, frame_width,_=tif.pages[0].shape
+            video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps, frameSize=(frame_width, frame_height), isColor=True)
+
+        #if image is single channel get height and width
+        if len(frameSize)==2:
+            frame_height, frame_width=tif.pages[0].shape
+            video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps, frameSize=(frame_width, frame_height), isColor=False)
 
         for i, page in enumerate(tif.pages):
             #print(i)
@@ -79,11 +88,12 @@ def ometiff2bigtiff(path):
     else:
         output_filename=path+'/'+re.split('/',path)[-1]+'bigtiff.btf'
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
-        print(f'list of files is {os.listdir(path)}')
+        #print(f'list of files is {os.listdir(path)}')
         for file in natsorted(os.listdir(path)):
             print(os.path.join(path,file))
-            if file.endswith('ome.tif') and 'bg' not in file:
-                print(os.path.join(path,file))
+            #print(os.path.join(path,file))
+            if file.endswith('ome.tif'):
+                #print(os.path.join(path,file))
                 with tiff.TiffFile(os.path.join(path,file), multifile=False) as tif:
                     for page in tif.pages:
                         img = page.asarray()
@@ -236,7 +246,8 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
                 #loads the first frame and inverts it
                 img=page.asarray()
                 #median Blur
-                img=cv2.medianBlur(img,median_blur)
+                if median_blur!=0:
+                    img=cv2.medianBlur(img,median_blur)
                
                 #apply threshold
                 ret, new_img = cv2.threshold(img,lower_threshold,higher_threshold,cv2.THRESH_BINARY)
@@ -247,7 +258,7 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
 
 
 
-def unet_segmentation_contours_with_children(input_filepath, output_filepath, weights_path):
+def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_filepath, output_filepath, weights_path):
     """
     Run through the unet segmentation the contours with children.
     TO DO: It would be more efficient to do a list of frames.
@@ -264,40 +275,68 @@ def unet_segmentation_contours_with_children(input_filepath, output_filepath, we
     model=unet()
     model.load_weights(weights_path)
 
-    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-            with tiff.TiffFile(input_filepath, multifile=False) as tif:
-                for i, page in enumerate(tif.pages):
-                    img=page.asarray()
-                    
-                    #find contours with children
-                    contours_with_children=extract_contours_with_children(img)
+    with tiff.TiffFile(binary_input_filepath, multifile=False) as binary_tif,\
+     tiff.TiffFile(raw_input_filepath, multifile=False) as raw_tif,\
+     tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+        for i, page in enumerate(binary_tif.pages):
+            img=page.asarray()
+            
+            #find contours
+            _,cnts,hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            
+            #if there is None or less than 2 contours: write the binary and continue
+            if cnts is None or len(cnts)<2:
+                tif_writer.write(img, contiguous=True)
+                continue
 
-                    #make a copy of the original image here in order to paste more than one contour with children
-                    new_img=img.copy()
-                    for cnt_idx,cnt in enumerate(contours_with_children):
-                            x,y,w,h = cv2.boundingRect(cnt)
-                            #make the crop
-                            cnt_img=img[y:y+h,x:x+w]
+            #find contours with children
+            contours_with_children=extract_contours_with_children(img)
 
-                            #run U-Net network:
-                            cnt_img=cv2.resize(cnt_img, (256,256))
-                            cnt_img=np.reshape(cnt_img,cnt_img.shape+(1,))
-                            cnt_img=np.reshape(cnt_img,(1,)+cnt_img.shape)
+            #make a copy of the original image here in order to paste more than one contour with children
+            new_img=raw_tif.pages[i].asarray()
+            for cnt_idx,cnt in enumerate(contours_with_children):
+                    x,y,w,h = cv2.boundingRect(cnt)
+                    #make the crop
+                    cnt_img=new_img[y:y+h,x:x+w]
 
-                            #normalize to 1 by dividing by 255
-                            cnt_img=cnt_img/255
-                            results = model.predict(cnt_img)
-                            #reshape results
-                            results_reshaped=results.reshape(256,256)
-                            #resize results
-                            results_reshaped=cv2.resize(results_reshaped, (w,h))
-                            #multiply it by 255
-                            results_reshaped=results_reshaped*255
+                    #run U-Net network:
+                    cnt_img=cv2.resize(cnt_img, (256,256))
+                    cnt_img=np.reshape(cnt_img,cnt_img.shape+(1,))
+                    cnt_img=np.reshape(cnt_img,(1,)+cnt_img.shape)
 
-                            #paste it into the original image
-                            new_img[y:y+h,x:x+w]=results_reshaped
+                    #normalize to 1 by dividing by 255
+                    cnt_img=cnt_img/255
+                    results = model.predict(cnt_img)
+                    #reshape results
+                    results_reshaped=results.reshape(256,256)
+                    #resize results
+                    results_reshaped=cv2.resize(results_reshaped, (w,h))
+                    #multiply it by 255
+                    results_reshaped=results_reshaped*255
 
-                    tif_writer.write(new_img, contiguous=True)
+                    #paste it into the original image
+                    new_img[y:y+h,x:x+w]=results_reshaped
+
+            tif_writer.write(new_img, contiguous=True)
+
+
+def erode(binary_input_filepath, output_filepath):
+    """
+    erode all the frames of a stack file
+    Paramereters:
+    -------------
+    input_filepath, str
+    Binary file
+    output_filepath, str
+    """
+    with tiff.TiffFile(binary_input_filepath, multifile=False) as tif, tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+        for i, page in enumerate(tif.pages):
+            img=page.asarray()
+            eroded_img=binary_erosion(img)
+            #convery to image with values form 0 to 255
+            eroded_img = eroded_img.astype(np.uint8)  #convert to an unsigned byte
+            eroded_img*=255
+            tif_writer.write(eroded_img, contiguous=True)
 
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
