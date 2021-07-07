@@ -42,10 +42,10 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
         fourcc=0
     else:
         fourcc=cv2.VideoWriter_fourcc(*fourcc)
-    
+
     #make fps a float
     fps=float(fps)
-    
+
     #tiff read object
     with tiff.TiffFile(tiff_path, multifile=False) as tif:
         #print(tif)
@@ -75,7 +75,7 @@ def ometiff2bigtiff(path):
 
     IMPORTANT: This ometiff2big tiff removes the Z-Stack information in a recording with Z stacks!
     At least if the number of Z Stacks is inconsistent, which is the case for the current writer in ome.tiff. While recording, the microscope saves the ome.tiff file even before the z-stack is finished.
-    
+
     Parameters:
     -----------
     path: str,
@@ -188,7 +188,7 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     #defines corner array dimensions and fill value of the corner matrix
                     fill_value=100
                     corner_matrix=np.full((fold_increase*img_stack.shape[2],fold_increase*img_stack.shape[2]),fill_value, dtype='uint16')
-                    
+
                     #flip if needed (for Green Channel, since the image is mirrored compared to red channel)
                     if flip==True:
                         max2=cv2.flip(max2,1)
@@ -198,7 +198,7 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     vert_conc_1 = cv2.hconcat([max2,max1])
                     vert_conc2 = cv2.hconcat([max0, corner_matrix])
                     final_img = cv2.vconcat([vert_conc_1,vert_conc2])
-                    
+
                     #save the 3 max projection image
                     output_tif.write(final_img, photometric='minisblack', contiguous=True)
 
@@ -247,12 +247,12 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
                 #median Blur
                 if median_blur!=0:
                     img=cv2.medianBlur(img,median_blur)
-               
+
                 #apply threshold
                 ret, new_img = cv2.threshold(img,lower_threshold,higher_threshold,cv2.THRESH_BINARY)
                 #draw_some_contours does not need imfunctions.draw_some_contours in here. But outside this file.
                 worm_contour_img=draw_some_contours(new_img,contour_size=contour_size,tolerance=tolerance, inner_contour_area_to_fill=inner_contour_area_to_fill)
-            
+
                 tif_writer.write(worm_contour_img, contiguous=True)
 
 
@@ -279,10 +279,10 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
      tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         for i, page in enumerate(binary_tif.pages):
             img=page.asarray()
-            
+
             #find contours
             _,cnts,hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            
+
             #if there is None or less than 2 contours: write the binary and continue
             if cnts is None or len(cnts)<2:
                 tif_writer.write(img, contiguous=True)
@@ -337,6 +337,51 @@ def erode(binary_input_filepath, output_filepath):
             eroded_img*=255
             tif_writer.write(eroded_img, contiguous=True)
 
+def make_hyperstack_from_ometif(input_path, output_filepath,shape,dtype,imagej=True, metadata={'axes': 'TZYX'}):
+    """
+    Creates a hyperstack from ome.tiff files path
+    Parameters:
+    --------------
+    input_path,
+    output_path
+    shape, tuple
+    Dimensions of the stack. Prefered format TZYX. Example: (100,30,600,600)
+    dtype, str
+    data type. Example: 'uint16'
+    imagej=True,
+    metadata, dict
+    Any metadata that has to be in the hyperstack
+    """
+
+    #create the hyperstack
+    hyperstack = tiff.memmap(
+    output_path,
+    shape=shape,
+    dtype=dtype,
+    imagej=True,
+    metadata={'axes': 'TZYX'},
+    )
+
+    #loop through it to fill it:
+    c=0
+    z_index=0
+    t_index=0
+    for file in natsorted(os.listdir(input_path)):
+        if file.endswith('ome.tif'):
+            #print(os.path.join(path,file))
+            with tiff.TiffFile(os.path.join(input_path,file), multifile=False) as tif:
+                for idx,page in enumerate(tif.pages):
+                    img = page.asarray()
+                    hyperstack[t_index, z_index] = img
+                    hyperstack.flush()
+                    c=c+1
+                    z_index=z_index+1
+                    #if z index is equal to the planes per volume (shape[1]), reset z and start new t_index
+                    if z_index==shape[1]:
+                        z_index=0
+                        t_index=t_index+1
+
+
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
 ####### THE FUNCTION BELOW CAN'T BE CALLED FROM THE IMUTILS PARSER YET:
@@ -369,14 +414,14 @@ def extract_frames(input_image, output_folder, frames_list):
         os.makedirs(output_folder)
     else: print(output_folder, 'already exists')
 
-    
+
     with tiff.TiffFile(input_image, multifile=False) as tif:
         #iterate over the frames in the list
         for i, page in enumerate(tif.pages[frames_list]):
             img=page.asarray()
             #print(os.path.join(output_folder,'img'+str(i)+'.'+str(file_format)))
             tiff.imwrite(os.path.join(output_folder,'img'+str(i)+'.tif'),img)
-                
+
 def add_zeros_to_filename(path, len_max_number=6):
     """
     Change the filename of images from img235.png to img00235.png depending on len_max_number
@@ -397,12 +442,12 @@ def add_zeros_to_filename(path, len_max_number=6):
         if 'img' not in filename: continue
         #print(filename)
         new_filename=filename
-        
+
         number=regex_num.search(filename).group(0)
 
-        #get the file exntesion without the do (e.g. 'png') 
+        #get the file exntesion without the do (e.g. 'png')
         file_extension=re.split('\.',filename)[-1]
-        
+
         #while the number is smaller than the len_max_number
         while len(number) < len_max_number:
             #print(re.split('img', filename)[1])
@@ -440,7 +485,7 @@ def images2stack(path, output_filename):
             image = tiff.imread(os.path.join(path,filename))
             tif.write(image, contiguous=True, photometric='minisblack', metadata=metadata)
             metadata = None
-            
+
 def stack2images(input_filename, output_path):
     """
     Convert a stack into a folder with all the images, saving each image with its original name
@@ -484,17 +529,17 @@ def contours_length(img):
     contains the length of the contours
     contours_peri: numpy array,
     contains the perimeter of the contours
-  
+
     """
     _,cnts,hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours_peri=[]
-    
+
     for cnt in cnts:
         contours_peri.append(cv2.arcLength(cnt, True))
-    
+
     contours_peri=np.array(contours_peri)
     contours_len=contours_peri/2
-    
+
     return  contours_len, contours_peri
 
 def z_projection(img,projection_type):
@@ -503,10 +548,10 @@ def z_projection(img,projection_type):
     ------------
     img, 3-D numpy array
     Image stack that needs to be projected across the z dimension
-    
+
     projection type, str
     String containing one of the 4 projections options: max, min, mean or median.
-    
+
     Returns:
     ------------
     projected_img, numpy array
@@ -525,7 +570,7 @@ def z_projection(img,projection_type):
 
 
 def z_projection_parser(img_path, output_path, projection_type):
-   
+
     """
     parser do run the z_projection function
     Parameters:
@@ -540,7 +585,7 @@ def z_projection_parser(img_path, output_path, projection_type):
     img=tiff.imread(img_path)
     projected_img=z_projection(img, projection_type)
     tiff.imwrite(output_path,projected_img)
-    return None
+
 
 def draw_some_contours(img,contour_size,tolerance,inner_contour_area_to_fill):
     """
@@ -555,16 +600,19 @@ def draw_some_contours(img,contour_size,tolerance,inner_contour_area_to_fill):
         tolerance around which other contours will be accepted. e.g. contour_size 100 and tolerance 0.1 will include contours from 90 to 110.
     inner_contour_area_to_fill, float
         area of inner contours that will be filled
-        
+
     Returns:
     -----------
     img_contours, numpy array
         image with drawn contours
     """
 
+    #convert image dtype if not uint8
+    #image has to be transformed to uint8 for the findContours
+    img=img.astype(np.uint8)
     #get contours
     _,cnts,hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    
+
     #good contours index
     cnts_idx=[]#np.array([])
     #create empty image
@@ -576,23 +624,23 @@ def draw_some_contours(img,contour_size,tolerance,inner_contour_area_to_fill):
         if (contour_size*(1-tolerance) <cnt_area<contour_size*(1+tolerance)):
             cnts_idx.append(np.array(cnt_idx))
             cv2.drawContours(img_contours,cnts, cnt_idx, color=255, thickness=-1, hierarchy=hierarchy, maxLevel=1)
-        
+
         #if the current cnt_idx has as a parent a contour in good countours (cnts_idx)
         if hierarchy[0][cnt_idx][3] in cnts_idx:
             #(and) if it is smaller than inner contour, draw it
             if cnt_area<inner_contour_area_to_fill:
             #print(cv2.contourArea(contours[j]))
                 cv2.drawContours(img_contours,cnts, cnt_idx, color=255, thickness=-1)
-    
+
     #convert the resulting image into a 8 binary numpy array
     img_contours=np.array(img_contours, dtype=np.uint8)
 
     return img_contours
-    
+
 def extract_contours_with_children(img):
     """
     Find the contours that have a children in the given image and return them as list
-    
+
     Parameters:
     -----------
     img, np.array
@@ -615,4 +663,3 @@ def extract_contours_with_children(img):
             #make the crop
             #cnt_img=img[y:y+h,x:x+w]
     return contours_with_children
-
