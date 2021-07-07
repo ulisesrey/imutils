@@ -9,7 +9,8 @@ FUNCTION_MAP = {'tiff2avi' : imfunctions.tiff2avi,
                 'stack_substract_background':imfunctions.stack_substract_background,
                 'make_contour_based_binary': imfunctions.make_contour_based_binary,
                 'unet_segmentation_contours_with_children': imfunctions.unet_segmentation_contours_with_children,
-                'erode':imfunctions.erode}
+                'erode':imfunctions.erode,
+                'make_hyperstack_from_ometif':imfunctions.make_hyperstack_from_ometif}
 
 
 # create the top-level parser
@@ -80,6 +81,15 @@ parser_f.add_argument("-w", "--weights_path", required=True, type=str, help="str
 parser_g= subparsers.add_parser('erode', help='erode help')
 parser_g.add_argument("-i", "--binary_input_filepath", required=True, type=str, help="path to the binary input image")
 parser_g.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
+
+#parser for make_hyperstack_from_ometif
+parser_f= subparsers.add_parser('ake_hyperstack_from_ometif', help='ake_hyperstack_from_ometif help')
+parser_f.add_argument("-i", "--input_path", required=True, type=str, help="path to the input image")
+parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output filepath")
+parser_f.add_argument("-s", "--shape", required=True, type=tuple, help="shape")
+parser_f.add_argument("-t", "--dtype", required=True, type=str, help="data type")
+parser_f.add_argument("-imagej", "--imagej", required=True, type=bool, help="imagej")
+parser_f.add_argument("-m", "--metadata", required=True, type=dict, help="metadata")
 
 
 
