@@ -10,7 +10,7 @@ FUNCTION_MAP = {'tiff2avi' : imfunctions.tiff2avi,
                 'make_contour_based_binary': imfunctions.make_contour_based_binary,
                 'unet_segmentation_contours_with_children': imfunctions.unet_segmentation_contours_with_children,
                 'erode':imfunctions.erode,
-                'make_hyperstack_from_ometif':imfunctions.make_hyperstack_from_ometif}
+                'make_hyperstack_from_ometif': imfunctions.make_hyperstack_from_ometif}
 
 
 # create the top-level parser
