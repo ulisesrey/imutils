@@ -345,7 +345,7 @@ def make_hyperstack_from_ometif(input_path, output_filepath,shape,dtype,imagej=T
     Parameters:
     --------------
     input_path,
-    output_path
+    output_filepath,
     shape, tuple
     Dimensions of the stack. Prefered format TZYX. Example: (100,30,600,600)
     dtype, str
@@ -357,7 +357,7 @@ def make_hyperstack_from_ometif(input_path, output_filepath,shape,dtype,imagej=T
 
     #create the hyperstack
     hyperstack = tiff.memmap(
-    output_path,
+    output_filepath,
     shape=shape,
     dtype=dtype,
     imagej=True,
