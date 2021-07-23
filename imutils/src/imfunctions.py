@@ -14,8 +14,6 @@ from skimage.morphology import binary_erosion
 
 from imutils.src.model import *
 
-def test_function()
-
 def tiff2avi(tiff_path, avi_path, fourcc, fps):
     """
     Convert tiff file into avi file with the specified fourcc codec and fps
