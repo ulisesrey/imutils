@@ -1,9 +1,9 @@
 import argparse
 from imutils.src import imfunctions
 
-FUNCTION_MAP = {'tiff2avi' : imfunctions.tiff2avi,
-                'ometiff2bigtiff' : imfunctions.ometiff2bigtiff,
-                'ometiff2bigtiffZ' : imfunctions.ometiff2bigtiffZ,
+FUNCTION_MAP = {'tiff2avi': imfunctions.tiff2avi,
+                'ometiff2bigtiff': imfunctions.ometiff2bigtiff,
+                'ometiff2bigtiffZ': imfunctions.ometiff2bigtiffZ,
                 'max_projection_3d': imfunctions.max_projection_3d,
                 'z_projection_parser': imfunctions.z_projection_parser,
                 'stack_substract_background':imfunctions.stack_substract_background,
@@ -90,7 +90,6 @@ parser_f.add_argument("-s", "--shape", required=True, type=tuple, help="shape")
 parser_f.add_argument("-t", "--dtype", required=True, type=str, help="data type")
 parser_f.add_argument("-imagej", "--imagej", required=True, type=bool, help="imagej")
 parser_f.add_argument("-m", "--metadata", required=True, type=dict, help="metadata")
-
 
 
 #create below the parser for another function
