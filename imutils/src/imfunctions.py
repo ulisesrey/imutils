@@ -242,7 +242,7 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
     with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
         with tiff.TiffFile(stack_input_filepath, multifile=False) as tif:
             for i, page in enumerate(tif.pages):
-                #loads the first frame and inverts it
+                #loads the first frame
                 img=page.asarray()
                 #median Blur
                 if median_blur!=0:
@@ -569,7 +569,7 @@ def z_projection(img,projection_type):
     return projected_img
 
 
-def z_projection_parser(img_path, output_path, projection_type):
+def z_projection_parser(hyperstack_filepath, output_filepath, projection_type):
 
     """
     parser do run the z_projection function
@@ -582,9 +582,14 @@ def z_projection_parser(img_path, output_path, projection_type):
     ----------
     Writes the projection. Function itself returns None
     """
-    img=tiff.imread(img_path)
-    projected_img=z_projection(img, projection_type)
-    tiff.imwrite(output_path,projected_img)
+    #load hyperstack in memory map
+    hyperstack=tiff.memmap(hyperstack_filepath, dtype='uint16')
+    #crate writer object
+    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+        #iterate for each volume of the hyperstack
+        for volume in hyperstack:
+            projected_img=z_projection(volume, projection_type)
+            tif_writer.write(projected_img, contiguous=True)
 
 
 def draw_some_contours(img,contour_size,tolerance,inner_contour_area_to_fill):
