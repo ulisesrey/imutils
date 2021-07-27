@@ -49,8 +49,8 @@ parser_d.add_argument("-flip", "--flip", type=bool)
 
 #parser for z_projection
 parser_e= subparsers.add_parser('z_projection_parser', help='z_projection_parser help')
-parser_e.add_argument("-i", "--img_path", required=True, help="path to the input image")
-parser_e.add_argument("-o", "--output_path", required=True, help="path to the output image")
+parser_e.add_argument("-i", "--hyperstack_filepath", required=True, help="path to the input image")
+parser_e.add_argument("-o", "--output_filepath", required=True, help="path to the output image")
 parser_e.add_argument("-type", "--projection_type", required=True, type=str, help="string containing the projection type")
 
 #parser for stack_substract_background
