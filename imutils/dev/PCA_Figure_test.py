@@ -7,8 +7,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
-import matplotlib.pyplot as plt
+import mpld3
+
 
 
 path='imutils/dev/2020-07-01_18-36-25_control_worm6_spline_K.csv'
@@ -17,25 +17,25 @@ path='imutils/dev/2020-07-01_18-36-25_control_worm6_spline_K.csv'
 df=pd.read_csv(path, header=None)
 
 df.shape
-#What to do with Nas?
-#df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
-df.fillna(0, inplace=True) #alternative change nans to zeros
-features = np.arange(30,90)# Separating out the features (starting bodypart, ending bodypart)
+# What to do with Nas?
+# df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
+df.fillna(0, inplace=True)  #alternative change nans to zeros
+features = np.arange(30, 90)  #Separating out the features (starting bodypart, ending bodypart)
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
 
-#PCA
+# PCA
 pca = PCA(n_components=5)
 principalComponents = pca.fit_transform(data)
 print(principalComponents.shape)
-principalDf = pd.DataFrame(data = principalComponents, columns = ['PC1', 'PC2', 'PC3','PC4','PC5'])# 'PC6', 'PC7', 'PC8','PC9','PC10'])
+principalDf = pd.DataFrame(data=principalComponents, columns=['PC1', 'PC2', 'PC3','PC4','PC5'])  # 'PC6', 'PC7', 'PC8','PC9','PC10'])
 print(principalDf.shape)
 
 
-## Second Figure
-#define time
+# Second Figure
+# define time
 time=np.arange(0,principalDf.shape[0])
-time=np.arange(193195,196000) #easy
+time=np.arange(193195,194500)  #easy
 # time=np.arange(6600,7150) #challenging
 # time=np.arange(6000,7500) #challenging
 
@@ -46,11 +46,10 @@ plt.rcParams.update({'font.size': 15})
 for pc in principalDf:
     if pc == 'PC4': break
     ax=principalDf.loc[time,pc].plot(legend=True, figsize=(200,5), linewidth=2)
-ax0.set_xlabel('Time (frames)', fontsize = 15)
+ax0.set_xlabel('Time (frames)', fontsize=15)
 ax0.set_ylim([-.5,.5])
-ax0.set_ylabel('',fontsize = 15)
+ax0.set_ylabel('',fontsize=15)
 #plt.show()
-
 
 
 mpl.rcParams['legend.fontsize'] = 10
@@ -64,7 +63,9 @@ x=principalDf.loc[time,'PC1'].rolling(window=avg_win).mean()
 y=principalDf.loc[time,'PC2'].rolling(window=avg_win).mean()
 z=principalDf.loc[time,'PC3'].rolling(window=avg_win).mean()
 
-ax1.plot(x, y, z, label='BH PC')
+#ax1.plot(x, y, z, label='BH PC')
+#ax1.scatter(x, y, z, label='BH PC')
+ax1.scatter(x, y, z, c=time, label='BH PC')
 ax1.legend()
 
 plt.show()
