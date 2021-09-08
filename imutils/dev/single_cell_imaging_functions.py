@@ -97,3 +97,22 @@ def binarize_btf(input_path,output_path,median_blur,lower_threshold,higher_thres
                 #apply threshold
                 ret, new_img = cv2.threshold(img,lower_threshold,higher_threshold,cv2.THRESH_BINARY)
                 tif_writer.save(new_img,contiguous=True)
+                
+
+def get_new_file_names(input_file,output_path,add_to_name,file_extension):
+    """
+    Parameters:
+    returns a string containing an output path and a new filename.
+    new filename consits of the stem name of the input, a specified  addition to the name and extension
+    ----------------
+    input_file: Path object
+    output_path:path were the new files should be saved
+    add_to_name:str,string to add to end of the new filename (for example: _binary)
+    file_extension:format of the new file (for example: .btf)
+    
+    """
+    
+    #specifiy utput path and new filename for each file
+    new_filename=f'{output_path}/{input_file.stem}{add_to_name}{file_extension}'
+    
+    return new_filename
