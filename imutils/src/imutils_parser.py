@@ -61,7 +61,7 @@ parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="
 parser_f.add_argument("-bg", "--background_img_filepath", required=True, type=str, help="string with the background_img_filepath")
 
 #parser for make__binary
-parser_g0= subparsers.add_parser('make_contour_based_binary', help='stack_substract_background help')
+parser_g0= subparsers.add_parser('stack_make_binary', help='stack_substract_background help')
 parser_g0.add_argument("-i", "--stack_input_filepath", required=True, help="path to the input image")
 parser_g0.add_argument("-o", "--stack_output_filepath", required=True, help="path to the output image")
 parser_g0.add_argument("-lt", "--lower_threshold", required=True, type=float, help="lower_threshold")
@@ -92,7 +92,7 @@ parser_g.add_argument("-i", "--binary_input_filepath", required=True, type=str, 
 parser_g.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
 
 #parser for make_hyperstack_from_ometif
-parser_f= subparsers.add_parser('ake_hyperstack_from_ometif', help='ake_hyperstack_from_ometif help')
+parser_f= subparsers.add_parser('make_hyperstack_from_ometif', help='ake_hyperstack_from_ometif help')
 parser_f.add_argument("-i", "--input_path", required=True, type=str, help="path to the input image")
 parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output filepath")
 parser_f.add_argument("-s", "--shape", required=True, type=tuple, help="shape")
