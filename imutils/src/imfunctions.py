@@ -232,6 +232,27 @@ def stack_substract_background(input_filepath, output_filepath, background_img_f
                 tif_writer.write(new_img, contiguous=True)
 
 
+def stack_make_binary(stack_input_filepath:str, stack_output_filepath:str, lower_threshold:int, higher_threshold:int):
+
+    """
+    write a binary stack based on lower and higher threshold
+    Parameters:
+    -------------
+    stack_input_filepath, str
+    stack_output_filepath, str
+    lower_threshold, int
+    higher_threshold, int
+    Returns:
+    -------------
+    None
+    """
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath, multifile=False) as tif:
+        for i, page in enumerate(tif.pages):
+            img=page.asarray()
+            # apply threshold
+            ret, new_img = cv2.threshold(img,lower_threshold,higher_threshold,cv2.THRESH_BINARY)
+            tif_writer.write(new_img, contiguous=True)
+
 def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, lower_threshold, higher_threshold, contour_size, tolerance, inner_contour_area_to_fill):
     """
     Produce a binary image based on contour and inner contour sizes.

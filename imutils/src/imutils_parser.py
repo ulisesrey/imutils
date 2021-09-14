@@ -7,6 +7,7 @@ FUNCTION_MAP = {'tiff2avi': imfunctions.tiff2avi,
                 'max_projection_3d': imfunctions.max_projection_3d,
                 'z_projection_parser': imfunctions.z_projection_parser,
                 'stack_substract_background':imfunctions.stack_substract_background,
+                'stack_make_binary':imfunctions.stack_make_binary,
                 'make_contour_based_binary': imfunctions.make_contour_based_binary,
                 'unet_segmentation_contours_with_children': imfunctions.unet_segmentation_contours_with_children,
                 'erode':imfunctions.erode,
@@ -58,6 +59,14 @@ parser_f= subparsers.add_parser('stack_substract_background', help='stack_substr
 parser_f.add_argument("-i", "--input_filepath", required=True, type=str, help="path to the input image")
 parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
 parser_f.add_argument("-bg", "--background_img_filepath", required=True, type=str, help="string with the background_img_filepath")
+
+#parser for make__binary
+parser_g0= subparsers.add_parser('make_contour_based_binary', help='stack_substract_background help')
+parser_g0.add_argument("-i", "--stack_input_filepath", required=True, help="path to the input image")
+parser_g0.add_argument("-o", "--stack_output_filepath", required=True, help="path to the output image")
+parser_g0.add_argument("-lt", "--lower_threshold", required=True, type=float, help="lower_threshold")
+parser_g0.add_argument("-ht", "--higher_threshold", required=True, type=float, help="higher_threshold")
+
 
 #parser for make_contour_based_binary
 parser_g= subparsers.add_parser('make_contour_based_binary', help='stack_substract_background help')
