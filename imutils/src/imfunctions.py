@@ -442,10 +442,11 @@ def extract_frames(input_image, output_folder, frames_list):
 
     with tiff.TiffFile(input_image, multifile=False) as tif:
         #iterate over the frames in the list
-        for i, page in enumerate(tif.pages[frames_list]):
-            img=page.asarray()
+        #for i, page in enumerate(tif.pages[frames_list]):
+        for frame in frames_list:
+            img=tif.pages[frame].asarray()
             #print(os.path.join(output_folder,'img'+str(i)+'.'+str(file_format)))
-            tiff.imwrite(os.path.join(output_folder,'img'+str(i)+'.tif'),img)
+            tiff.imwrite(os.path.join(output_folder,'img'+str(frame)+'.tif'),img)
 
 
 def add_zeros_to_filename(path, len_max_number=6):
