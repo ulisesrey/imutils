@@ -45,11 +45,11 @@ def calculate_signal(rfp_filepath,rfp_mask_filepath,gcamp_filepath,background_gf
 def plot_gcamp_rfp_ratio(gcamp_signal,rfp_signal):
     fig, axes=plt.subplots(figsize=(20,5),nrows=3, dpi=150)
     axes[0].plot(gcamp_signal)
-    axes[0].set_ylabel('GCamp')
+    axes[0].set_ylabel('GCamp',fontsize=15)
     axes[1].plot(rfp_signal)
-    axes[1].set_ylabel('RFP')
+    axes[1].set_ylabel('RFP',fontsize=15)
     axes[2].plot(gcamp_signal/rfp_signal)
-    axes[2].set_ylabel('GCamp/RFP Ratio') 
+    axes[2].set_ylabel('GCamp/RFP',fontsize=15) 
     return axes
     
     
@@ -116,3 +116,52 @@ def get_new_file_names(input_file,output_path,add_to_name,file_extension):
     new_filename=f'{output_path}/{input_file.stem}{add_to_name}{file_extension}'
     
     return new_filename
+
+
+
+
+def calculate_background_intensity(rfp_mask_filepath,rfp_filepath,gcamp_filepath):
+    
+    """
+    returns a list of background corrected gcamp and rfp signal from a roi specified via the mask
+    
+    Parameters:
+    -----------------------------------
+    rfp_filepath: btf file, rfp signal
+    rfp_mask: btf file,
+    gcamp_filepath: gfp signal
+    background: background intensity
+    """
+
+    gcamp_background=[]
+    rfp_background=[]
+
+    with tiff.TiffFile(rfp_mask_filepath, multifile=True) as tif_mask,\
+        tiff.TiffFile(gcamp_filepath, multifile=False) as tif_gcamp,\
+        tiff.TiffFile(rfp_filepath, multifile=False) as tif_rfp:
+    
+        for i, page in enumerate(tif_mask.pages):
+            
+            steps=len(tif_mask.pages)/10
+            
+            if i %steps==0:
+        
+        
+                mask=page.asarray()
+                gcamp=tif_gcamp.pages[i].asarray()
+                rfp=tif_rfp.pages[i].asarray()
+        
+            
+                #find where the mask is
+                background=np.where(mask!=255)
+        
+                gcamp_background_single_frame=np.mean(gcamp[background])
+                rfp_background_single_frame=np.mean(rfp[background])
+        
+                gcamp_background.append(gcamp_background_single_frame)
+                rfp_background.append(rfp_background_single_frame)
+
+        gcamp_background_mean=np.mean(np.array(gcamp_background))
+        rfp_background_mean=np.mean(np.array(rfp_background))
+        
+    return (gcamp_background_mean,rfp_background_mean)
