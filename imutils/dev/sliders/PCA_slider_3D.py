@@ -3,15 +3,19 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
 import pandas as pd
 from sklearn.decomposition import PCA
+import tifffile as tiff
 
 
 # LOAD PCA DATA
 path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
-
+img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
 # has no reversals path='/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/all_good_skeleton/2020-06-30_18-17-47_chemotaxis_worm5_spline_K.csv'
+
 df=pd.read_csv(path, header=None)
 
 df.shape
+
+img=tiff.imread(img_path)
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True) #alternative change nans to zeros
@@ -39,7 +43,7 @@ fig = plt.figure(figsize=plt.figaspect(0.5), dpi=200)
 ax1 = fig.add_subplot(1, 2, 1, projection='3d')
 ax2 = fig.add_subplot(1, 2, 2)
 
-ax2.imshow(np.zeros(shape=(200,200)))
+line2=ax2.imshow(img[0])
 
 line, = ax1.plot(x,y,z, lw=2)
 ax1.set_xlabel('Time [s]')
@@ -51,7 +55,7 @@ start_slider = Slider(
     ax=start_ax,
     label='Starting time',
     valmin=0,
-    valmax=15000,
+    valmax=1200,
     valinit=0,
     valstep=1
 )
@@ -61,21 +65,23 @@ end_slider = Slider(
     ax=end_ax,
     label='ending time',
     valmin=0,
-    valmax=50000,
-    valinit=1000,
+    valmax=1200,
+    valinit=100,
     valstep=1
 )
 
 
 # The function to be called anytime a slider's value changes
 def update(val):
-    start_c=int(start_slider.val)
-    end_c=int(end_slider.val)
+    start_c=int(start_slider.val)*167
+    end_c=int(end_slider.val)*167
     #line.set_data(np.linspace(start_c, end_c, end_c-start_c),t[start_c:end_c])
     line.set_xdata(x[start_c:end_c])
     line.set_ydata(y[start_c:end_c])
     line.set_3d_properties(z[start_c:end_c])
     #ax1.set_xlim([0,0.2])
+
+    line2.set_data(img[end_slider.val])
     fig.canvas.draw_idle()
 
 # register the update function with each slider
