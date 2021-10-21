@@ -47,6 +47,10 @@ img_line=ax2.imshow(img[0])
 
 line_all, = ax1.plot(x,y,z, lw=0.5, color='grey')
 line, = ax1.plot(x,y,z, lw=2)
+print(type(x))
+print(x.iloc[-1])
+pointer, = ax1.plot(x.iloc[-1], y.iloc[-1], z.iloc[-1], 'go')
+
 ax1.set_xlabel('PC1')
 ax1.set_ylabel('PC2')
 ax1.set_zlabel('PC3')
@@ -86,6 +90,9 @@ def update(val):
     line.set_ydata(y[current_time-1000:current_time])
     line.set_3d_properties(z[current_time-1000:current_time])
 
+    pointer.set_xdata(x[current_time])
+    pointer.set_ydata(y[current_time])
+    pointer.set_3d_properties(z[current_time])
 
     img_line.set_data(img[cursor_slider.val])
     fig.canvas.draw_idle()
