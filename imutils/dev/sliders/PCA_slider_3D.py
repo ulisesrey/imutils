@@ -43,10 +43,13 @@ fig = plt.figure(figsize=plt.figaspect(0.5), dpi=200)
 ax1 = fig.add_subplot(1, 2, 1, projection='3d')
 ax2 = fig.add_subplot(1, 2, 2)
 
-line2=ax2.imshow(img[0])
+img_line=ax2.imshow(img[0])
 
+line_all, = ax1.plot(x,y,z, lw=0.5, color='grey')
 line, = ax1.plot(x,y,z, lw=2)
-ax1.set_xlabel('Time [s]')
+ax1.set_xlabel('PC1')
+ax1.set_ylabel('PC2')
+ax1.set_zlabel('PC3')
 
 # Make a horizontal slider to control the frequency.
 axcolor = 'lightgoldenrodyellow'
@@ -60,32 +63,35 @@ start_slider = Slider(
     valstep=1
 )
 
-end_ax = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
-end_slider = Slider(
-    ax=end_ax,
-    label='ending time',
+cursor_ax = plt.axes([0.25, 0.05, 0.65, 0.03], facecolor=axcolor)
+cursor_slider = Slider(
+    ax=cursor_ax,
+    label='current time',
     valmin=0,
     valmax=1200,
     valinit=100,
     valstep=1
 )
 
-
 # The function to be called anytime a slider's value changes
 def update(val):
     start_c=int(start_slider.val)*167
-    end_c=int(end_slider.val)*167
-    #line.set_data(np.linspace(start_c, end_c, end_c-start_c),t[start_c:end_c])
-    line.set_xdata(x[start_c:end_c])
-    line.set_ydata(y[start_c:end_c])
-    line.set_3d_properties(z[start_c:end_c])
-    #ax1.set_xlim([0,0.2])
+    current_time=int(cursor_slider.val)*167
 
-    line2.set_data(img[end_slider.val])
+    line_all.set_xdata(x[start_c:current_time])
+    line_all.set_ydata(y[start_c:current_time])
+    line_all.set_3d_properties(z[start_c:current_time])
+
+    line.set_xdata(x[current_time-1000:current_time])
+    line.set_ydata(y[current_time-1000:current_time])
+    line.set_3d_properties(z[current_time-1000:current_time])
+
+
+    img_line.set_data(img[cursor_slider.val])
     fig.canvas.draw_idle()
 
 # register the update function with each slider
 start_slider.on_changed(update)
-end_slider.on_changed(update)
+cursor_slider.on_changed(update)
 
 plt.show()
