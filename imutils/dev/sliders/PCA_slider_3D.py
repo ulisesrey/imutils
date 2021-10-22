@@ -4,22 +4,26 @@ from matplotlib.widgets import Slider, Button
 import pandas as pd
 from sklearn.decomposition import PCA
 import tifffile as tiff
+import zarr
 
 
 # LOAD PCA DATA
 path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
-img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
+#img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
+img_path='/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_unet_25493234/binary/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf'
 # has no reversals path='/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/all_good_skeleton/2020-06-30_18-17-47_chemotaxis_worm5_spline_K.csv'
 
 df=pd.read_csv(path, header=None)
 
 df.shape
 
-img=tiff.imread(img_path)
+store=tiff.imread(img_path, aszarr=True)
+img = zarr.open(store, mode='r')
+print(img.shape)
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True) #alternative change nans to zeros
-features = np.arange(30,90)# Separating out the features (starting bodypart, ending bodypart)
+features = np.arange(0,30)# Separating out the features (starting bodypart, ending bodypart)
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
 
@@ -72,23 +76,23 @@ cursor_slider = Slider(
     ax=cursor_ax,
     label='current time',
     valmin=0,
-    valmax=1200,
+    valmax=200001,
     valinit=100,
     valstep=1
 )
 
 # The function to be called anytime a slider's value changes
 def update(val):
-    start_c=int(start_slider.val)*167
-    current_time=int(cursor_slider.val)*167
+    start_c=int(start_slider.val)#*167
+    current_time=int(cursor_slider.val)#*167
 
     line_all.set_xdata(x[start_c:current_time])
     line_all.set_ydata(y[start_c:current_time])
     line_all.set_3d_properties(z[start_c:current_time])
 
-    line.set_xdata(x[current_time-1000:current_time])
-    line.set_ydata(y[current_time-1000:current_time])
-    line.set_3d_properties(z[current_time-1000:current_time])
+    line.set_xdata(x[current_time-600:current_time])
+    line.set_ydata(y[current_time-600:current_time])
+    line.set_3d_properties(z[current_time-600:current_time])
 
     pointer.set_xdata(x[current_time])
     pointer.set_ydata(y[current_time])
