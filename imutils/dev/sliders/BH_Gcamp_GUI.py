@@ -8,11 +8,13 @@ from matplotlib.widgets import Slider, Button
 import pandas as pd
 from sklearn.decomposition import PCA
 import tifffile as tiff
+import zarr
 
 
 # LOAD PCA DATA
-img_path='/Users/ulises.rey/local_data/BAG/2021-10-01_17-34-35_worm2_on-channel-0-behaviour-bigtiff.btf'
-signal_path='/Users/ulises.rey/local_data/BAG/traces/2021-10-01_17-34-34_worm2_on-channel-1-Andor9046bigtiff.btftraces.csv'
+#img_path='/Users/ulises.rey/local_data/BAG/2021-10-01_17-34-35_worm2_on-channel-0-behaviour-bigtiff.btf'
+img_path='/Volumes/clustertmp/zimmer/DanielM/bag_zim_06/circular/btiffs_behaviour/2021-10-01_17-34-35_worm2_on-channel-0-behaviour-bigtiff.btf'
+signal_path='/Users/ulises.rey/local_data/BAG/traces/2021-10-01_18-11-03_worm3_on-channel-1-Andor9046bigtiff.btftraces.csv'
 df=pd.read_csv(signal_path)
 
 #df=pd.read_csv(path, header=None)
@@ -21,7 +23,8 @@ data=df['ratiometric'].values
 
 df.shape
 
-img=tiff.imread(img_path)
+store=tiff.imread(img_path, aszarr=True)
+img = zarr.open(store, mode='r')
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 
@@ -34,7 +37,7 @@ ax1 = fig.add_subplot(1, 2, 1)
 ax2 = fig.add_subplot(1, 2, 2)
 
 
-img_line=ax2.imshow(img[0])
+img_line=ax2.imshow(img[0])#[600:800,300:500]
 
 line_all, = ax1.plot(data, lw=1, color='k')
 pointer, = ax1.plot(data[-1], 'go')
