@@ -23,7 +23,7 @@ print(img.shape)
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True) #alternative change nans to zeros
-features = np.arange(0,30)# Separating out the features (starting bodypart, ending bodypart)
+features = np.arange(0,99)# Separating out the features (starting bodypart, ending bodypart)
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
 
@@ -47,17 +47,21 @@ fig = plt.figure(figsize=plt.figaspect(0.5), dpi=200)
 ax1 = fig.add_subplot(1, 2, 1, projection='3d')
 ax2 = fig.add_subplot(1, 2, 2)
 
-img_line=ax2.imshow(img[0])
-
 line_all, = ax1.plot(x,y,z, lw=0.5, color='grey')
 line, = ax1.plot(x,y,z, lw=2)
 print(type(x))
 print(x.iloc[-1])
 pointer, = ax1.plot(x.iloc[-1], y.iloc[-1], z.iloc[-1], 'go')
+lim_value=0.2
+ax1.set_xlim([-lim_value,lim_value])
+ax1.set_ylim([-lim_value,lim_value])
+ax1.set_zlim([-lim_value,lim_value])
 
 ax1.set_xlabel('PC1')
 ax1.set_ylabel('PC2')
 ax1.set_zlabel('PC3')
+
+img_line=ax2.imshow(img[0])
 
 # Make a horizontal slider to control the frequency.
 axcolor = 'lightgoldenrodyellow'
@@ -66,7 +70,7 @@ start_slider = Slider(
     ax=start_ax,
     label='Starting time',
     valmin=0,
-    valmax=1200,
+    valmax=200001,
     valinit=0,
     valstep=1
 )
