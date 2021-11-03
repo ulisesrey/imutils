@@ -20,10 +20,18 @@ df.shape
 store=tiff.imread(img_path, aszarr=True)
 img = zarr.open(store, mode='r')
 print(img.shape)
+
+#read cross product calculated elsewhere:
+cross_product_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff_cross_product.csv'
+cross_product_df=pd.read_csv(cross_product_path)
+cross_product_array=np.array(cross_product_df['Cross Product'].rolling(window=16, center=True).mean())
+plt.plot(cross_product_array)
+plt.hlines(0, xmin=0, xmax=200001)
+
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True) #alternative change nans to zeros
-features = np.arange(0,99)# Separating out the features (starting bodypart, ending bodypart)
+features = np.arange(20,70)# Separating out the features (starting bodypart, ending bodypart)
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
 
@@ -39,16 +47,24 @@ x=principalDf.loc[:,'PC1'].rolling(window=avg_win).mean()
 y=principalDf.loc[:,'PC2'].rolling(window=avg_win).mean()
 z=principalDf.loc[:,'PC3'].rolling(window=avg_win).mean()
 
+the_data=np.empty(shape=(4,200001))
+the_data[0]=x
+the_data[1]=y
+the_data[2]=z
+the_data[3]=cross_product_array
 
 # Create the figure and the line that we will manipulate
-fig = plt.figure(figsize=plt.figaspect(0.5), dpi=200)
+fig = plt.figure(figsize=plt.figaspect(0.5), dpi=100)
 #fig, ax = plt.subplots()
 #plt.subplots_adjust(left=0.25, bottom=0.25)
 ax1 = fig.add_subplot(1, 2, 1, projection='3d')
 ax2 = fig.add_subplot(1, 2, 2)
 
 line_all, = ax1.plot(x,y,z, lw=0.5, color='grey')
-line, = ax1.plot(x,y,z, lw=2)
+#
+#line, = ax1.plot(x[-600:-1],y[-600:-1],z[-600:-1], lw=2)
+line = ax1.scatter(x[1500:2273], y[1500:2273], z[1500:2273], c=cross_product_array[1500:2273], s=1, vmin=-4e-4, vmax=4e-4, cmap='bwr')
+
 print(type(x))
 print(x.iloc[-1])
 pointer, = ax1.plot(x.iloc[-1], y.iloc[-1], z.iloc[-1], 'go')
@@ -89,14 +105,21 @@ cursor_slider = Slider(
 def update(val):
     start_c=int(start_slider.val)#*167
     current_time=int(cursor_slider.val)#*167
-
+    ax1.cla()
     line_all.set_xdata(x[start_c:current_time])
     line_all.set_ydata(y[start_c:current_time])
     line_all.set_3d_properties(z[start_c:current_time])
 
-    line.set_xdata(x[current_time-600:current_time])
-    line.set_ydata(y[current_time-600:current_time])
-    line.set_3d_properties(z[current_time-600:current_time])
+    #this is for when this was a plot
+    #line.set_xdata(x[current_time-600:current_time])
+    #line.set_ydata(y[current_time-600:current_time])
+    #ax1.cla()
+    ax1.scatter(x[current_time-600:current_time],y[current_time-600:current_time],z[current_time-600:current_time],cross_product_array[current_time-600:current_time], s=1, vmin=-4e-2, vmax=4e-2, cmap='bwr')
+    #this for a scatter
+    # line_all.set_xdata(x[start_c:current_time])
+    # line_all.set_ydata(y[start_c:current_time])
+    # line_all.set_3d_properties(z[start_c:current_time])
+    #line_all.set_color('green')#cross_product_array[start_c:current_time])
 
     pointer.set_xdata(x[current_time])
     pointer.set_ydata(y[current_time])
