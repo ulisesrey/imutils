@@ -6,8 +6,6 @@ from sklearn.decomposition import PCA
 import tifffile as tiff
 import zarr
 
-#from mpl_toolkits.mplot3d import Axes3D
-
 # LOAD PCA DATA
 path = '/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
 # img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
