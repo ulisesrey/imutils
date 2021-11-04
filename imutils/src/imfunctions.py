@@ -280,6 +280,38 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
 
                 tif_writer.write(worm_contour_img, contiguous=True)
 
+def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
+    """"
+    Segment input stack and save as a new stack based on weights path
+    Paramaters:
+    -----------------
+    input_filepath, str
+    output_filepath, str
+    weights_path, str
+    """
+    model=unet()
+    model.load_weights(weights_path)
+
+    with tiff.TiffFile(input_filepath, multifile=False) as tif,\
+            tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+        for i, page in enumerate(tif.pages):
+            img=page.asarray()
+            # run U-Net network:
+            img = cv2.resize(img, (256, 256))
+            img = np.reshape(img, img.shape + (1,))
+            img = np.reshape(img, (1,) + img.shape)
+
+            # normalize to 1 by dividing by 255
+            img = img / 255
+            results = model.predict(img)
+            # reshape results
+            results_reshaped = results.reshape(256, 256)
+            # resize results
+            results_reshaped = cv2.resize(results_reshaped, (w, h))
+            # multiply it by 255
+            results_reshaped = results_reshaped * 255
+            tif_writer.write(results_reshaped, contiguous=True)
+
 
 def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_filepath, output_filepath, weights_path):
     """
