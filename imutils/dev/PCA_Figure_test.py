@@ -1,4 +1,5 @@
 #this was a test to run this code locally using atom
+#check inside the folder sliders to see the latest version
 
 import pandas as pd
 import numpy as np
