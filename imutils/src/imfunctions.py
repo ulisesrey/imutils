@@ -314,6 +314,9 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
             results_reshaped = cv2.resize(results_reshaped, (input_shape))
             # multiply it by 255
             results_reshaped = results_reshaped * 255
+            #changing type to dtype=np.uint8
+            results_reshaped=results_reshaped.astype(np.uint8)
+            
             tif_writer.write(results_reshaped, contiguous=True)
 
 
