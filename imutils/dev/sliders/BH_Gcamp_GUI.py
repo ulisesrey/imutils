@@ -13,7 +13,7 @@ import zarr
 
 # LOAD PCA DATA
 #img_path='/Users/ulises.rey/local_data/BAG/2021-10-01_17-34-35_worm2_on-channel-0-behaviour-bigtiff.btf'
-img_path='/Volumes/clustertmp/zimmer/DanielM/bag_zim_06/circular/btiffs_behaviour/2021-10-01_17-34-35_worm2_on-channel-0-behaviour-bigtiff.btf'
+img_path='/Volumes/clustertmp/zimmer/DanielM/bag_zim_06/circular/btiffs_behaviour/2021-10-01_18-11-05_worm3_on-channel-0-behaviour-bigtiff.btf'
 signal_path='/Users/ulises.rey/local_data/BAG/traces/2021-10-01_18-11-03_worm3_on-channel-1-Andor9046bigtiff.btftraces.csv'
 df=pd.read_csv(signal_path)
 
@@ -37,7 +37,7 @@ ax1 = fig.add_subplot(1, 2, 1)
 ax2 = fig.add_subplot(1, 2, 2)
 
 
-img_line=ax2.imshow(img[0])#[600:800,300:500]
+img_line=ax2.imshow(img[0][200:-200,350:-350])#[100:-100,250:-250])#[200:800,200:700])
 
 line_all, = ax1.plot(data, lw=1, color='k')
 pointer, = ax1.plot(data[-1], 'go')
@@ -53,8 +53,8 @@ cursor_ax = plt.axes([0.25, 0.1, 0.65, 0.03], facecolor=axcolor)
 cursor_slider = Slider(
     ax=cursor_ax,
     label='current time',
-    valmin=0,
-    valmax=30000,
+    valmin=4000,
+    valmax=6000,
     valinit=100,
     valstep=1
 )
@@ -82,7 +82,7 @@ def update(val):
     pointer.set_data(current_time,data[current_time])
 
 
-    img_line.set_data(img[cursor_slider.val])
+    img_line.set_data(img[cursor_slider.val][200:-200,350:-350])
     fig.canvas.draw_idle()
 
 # register the update function with each slider

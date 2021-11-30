@@ -9,8 +9,9 @@ import zarr
 
 # LOAD PCA DATA
 path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
+#'/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/binary_skeleton_output/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_Y_coords.csv'#2020-07-01_18-36-25_control_worm6-_spline_K.csv'#'/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
 #img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
-img_path='/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_unet_25493234/binary/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf'
+img_path='/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/skeleton_images/2020-07-01_13-21-00_chemotaxisl_worm1-channel-0-bigtiff.btf'
 # has no reversals path='/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/all_good_skeleton/2020-06-30_18-17-47_chemotaxis_worm5_spline_K.csv'
 
 df=pd.read_csv(path, header=None)
@@ -20,10 +21,12 @@ df.shape
 store=tiff.imread(img_path, aszarr=True)
 img = zarr.open(store, mode='r')
 print(img.shape)
+
+
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True) #alternative change nans to zeros
-features = np.arange(30,60)# Separating out the features (starting bodypart, ending bodypart)
+features = np.arange(0,99)# Separating out the features (starting bodypart, ending bodypart)
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
 
@@ -34,10 +37,10 @@ print(principalComponents.shape)
 principalDf = pd.DataFrame(data = principalComponents, columns = ['PC1', 'PC2', 'PC3','PC4','PC5'])# 'PC6', 'PC7', 'PC8','PC9','PC10'])
 print(principalDf.shape)
 
-avg_win=16
-x=principalDf.loc[:,'PC1'].rolling(window=avg_win).median()
-y=principalDf.loc[:,'PC2'].rolling(window=avg_win).median()
-z=principalDf.loc[:,'PC3'].rolling(window=avg_win).median()
+avg_win=16#167
+x=principalDf.loc[:,'PC1'].rolling(window=avg_win).mean()
+y=principalDf.loc[:,'PC2'].rolling(window=avg_win).mean()
+z=principalDf.loc[:,'PC3'].rolling(window=avg_win).mean()
 
 
 # Create the figure and the line that we will manipulate
@@ -52,10 +55,10 @@ line, = ax1.plot(x,y,z, lw=2)
 print(type(x))
 print(x.iloc[-1])
 pointer, = ax1.plot(x.iloc[-1], y.iloc[-1], z.iloc[-1], 'go')
-lim_value=0.2
-ax1.set_xlim([-lim_value,lim_value])
-ax1.set_ylim([-lim_value,lim_value])
-ax1.set_zlim([-lim_value,lim_value])
+# lim_value=2#0.2
+# ax1.set_xlim([-lim_value,lim_value])
+# ax1.set_ylim([-lim_value,lim_value])
+# ax1.set_zlim([-lim_value,lim_value])
 
 ax1.set_xlabel('PC1')
 ax1.set_ylabel('PC2')
@@ -71,7 +74,7 @@ start_slider = Slider(
     label='Starting time',
     valmin=0,
     valmax=200001,
-    valinit=0,
+    valinit=190000,
     valstep=1
 )
 
