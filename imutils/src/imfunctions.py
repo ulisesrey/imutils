@@ -95,7 +95,7 @@ def ometiff2bigtiff(path):
             #print(os.path.join(path,file))
             if file.endswith('ome.tif'):
                 #print(os.path.join(path,file))
-                with tiff.TiffFile(os.path.join(path,file), multifile=False) as tif:
+                with tiff.TiffFile(os.path.join(path,file)) as tif:
                     for page in tif.pages:
                         img = page.asarray()
                         output_tif.write(img, photometric='minisblack', contiguous=True)#, description=omexmlMetadataString)
