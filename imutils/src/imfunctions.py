@@ -666,10 +666,8 @@ def z_projection_parser(hyperstack_filepath, output_filepath, projection_type, a
     hyperstack=tiff.memmap(hyperstack_filepath, dtype='uint16')
     #crate writer object
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-        #iterate for each volume of the hyperstack
-        for volume in hyperstack:
-            projected_img=z_projection(volume, projection_type, axis)
-            tif_writer.write(projected_img, contiguous=True)
+        projected_img=z_projection(hyperstack, projection_type, axis)
+        tif_writer.write(projected_img, contiguous=True)
 
 
 def draw_some_contours(img,contour_size,tolerance,inner_contour_area_to_fill):
