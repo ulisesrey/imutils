@@ -55,6 +55,7 @@ parser_e= subparsers.add_parser('z_projection_parser', help='z_projection_parser
 parser_e.add_argument("-i", "--hyperstack_filepath", required=True, help="path to the input image")
 parser_e.add_argument("-o", "--output_filepath", required=True, help="path to the output image")
 parser_e.add_argument("-type", "--projection_type", required=True, type=str, help="string containing the projection type")
+parser_e.add_argument("-axis", "--axis", required=True, type=int, help="int or float containing the axis from which to make z projection")
 
 #parser for stack_substract_background
 parser_f= subparsers.add_parser('stack_substract_background', help='stack_substract_background help')
