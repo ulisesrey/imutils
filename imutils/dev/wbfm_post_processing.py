@@ -80,6 +80,7 @@ def quantify_mask(input_filepath, mask_filepath, csv_output_filepath):
     with tiff.TiffFile(input_filepath) as tif, tiff.TiffFile(mask_filepath) as tif_mask:
         for idx, page in enumerate(tif.pages):
             img=page.asarray()
+            img = img[:650, :900]
             mask=tif_mask.pages[idx].asarray()
             mask = np.bool_(mask)
             print('mean is ', np.mean(img[mask]))
