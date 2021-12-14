@@ -9,10 +9,10 @@ import tifffile as tiff
 import cv2
 
 #scripts to run on the cluster for quantifying bleaching
-
-# input_filepath='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff_z_project.btf'
-# output_filepath='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/scarlet_mask/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff.btf'
 #
+# input_filepath='/Volumes/scratch/ulises/wbfm/20211210/data/worm3/2021-12-10_14-33-15_ZIM2156_worm3-channel-1-pco_camera2/2021-12-10_14-33-15_ZIM2156_worm3-channel-1-pco_camera2bigtiff_z_project.btf'
+# output_filepath='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/scarlet_mask/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff.btf'
+# #
 # # # img=tiff.imread(input_filename)
 # # # plt.imshow(img)
 # # #
@@ -51,9 +51,14 @@ def create_mask(input_filepath, output_filepath):
             img = page.asarray()
             img = img[:650, :900]
             blurred_img = filters.gaussian(img, 5)
-            ret, mask = cv2.threshold(blurred_img, 0.003, 255, cv2.THRESH_BINARY)
+            #ret, mask = cv2.threshold(blurred_img, 0.003, 10000, cv2.THRESH_BINARY)
+            # if blurred_img is higher than 0.03, write 1, if not 0.
+            thresh=filters.threshold_otsu(blurred_img)
+            # mask=img>thresh
+            mask=np.where(blurred_img>thresh, 255, 0)
             mask=np.array(mask, dtype=np.uint8)
-            tif_writer.write(mask, contiguous=True)
+            tif_writer.write(mask)
+            #if idx>400: break
 
 # output_filepath='/Volumes/scratch/ulises/wbfm/20211210/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff.btf'
 #
