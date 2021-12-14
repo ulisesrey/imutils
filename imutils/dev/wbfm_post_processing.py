@@ -10,8 +10,8 @@ import cv2
 
 #scripts to run on the cluster for quantifying bleaching
 
-input_filename='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff_z_project.btf'
-output_filename='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/scarlet_mask/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff.btf'
+#input_filename='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff_z_project.btf'
+#output_filename='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/scarlet_mask/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff.btf'
 # img=tiff.imread(input_filename)
 # plt.imshow(img)
 
