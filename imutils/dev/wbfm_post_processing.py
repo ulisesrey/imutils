@@ -19,26 +19,26 @@ import cv2
 # csvfile_corrected_head = open(csv_output_path + '_skeleton_corrected_head_coords.csv', 'w', newline='')
 # csv_writer_head = csv.writer(csvfile_corrected_head)
 
-df=pd.DataFrame()
-
-with tiff.TiffFile(input_filename) as tif, tiff.TiffWriter(output_filename) as tif_writer:
-    for idx, page in enumerate(tif.pages):
-        img=page.asarray()
-        img=img[:650,:900]
-        blurred_img=filters.gaussian(img, 5)
-        ret, mask = cv2.threshold(blurred_img, 0.003, 255, cv2.THRESH_BINARY)
-        tif_writer.write(mask, contiguous=True)
-        #convert the mask to boolean
-        mask = np.bool_(mask)
-        print('mean is ', np.mean(img[mask]))
-        df.loc[idx,'area'] = len(img[mask])
-        df.loc[idx,'mean'] = np.mean(img[mask])
-        df.loc[idx,'min'] = np.min(img[mask])
-        df.loc[idx,'max'] = np.max(img[mask])
-        if idx>10: break
-    df.to_csv('/Volumes/scratch/ulises/wbfm/20211210/data/worm1/Results_python.csv')
-    #     csv_writer_head.writerow([idx, mean, min, max])
-    # csvfile_corrected_head.close()
+# df=pd.DataFrame()
+#
+# with tiff.TiffFile(input_filename) as tif, tiff.TiffWriter(output_filename) as tif_writer:
+#     for idx, page in enumerate(tif.pages):
+#         img=page.asarray()
+#         img=img[:650,:900]
+#         blurred_img=filters.gaussian(img, 5)
+#         ret, mask = cv2.threshold(blurred_img, 0.003, 255, cv2.THRESH_BINARY)
+#         tif_writer.write(mask, contiguous=True)
+#         #convert the mask to boolean
+#         mask = np.bool_(mask)
+#         print('mean is ', np.mean(img[mask]))
+#         df.loc[idx,'area'] = len(img[mask])
+#         df.loc[idx,'mean'] = np.mean(img[mask])
+#         df.loc[idx,'min'] = np.min(img[mask])
+#         df.loc[idx,'max'] = np.max(img[mask])
+#         if idx>10: break
+#     df.to_csv('/Volumes/scratch/ulises/wbfm/20211210/data/worm1/Results_python.csv')
+#     #     csv_writer_head.writerow([idx, mean, min, max])
+#     # csvfile_corrected_head.close()
 
 def create_mask(input_filepath, output_filepath):
     """"
