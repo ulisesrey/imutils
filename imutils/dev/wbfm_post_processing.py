@@ -10,18 +10,19 @@ import cv2
 
 #scripts to run on the cluster for quantifying bleaching
 
-#input_filename='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff_z_project.btf'
-#output_filename='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/scarlet_mask/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff.btf'
-# img=tiff.imread(input_filename)
-# plt.imshow(img)
-
-# create csv objects
-# csvfile_corrected_head = open(csv_output_path + '_skeleton_corrected_head_coords.csv', 'w', newline='')
-# csv_writer_head = csv.writer(csvfile_corrected_head)
-
+# input_filepath='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff_z_project.btf'
+# output_filepath='/Volumes/scratch/ulises/wbfm/20211210/data/worm1/scarlet_mask/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff.btf'
+#
+# # # img=tiff.imread(input_filename)
+# # # plt.imshow(img)
+# # #
+# # # create csv objects
+# # # csvfile_corrected_head = open(csv_output_path + '_skeleton_corrected_head_coords.csv', 'w', newline='')
+# # # csv_writer_head = csv.writer(csvfile_corrected_head)
+# #
 # df=pd.DataFrame()
 #
-# with tiff.TiffFile(input_filename) as tif, tiff.TiffWriter(output_filename) as tif_writer:
+# with tiff.TiffFile(input_filepath) as tif, tiff.TiffWriter(output_filepath) as tif_writer:
 #     for idx, page in enumerate(tif.pages):
 #         img=page.asarray()
 #         img=img[:650,:900]
@@ -37,22 +38,26 @@ import cv2
 #         df.loc[idx,'max'] = np.max(img[mask])
 #         if idx>10: break
 #     df.to_csv('/Volumes/scratch/ulises/wbfm/20211210/data/worm1/Results_python.csv')
-#     #     csv_writer_head.writerow([idx, mean, min, max])
-#     # csvfile_corrected_head.close()
+    #     csv_writer_head.writerow([idx, mean, min, max])
+    # csvfile_corrected_head.close()
 
 def create_mask(input_filepath, output_filepath):
     """"
     function to create a mask out of the z_3D_projection
     """
     with tiff.TiffFile(input_filepath) as tif, tiff.TiffWriter(output_filepath) as tif_writer:
+        print('Number of pages: ', len(tif.pages))
         for idx, page in enumerate(tif.pages):
-            print('Number of pages: ', len(tif.pages))
             img = page.asarray()
             img = img[:650, :900]
             blurred_img = filters.gaussian(img, 5)
             ret, mask = cv2.threshold(blurred_img, 0.003, 255, cv2.THRESH_BINARY)
-            mask=mask.astype(bool)
+            mask=np.array(mask, dtype=np.uint8)
             tif_writer.write(mask, contiguous=True)
+
+# output_filepath='/Volumes/scratch/ulises/wbfm/20211210/2021-12-10_11-59-29_ZIM2156_worm1-channel-0-pco_camera1bigtiff.btf'
+#
+# create_mask(input_filepath, output_filepath)
 
 def quantify_mask(input_filepath, mask_filepath, csv_output_filepath):
     """
