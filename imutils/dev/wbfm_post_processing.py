@@ -46,11 +46,38 @@ def create_mask(input_filepath, output_filepath):
     """
     with tiff.TiffFile(input_filepath) as tif, tiff.TiffWriter(output_filepath) as tif_writer:
         for idx, page in enumerate(tif.pages):
+            print('Number of pages: ', len(tif.pages))
             img = page.asarray()
             img = img[:650, :900]
             blurred_img = filters.gaussian(img, 5)
             ret, mask = cv2.threshold(blurred_img, 0.003, 255, cv2.THRESH_BINARY)
+            mask=mask.astype(bool)
             tif_writer.write(mask, contiguous=True)
+
+def quantify_mask(input_filepath, mask_filepath, csv_output_filepath):
+    """
+    Args:
+        input_filepath: str
+        btf with the max projection or image where you want to calculate the values in the mask
+        mask_filepath: str
+        btf with the mask
+        csv_output_filepath: str
+        output where the dataframe will be saved
+    Returns:
+
+    """
+    df=pd.DataFrame()
+    with tiff.TiffFile(input_filepath) as tif, tiff.TiffFile(mask_filepath) as tif_mask:
+        for idx, page in enumerate(tif.pages):
+            img=page.asarray()
+            mask=tif_mask.pages[idx].asarray()
+            mask = np.bool_(mask)
+            print('mean is ', np.mean(img[mask]))
+            df.loc[idx,'area'] = len(img[mask])
+            df.loc[idx,'mean'] = np.mean(img[mask])
+            df.loc[idx,'min'] = np.min(img[mask])
+            df.loc[idx,'max'] = np.max(img[mask])
+    df.to_csv(csv_output_filepath)
 
 def plot_bleaching_curve():
     path='/Volumes/scratch/ulises/wbfm/20211210/data/worm2/Results_scarlett.csv'
