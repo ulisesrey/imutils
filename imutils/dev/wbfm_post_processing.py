@@ -1,12 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import os
 from skimage import filters
 
 import tifffile as tiff
 
 import cv2
+
+import glob
 
 #scripts to run on the cluster for quantifying bleaching
 #
@@ -90,17 +92,38 @@ def quantify_mask(input_filepath, mask_filepath, csv_output_filepath):
             df.loc[idx,'max'] = np.max(img[mask])
     df.to_csv(csv_output_filepath)
 
-def plot_bleaching_curve():
-    path='/Volumes/scratch/ulises/wbfm/20211210/data/worm2/Results_scarlett.csv'
-    df=pd.read_csv(path)#, sep='\t')
-    print(df.head(10))
-    print(list(df.columns))
-    fig,(ax1,ax2)=plt.subplots(nrows=2)
-    df['Mean'].plot(ax=ax1)
-    ax1.set_ylabel('Mean Pixel Intensity')
+def plot_bleaching_curve(project_path, channel):
+    """
+    Args:
+        project_path: str,
+         e.g. /scratch/ulises/wbfm/20211210/data/worm3/
+        channel: str,
+        e.g. 'gcamp' or 'scarlett'
 
-    ax1.set_ylim([100,200])
-    df['Max'].plot(ax=ax2)
-    ax2.set_ylabel('Max Pixel Intensity')
-    ax2.set_ylim([100,600])
-    plt.show()
+    Returns:
+    ax
+    """
+    path=os.path.join(project_path,'Results_'+channel+'.csv')
+    df=pd.read_csv(path)#, sep='\t')
+    fig, axes = plt.subplots(nrows=2)
+    df['mean'].plot(ax=axes[0])
+    axes[0].set_ylabel('Mean Pixel Intensity')
+    #axes[0].set_ylim([100,1200])
+
+    df['max'].plot(ax=axes[1])
+    axes[1].set_ylabel('Max Pixel Intensity')
+    axes[1].set_xlabel('Time (volumes)')
+    #axes[1].set_ylim([100,4000])
+    return fig, axes
+
+projects=glob.glob('/Volumes/scratch/ulises/wbfm/20211210/data/worm*')
+channels=['gcamp', 'scarlet']
+for project_path in projects:
+    print(project_path)
+#project_path='/Volumes/scratch/ulises/wbfm/20211210/data/worm3/'
+    for channel in channels:
+        fig, axes = plot_bleaching_curve(project_path,channel)
+        title=project_path[-19:]+'_'+channel
+        fig.suptitle(title, fontsize=16)
+        plt.savefig(os.path.join(project_path,'Results_'+channel), dpi=100)
+plt.show()
