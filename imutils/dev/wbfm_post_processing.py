@@ -90,8 +90,8 @@ def quantify_mask(input_filepath, mask_filepath, csv_output_filepath):
             df.loc[idx,'mean'] = np.mean(img[mask])
             df.loc[idx,'min'] = np.min(img[mask])
             df.loc[idx,'max'] = np.max(img[mask])
-            df.loc[idx,'10th_percentile']=np.percentile(img[mask], 10)
-            df.loc[idx, '10th_percentile_mean'] = np.mean(img[mask]>np.percentile(img[mask], 10))
+            df.loc[idx,'10th_percentile']=np.percentile(img[mask], 90)
+            df.loc[idx, '10th_percentile_mean'] = np.mean(img[mask]>np.percentile(img[mask], 90))
     df.to_csv(csv_output_filepath)
 
 def plot_bleaching_curve(project_path, channel):
