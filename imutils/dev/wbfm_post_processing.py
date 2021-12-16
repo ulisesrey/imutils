@@ -85,14 +85,20 @@ def quantify_mask(input_filepath, mask_filepath, csv_output_filepath):
             img = img[:650, :900]
             mask=tif_mask.pages[idx].asarray()
             mask = np.bool_(mask)
-            print('mean is ', np.mean(img[mask]))
+            #print('mean is ', np.mean(img[mask]))
             df.loc[idx,'area'] = len(img[mask])
             df.loc[idx,'mean'] = np.mean(img[mask])
             df.loc[idx,'min'] = np.min(img[mask])
             df.loc[idx,'max'] = np.max(img[mask])
             df.loc[idx,'10th_percentile']=np.percentile(img[mask], 90)
-            df.loc[idx, '10th_percentile_mean'] = np.mean(img[mask]>np.percentile(img[mask], 90))
+            df.loc[idx, '10th_percentile_mean'] = np.mean(img[img>np.percentile(img[mask], 90)])
     df.to_csv(csv_output_filepath)
+
+# input_filepath='/Volumes/scratch/ulises/wbfm/20211210/data/worm7/2021-12-10_17-09-46_ZIM2156_worm7-channel-0-pco_camera1/2021-12-10_17-09-46_ZIM2156_worm7-channel-0-pco_camera1bigtiff_z_project.btf'
+# mask_filepath='/Volumes/scratch/ulises/wbfm/20211210/data/worm7/2021-12-10_17-09-46_ZIM2156_worm7-channel-0-pco_camera1/2021-12-10_17-09-46_ZIM2156_worm7-channel-0-pco_camera1bigtiff_z_project_mask.btf'
+# csv_output_filepath='/Volumes/scratch/ulises/wbfm/20211210/test.csv'
+# quantify_mask(input_filepath, mask_filepath, csv_output_filepath)
+
 
 def plot_bleaching_curve(project_path, channel):
     """
