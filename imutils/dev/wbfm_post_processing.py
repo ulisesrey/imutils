@@ -90,6 +90,8 @@ def quantify_mask(input_filepath, mask_filepath, csv_output_filepath):
             df.loc[idx,'mean'] = np.mean(img[mask])
             df.loc[idx,'min'] = np.min(img[mask])
             df.loc[idx,'max'] = np.max(img[mask])
+            df.loc[idx,'10th_percentile']=np.percentile(img[mask], 10)
+            df.loc[idx, '10th_percentile_mean'] = np.mean(img[mask]>np.percentile(img[mask], 10))
     df.to_csv(csv_output_filepath)
 
 def plot_bleaching_curve(project_path, channel):
@@ -105,10 +107,11 @@ def plot_bleaching_curve(project_path, channel):
     """
     path=os.path.join(project_path,'Results_'+channel+'.csv')
     df=pd.read_csv(path)#, sep='\t')
+
     fig, axes = plt.subplots(nrows=2)
     df['mean'].plot(ax=axes[0])
     axes[0].set_ylabel('Mean Pixel Intensity')
-    #axes[0].set_ylim([100,1200])
+    axes[0].set_ylim([100,1200])
 
     df['max'].plot(ax=axes[1])
     axes[1].set_ylabel('Max Pixel Intensity')
@@ -116,14 +119,27 @@ def plot_bleaching_curve(project_path, channel):
     #axes[1].set_ylim([100,4000])
     return fig, axes
 
-projects=glob.glob('/Volumes/scratch/ulises/wbfm/20211210/data/worm*')
-channels=['gcamp', 'scarlet']
-for project_path in projects:
-    print(project_path)
-#project_path='/Volumes/scratch/ulises/wbfm/20211210/data/worm3/'
-    for channel in channels:
-        fig, axes = plot_bleaching_curve(project_path,channel)
-        title=project_path[-19:]+'_'+channel
-        fig.suptitle(title, fontsize=16)
-        plt.savefig(os.path.join(project_path,'Results_'+channel), dpi=100)
-plt.show()
+def plot_max_bleaching_curve(project_path, channel):
+
+    path=os.path.join(project_path,'Results_'+channel+'.csv')
+    df=pd.read_csv(path)#, sep='\t')
+
+    fig, axes = plt.subplots(figsize=(10,4))
+    df['max'].plot(ax=axes)
+    axes.set_ylabel('Max Pixel Intensity')
+    axes.set_xlabel('Time (volumes)')
+    #axes[1].set_ylim([100,4000])
+    return fig, axes
+
+# projects=glob.glob('/Volumes/scratch/ulises/wbfm/20211210/data/worm*')
+# channels=['gcamp', 'scarlet']
+#
+# for project_path in projects:
+#     print(project_path)
+# #project_path='/Volumes/scratch/ulises/wbfm/20211210/data/worm3/'
+#     for channel in channels:
+#         fig, axes = plot_max_bleaching_curve(project_path,channel)
+#         title=project_path[-19:]+'_'+channel
+#         fig.suptitle(title, fontsize=16)
+#         plt.savefig(os.path.join(project_path,'Results_MAX'+channel), dpi=100)
+# plt.show()
