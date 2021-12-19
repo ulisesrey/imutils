@@ -162,23 +162,61 @@ def plot_bleaching_curve(project_path, column, ax=None):
 #     return df
 
 
-projects=glob.glob('/Volumes/scratch/ulises/wbfm/2021*/data/worm*')
-channels=['gcamp', 'scarlet']
-for channel in channels:
-    files=glob.glob('/Volumes/scratch/ulises/wbfm/2021*/data/worm*/Results_'+str(channel)+'.csv')
-    column='10th_percentile_mean'
-    for file in files:
-        print(file)
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax=plot_bleaching_curve(file, column, ax=ax)
-        title=file[29:48]+' '+channel+' '+column
-        fig.suptitle(title, fontsize=16)
-        if channel == 'gcamp': ax.set_ylim([100,300])
-        if channel == 'scarlet': ax.set_ylim([150, 3500])
-        plt.savefig(os.path.splitext(file)[0]+str(column)+'.png', dpi=100)
-plt.show()
+
+# channels=['gcamp', 'scarlet']
+# for channel in channels:
+#     files=glob.glob('/Volumes/scratch/ulises/wbfm/2021*/data/worm*/Results_'+str(channel)+'.csv')
+#     column='10th_percentile_mean'
+#     for file in files:
+#         print(file)
+#         fig, ax = plt.subplots(figsize=(10, 4))
+#         ax=plot_bleaching_curve(file, column, ax=ax)
+#         title=file[29:48]+' '+channel+' '+column
+#         fig.suptitle(title, fontsize=16)
+#         if channel == 'gcamp': ax.set_ylim([100,300])
+#         if channel == 'scarlet': ax.set_ylim([150, 3500])
+#         plt.savefig(os.path.splitext(file)[0]+str(column)+'.png', dpi=100)
+# plt.show()
+
+
+recordings=glob.glob('/Volumes/scratch/ulises/wbfm/2021*/data/worm*')
+
+#
+# for recording in recordings:
+#     yaml_filepath=os.path.join(recording, 'config.yaml')
+#     yaml_dict=yaml.safe_load(open(yaml_filepath))
+#     df = pd.read_csv(os.path.join(recording, 'Results_scarlet.csv'))
+#     if yaml_dict['recording_length_minutes']<15: continue
+#     if yaml_dict['laser_561']<301:
+#         print(recording)
+#         #print intensity before and after
+#         #print(df['10th_percentile_mean'].head(500).median(),df['10th_percentile_mean'].tail(500).median())
+#         #print percentage bleaching
+#         print((df['10th_percentile_mean'].head(500).median()-df['10th_percentile_mean'].tail(500).median())/df['10th_percentile_mean'].head(500).median())
+#         df['10th_percentile_mean'].head(200).median()
+#         df['10th_percentile_mean'].tail(200).median()
+#         #df['10th_percentile_mean'].plot(color='r', alpha=0.5)
+#     # if yaml_dict['laser_488'] < 601:
+#     #     print('low:', df['10th_percentile_mean'].head(200).median(), df['10th_percentile_mean'].tail(200).median())
+#     #     df['10th_percentile_mean'].head(200).median()
+#     #     df['10th_percentile_mean'].tail(200).median()
+#         df['10th_percentile_mean'].plot(color='k', alpha=0.5, title=recording)
+#         plt.show()
 
 
 
+#make figure of mask
+#TODO write a function that merges two tiff files with alpha parameter
+path_mask='/Volumes/scratch/ulises/wbfm/2021-12-10_14-33-15_ZIM2156_worm3-channel-0-pco_camera1bigtiff_z_project_mask-1.tif'
+path_img='/Volumes/scratch/ulises/wbfm/2021-12-10_14-33-15_ZIM2156_worm3-channel-1-pco_camera2bigtiff_z_project-2.tif'
 
+img=tiff.imread(path_img)
+mask=tiff.imread(path_mask)
 
+for i, frame in enumerate(img):
+    fig, ax= plt.subplots()
+    ax.imshow(frame)
+    ax.imshow(mask[i], cmap='gray', alpha=0.25)
+    ax.set_axis_off()
+    plt.savefig('22021-12-10_14-33-15_ZIM2156_worm3-channel-1-pco_camera2bigtiff_z_project_' + str(i) + '.png', dpi=100)
+    #break
