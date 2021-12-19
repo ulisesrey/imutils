@@ -139,32 +139,45 @@ def quantify_mask(input_filepath, mask_filepath, csv_output_filepath):
 #     #axes[1].set_ylim([100,4000])
 #     return fig, axes
 
-def plot_bleaching_curve(project_path, column, channel):
-    path = os.path.join(project_path, 'Results_' + channel + '.csv')
-    df = pd.read_csv(path)  # , sep='\t')
-
-    fig, axes = plt.subplots(figsize=(10, 4))
-    df[column].plot(ax=axes)
-    axes.set_ylabel('Pixel Intensity')
-    axes.set_xlabel('Time (volumes)')
+def plot_bleaching_curve(project_path, column, ax=None):
+    #path = os.path.join(project_path, 'Results_' + channel + '.csv')
+    df = pd.read_csv(project_path)  # , sep='\t')
+    if ax == None:
+        _, ax = plt.subplots(figsize=(10, 4))
+    df[column].plot(ax=ax)
+    ax.set_ylabel('Pixel Intensity')
+    ax.set_xlabel('Time (volumes)')
     # axes[1].set_ylim([100,4000])
-    return fig, axes
+    return ax
 
-# projects=glob.glob('/Volumes/scratch/ulises/wbfm/20211217/data/worm*')
-# channels=['gcamp', 'scarlet']
+# def bleaching_as_function_of_laser_power():
+#     df['Date'] =
+#     df['worm'] =
+#     df['488_power(uW)'] =
+#     df['561_power(uW)'] =
+#     df['Starting_Intensity'] =
+#     df['Ending_Intensity'] =
+#     df['Bleaching'] =
+#
+#     return df
 
-# for project_path in projects:
-#     print(project_path)
-# #project_path='/Volumes/scratch/ulises/wbfm/20211210/data/worm3/'
-#     for channel in channels:
-#         column='10th_percentile_mean'
-#         fig, axes = plot_bleaching_curve(project_path,column, channel)
-#         title=project_path[-19:]+' '+channel+' '+column
-#         fig.suptitle(title, fontsize=16)
-#         if channel == 'gcamp': axes.set_ylim([100,300])
-#         if channel == 'scarlet': axes.set_ylim([150, 3500])
-#         plt.savefig(os.path.join(project_path,'Results_'+channel+column), dpi=100)
-# plt.show()
+
+projects=glob.glob('/Volumes/scratch/ulises/wbfm/2021*/data/worm*')
+channels=['gcamp', 'scarlet']
+for channel in channels:
+    files=glob.glob('/Volumes/scratch/ulises/wbfm/2021*/data/worm*/Results_'+str(channel)+'.csv')
+    column='10th_percentile_mean'
+    for file in files:
+        print(file)
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax=plot_bleaching_curve(file, column, ax=ax)
+        title=file[29:48]+' '+channel+' '+column
+        fig.suptitle(title, fontsize=16)
+        if channel == 'gcamp': ax.set_ylim([100,300])
+        if channel == 'scarlet': ax.set_ylim([150, 3500])
+        plt.savefig(os.path.splitext(file)[0]+str(column)+'.png', dpi=100)
+plt.show()
+
 
 
 
