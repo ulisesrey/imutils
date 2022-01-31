@@ -150,7 +150,7 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
                     # if num_frames is not None and i > num_frames: break
 
 
-def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=20, flip=False):
+def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=24, flip=False):
 
     """
     Create a visualization image of a volume, with the 3 max projections possible.
