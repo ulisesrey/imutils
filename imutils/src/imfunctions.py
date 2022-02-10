@@ -1,20 +1,11 @@
-import cv2
-import tifffile as tiff
-
-import numpy as np
-import matplotlib.pyplot as plt
-import os
-from natsort import natsorted
 import re
 
-import pandas as pd
-import csv
-
+import cv2
+import tifffile as tiff
+from natsort import natsorted
 from skimage.morphology import binary_erosion
 
 from imutils.src.model import *
-
-from skimage import io.imread
 
 
 def tiff2avi(tiff_path, avi_path, fourcc, fps):
@@ -560,7 +551,7 @@ def images2stack(path, output_filename):
                 image = tiff.imread(os.path.join(path,filename))
             # if the images are png
             if filename.endswith('.png'):
-                image = io.imread(os.path.join(path,filename))
+                image = cv2.imread(os.path.join(path,filename))
 
             tif.write(image, contiguous=True, photometric='minisblack', metadata=metadata)
 
