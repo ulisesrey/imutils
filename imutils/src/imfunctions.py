@@ -556,6 +556,33 @@ def images2stack(path, output_filename):
             tif.write(image, contiguous=True, photometric='minisblack', metadata=metadata)
 
 
+def rgbimages2stacks(list_of_images, output_path):
+    """
+    Converts a list of PNG images into three stacks, one for each channel. It assumes the default is BGR.
+    Parameters:
+    -------------
+    list_of_images: list, list of png images
+    output_path: str, name of the directory where the stack will be written
+    """
+    r_output = os.path.join(output_path, 'Stack_red.tiff')
+    g_output = os.path.join(output_path, 'Stack_green.tiff')
+    b_output = os.path.join(output_path, 'Stack_blue.tiff')
+
+    with tiff.TiffWriter(r_output, imagej=True) as tif_r, tiff.TiffWriter(g_output,
+                                                                          imagej=True) as tif_g, tiff.TiffWriter(
+            b_output, imagej=True) as tif_b:
+        for image_path in list_of_images:
+            image = cv2.imread(image_path)
+            # somehow the default from PreSens is BGR so we need to convert it
+            rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            r_image = rgb_image[:, :, 0]
+            g_image = rgb_image[:, :, 1]
+            b_image = rgb_image[:, :, 2]
+
+            tif_r.write(r_image, contiguous=True, photometric='minisblack')
+            tif_g.write(g_image, contiguous=True, photometric='minisblack')
+            tif_b.write(b_image, contiguous=True, photometric='minisblack')
 
 
 def stack2images(input_filename, output_path):
