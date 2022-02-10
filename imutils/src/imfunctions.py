@@ -14,6 +14,8 @@ from skimage.morphology import binary_erosion
 
 from imutils.src.model import *
 
+from skimage import io.imread
+
 
 def tiff2avi(tiff_path, avi_path, fourcc, fps):
     """
@@ -553,9 +555,16 @@ def images2stack(path, output_filename):
 
     with tiff.TiffWriter(output_filename, imagej=True) as tif:
         for filename in files:
-            image = tiff.imread(os.path.join(path,filename))
+            # if the images are tiff
+            if filename.endswith('.tif*'):
+                image = tiff.imread(os.path.join(path,filename))
+            # if the images are png
+            if filename.endswith('.png'):
+                image = io.imread(os.path.join(path,filename))
+
             tif.write(image, contiguous=True, photometric='minisblack', metadata=metadata)
-            metadata = None
+
+
 
 
 def stack2images(input_filename, output_path):
