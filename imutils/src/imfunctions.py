@@ -83,15 +83,16 @@ def ometiff2bigtiff(path):
     else:
         output_filename=path+'/'+re.split('/',path)[-1]+'bigtiff.btf'
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
-        #print(f'list of files is {os.listdir(path)}')
+        print(f'list of files is {os.listdir(path)}')
         for file in natsorted(os.listdir(path)):
-            #print(os.path.join(path,file))
+            print(os.path.join(path,file))
             if file.endswith('ome.tif'):
-                #print(os.path.join(path,file))
+                print(os.path.join(path,file))
                 with tiff.TiffFile(os.path.join(path,file)) as tif:
-                    #print('length of pages is: ', len(tif.pages))
-                    #print('length of series is: ', len(tif.series))
-                    for page in tif.pages:
+                    print('length of pages is: ', len(tif.pages))
+                    print('length of series is: ', len(tif.series))
+                    for idx, page in enumerate(tif.pages):
+                        print(idx)
                         img = page.asarray()
                         output_tif.write(img, photometric='minisblack', contiguous=True)#, description=omexmlMetadataString)
 
