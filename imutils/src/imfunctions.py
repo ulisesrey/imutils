@@ -561,7 +561,7 @@ def images2stack(path, output_filename):
     with tiff.TiffWriter(output_filename, imagej=True) as tif:
         for filename in files:
             # if the images are tiff
-            if filename.endswith('.tif*'):
+            if filename.endswith(('.tif', '.tiff')):
                 image = tiff.imread(os.path.join(path, filename))
             # if the images are png
             if filename.endswith('.png'):
