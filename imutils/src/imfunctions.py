@@ -222,7 +222,7 @@ def stack_substract_background(input_filepath, output_filepath, background_img_f
     # load background image
     bg_img = tiff.imread(background_img_filepath)
     # invert it
-    bg_img = cv2.bitwise_not(bg_img)
+    bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         with tiff.TiffFile(input_filepath, multifile=False) as tif:
@@ -230,7 +230,7 @@ def stack_substract_background(input_filepath, output_filepath, background_img_f
                 img = page.asarray()
                 inv_img = cv2.bitwise_not(img)
                 new_img = cv2.subtract(inv_img, bg_img)
-                tif_writer.write(new_img, contiguous=True)
+                tif_writer.write(new_img, photometric='minisblack',  contiguous=True)
 
 
 def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, lower_threshold: int,
