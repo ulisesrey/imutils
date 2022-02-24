@@ -218,6 +218,8 @@ def stack_substract_background(input_filepath, output_filepath, background_img_f
     """
     #load background image
     bg_img=tiff.imread(background_img_filepath)
+    # invert it
+    bg_img = cv2.bitwise_not(bg_img)
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         with tiff.TiffFile(input_filepath, multifile=False) as tif:
@@ -470,10 +472,12 @@ def extract_frames(input_image, output_folder, frames_list):
     frames_list: list, numpy array or int
         list of integers, frames that will be extracted
     """
+    # create output_folder if it does not exist
     if not os.path.exists(output_folder):
         print('making ', output_folder, ' directory')
         os.makedirs(output_folder)
     else: print(output_folder, 'already exists')
+
 
     with tiff.TiffFile(input_image, multifile=False) as tif:
         #iterate over the frames in the list
