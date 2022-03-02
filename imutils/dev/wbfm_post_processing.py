@@ -52,6 +52,7 @@ def create_mask(input_filepath, output_filepath):
         print('Number of pages: ', len(tif.pages))
         for idx, page in enumerate(tif.pages):
             img = page.asarray()
+            # TODO : Remove this part below and make the function of the input image
             img = img[:650, :900]
             blurred_img = filters.gaussian(img, 5)
             # ret, mask = cv2.threshold(blurred_img, 0.003, 10000, cv2.THRESH_BINARY)
