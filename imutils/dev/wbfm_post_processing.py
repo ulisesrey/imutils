@@ -49,7 +49,7 @@ def create_mask(input_filepath, output_filepath):
     function to create a mask out of the z_3D_projection
     """
     with tiff.TiffFile(input_filepath) as tif, tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-        print('Number of pages: ', len(tif.pages))
+        # print('Number of pages: ', len(tif.pages))
         for idx, page in enumerate(tif.pages):
             img = page.asarray()
             # TODO : Remove this part below and make the function of the input image
