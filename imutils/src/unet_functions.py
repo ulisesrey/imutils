@@ -1,9 +1,11 @@
 #imports
 import cv2
 import tifffile as tiff
-
+import glob
+import os
 # unet model is here (too)
 from imutils.src.model import *
+from natsort import natsorted
 
 
 def unet_segmentation(img, model):
@@ -52,6 +54,19 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
             segmented_img=unet_segmentation(img, model)
             #write
             tif_writer.write(segmented_img, contiguous=True)
+
+def testGenerator(test_path, target_size = (256,256),flag_multi_class = False, as_gray = True):
+    """this function is duplicated from unet-master/data.py"""
+
+
+    for i in natsorted(os.listdir(test_path)):
+        print(i)
+        img = io.imread(os.path.join(test_path, i),as_gray = as_gray)
+        img = img / 255
+        img = trans.resize(img,target_size)
+        img = np.reshape(img,img.shape+(1,)) if (not flag_multi_class) else img
+        img = np.reshape(img,(1,)+img.shape)
+        yield img
 
 
 def predict_test_images(test_path, weights_path, save_path):
