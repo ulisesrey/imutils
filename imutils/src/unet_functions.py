@@ -6,6 +6,9 @@ import os
 # unet model is here (too)
 from imutils.src.model import *
 from natsort import natsorted
+import skimage.io as io
+import skimage.transform as trans
+from skimage import img_as_ubyte
 
 
 def unet_segmentation(img, model):
