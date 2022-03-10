@@ -52,3 +52,34 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
             segmented_img=unet_segmentation(img, model)
             #write
             tif_writer.write(segmented_img, contiguous=True)
+
+
+def predict_test_images(test_path, weights_path, save_path):
+    """
+    Creates the predictions for the images in the test_path based on the weights file
+    Probably I could use the unet_segmentation() instead
+    Args:
+        test_path:
+        weights_path:
+        save_path:
+
+    Returns:
+
+    """
+    model = unet()
+    #generate test generator
+    testGene = testGenerator(test_path=test_path)
+
+    number_of_predictions = len(glob.glob(os.path.join(test_path, '*.tif*')))
+
+    model.load_weights(weights_path)
+    results = model.predict_generator(testGene,number_of_predictions,verbose=1)
+
+    # save_path=os.path.join(project_path, test_folder+'_predictions')
+    #print(save_path)
+    try: os.mkdir(save_path)
+    except: print('folder already exists')
+
+    saveResult(save_path, results)
+
+    # return results
