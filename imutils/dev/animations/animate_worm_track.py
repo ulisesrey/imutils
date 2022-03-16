@@ -18,7 +18,12 @@ line, = ax.plot([], [], lw=2)
 path='/Users/ulises.rey/local_code/leopold_worms/data/concentration_change_2020-07-01_13-21-00_chemotaxisl_worm1.csv'
 df=pd.read_csv(path)
 
+# lists to store x and y axis points
+xdata= df['x_head_corrected']
+ydata = df['y_head_corrected']
 
+
+initial_time = 93100
 
 # initialization function
 def init():
@@ -26,34 +31,17 @@ def init():
     line.set_data([], [])
     return line,
 
-
-# lists to store x and y axis points
-xdata= df['x_head_corrected']
-ydata = df['y_head_corrected']
-
-initial_time = 93100
 # animation function
 def animate(i):
     # t is a parameter
     t =  initial_time + i*100
     print(t)
 
-
-    # x, y values to be plotted
-    # x = t * np.sin(t)
-    # y = t * np.cos(t)
-
-    # appending new points to x, y axes points list
-    # xdata.append(x)
-    # ydata.append(y)
     print(xdata[t])
     print(ydata[t])
 
     line.set_data(xdata[initial_time:t], ydata[initial_time:t])
-    #if t>251800: anim.pause()
-
     return line,
-
 
 # setting a title for the plot
 plt.title('Creating a growing coil with matplotlib!')
