@@ -1,3 +1,5 @@
+# it is very slow somehow. I do not think it is correct
+
 # function to animate worm track
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -6,7 +8,7 @@ import pandas as pd
 
 # define writer
 Writer = animation.writers['ffmpeg']
-writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+writer = Writer(fps=103, metadata=dict(artist='Me'), bitrate=1800)
 
 plt.style.use('seaborn-talk')
 
@@ -14,8 +16,9 @@ fig = plt.figure()
 ax = plt.axes()
 ax.set_xlim([-15, 5])
 ax.set_ylim([-4, 4])
-line, = ax.plot([], [], lw=2, c='black')
-line_rev, = ax.plot([], [], lw=2, c='red')
+line_track, = ax.plot([], [], lw=1, c='gray')
+line, = ax.plot([], [], markersize=6,  marker='o', c='black')
+line_rev, = ax.plot([], [], marker='o', markersize=6, c='red')
 
 # load data
 path = '/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/worm3/2021-03-04_16-17-30_worm3_ZIM2051-TablePosRecord.txt'
@@ -41,30 +44,38 @@ def init():
     line.set_data([], [])
     return line,
 
-
 # animation function
 def animate(i):
     # t is a parameter
-    t = initial_time + i *16
+    t = initial_time + i * 16#16
     print(t)
     # print(beh.loc[i,'state']=='reversal')
-    # print(ydata[t])
-    ax.scatter(xdata[t], ydata[t], lw=0.5, c=beh['state'].map(color_dict)[t/16], s=3)
+    # print('y data', ydata[t])
+    # print('x data', xdata[t])
+    #ax.scatter(xdata[t], ydata[t], lw=0.5, c=beh['state'].map(color_dict)[t/16], s=3)
 
-    # if beh.loc[i,'state'] == 'reversal':
-    #     line_rev.set_data(xdata[initial_time:t], ydata[initial_time:t])
-    # if beh.loc[i,'state'] != 'reversal':
-    #     line.set_data(xdata[initial_time:t], ydata[initial_time:t])
-    return line,
+    if beh.loc[i,'state'] == 'reversal':
+        print('reversal')
+        line_rev.set_data(xdata[t-350:t], ydata[t-350:t])
+        line.set_data([], [])
+    if beh.loc[i,'state'] != 'reversal':
+        print('forward')
+        line.set_data(xdata[t-350:t], ydata[t-350:t])
+        line_rev.set_data([], [])
+
+    #plot track
+    line_track.set_data(xdata[0:t], ydata[0:t])
+
+    return line, line_rev, line_track
 
 
 # setting a title for the plot
-plt.title('Worm trajectory')
+#plt.title('Worm trajectory')
 # hiding the axis details
-# plt.axis('off')
+plt.axis('off')
 
 # call the animator
 anim = animation.FuncAnimation(fig, animate, init_func=init,
                                frames=3131, interval=1, blit=True)
-# plt.show()
-anim.save('worm3_tracks_black_annotated.mp4', writer=writer)
+#plt.show()
+anim.save('worm3_tracks_black_annotated_103fps.mp4', writer=writer)
