@@ -10,6 +10,12 @@ import skimage.io as io
 import skimage.transform as trans
 from skimage import img_as_ubyte
 
+import pandas as pd
+from natsort import natsorted
+import matplotlib.image as mpimg
+import os
+import matplotlib.pyplot as plt
+
 
 def unet_segmentation(img, model):
     """
@@ -115,3 +121,41 @@ def predict_test_images(test_path, weights_path, save_path):
     saveResult(save_path, results)
 
     # return results
+
+def training_results_figure(training_folder):
+    fig, (ax1, ax2, ax3) = plt.subplots(figsize=(20, 5), nrows=1, ncols=3)
+    fig.subplots_adjust(wspace=0.5, hspace=0)
+    try:
+        df = pd.read_csv(os.path.join(training_folder, 'history.csv'))
+        df = df.iloc[:, 1:]
+        min_val_loss = round(df['val_loss'].min(), 3)
+        max_val_accuracy = round(df['val_accuracy'].max(), 3)
+
+        df[['val_loss', 'loss']].plot(ax=ax1)
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Loss')
+        ax1.set_title('Min val loss: ' + str(min_val_loss))
+        ax1.set_ylim(0, 1)
+        # plt.show()
+        df[['val_accuracy', 'accuracy']].plot(ax=ax2)
+        ax2.set_xlabel('Epoch')
+        ax2.set_ylabel('Accuracy')
+        ax2.set_title('Max val accuracy: ' + str(max_val_accuracy))
+    except:
+        print('no history file for this model: ', training_folder)
+
+    # plt.show()
+    img = mpimg.imread(os.path.join(training_folder, 'test_predictions', '1_predict.png'))
+    ax3.imshow(img)
+    ax3.set_axis_off()
+
+    return fig, (ax1, ax2, ax3)
+
+training_results_path='/Volumes/scratch/neurobiology/zimmer/ulises/code/unet-master/data/worm_segmentation_all_worms/training_results/*'
+
+training_folders=glob.glob(training_results_path)
+
+for training_folder in natsorted(training_folders):
+    fig, (ax1, ax2, ax3) = training_results_figure(training_folder)
+    fig.suptitle(os.path.basename(training_folder))
+    plt.show()
