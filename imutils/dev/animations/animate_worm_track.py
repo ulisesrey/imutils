@@ -6,24 +6,25 @@ import pandas as pd
 
 #define writer
 Writer = animation.writers['ffmpeg']
-writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+writer = Writer(fps=5.2, metadata=dict(artist='Me'), bitrate=1800)
 
 plt.style.use('seaborn-talk')
 
 fig = plt.figure()
-ax = plt.axes(xlim=[0, 6], ylim=[6, 11])
-line, = ax.plot([], [], lw=2)
+ax = plt.axes()
+ax.set_xlim([-15, 5])
+ax.set_ylim([-4, 4])
+line, = ax.plot([], [], lw=2, c='black')
 
 #load data
-path='/Users/ulises.rey/local_code/leopold_worms/data/concentration_change_2020-07-01_13-21-00_chemotaxisl_worm1.csv'
+path='/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/worm3/2021-03-04_16-17-30_worm3_ZIM2051-TablePosRecord.txt'
 df=pd.read_csv(path)
 
 # lists to store x and y axis points
-xdata= df['x_head_corrected']
-ydata = df['y_head_corrected']
+xdata= df.loc[::16,'X']#df['x_head_corrected']
+ydata = df.loc[::16,'Y']#df['y_head_corrected']
 
-
-initial_time = 93100
+initial_time = 0
 
 # initialization function
 def init():
@@ -34,22 +35,22 @@ def init():
 # animation function
 def animate(i):
     # t is a parameter
-    t =  initial_time + i*100
+    t =  initial_time + i#*167
     print(t)
+    # print(xdata[t])
+    # print(ydata[t])
 
-    print(xdata[t])
-    print(ydata[t])
 
     line.set_data(xdata[initial_time:t], ydata[initial_time:t])
     return line,
 
 # setting a title for the plot
-plt.title('Creating a growing coil with matplotlib!')
+#plt.title('Creating a growing coil with matplotlib!')
 # hiding the axis details
-#plt.axis('off')
+plt.axis('off')
 
 # call the animator
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=219, interval=10, blit=True)
-plt.show()
-anim.save('worm_tracks.avi', writer=writer)
+                               frames=2125, interval=10, blit=True)
+#plt.show()
+anim.save('worm3_tracks_black_new2.mp4', writer=writer)
