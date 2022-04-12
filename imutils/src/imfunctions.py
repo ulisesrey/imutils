@@ -794,3 +794,24 @@ def extract_contours_with_children(img):
             # make the crop
             # cnt_img=img[y:y+h,x:x+w]
     return contours_with_children
+
+
+def measure_mask(img, threshold):
+
+    """
+    Returns the number of values above a threshold and the sum of its values
+    """
+    roi = img >= threshold
+    n_values = np.sum(roi)
+    intensity = np.sum(img[roi])
+
+    return n_values, intensity
+
+# input_filepath='/Users/ulises.rey/local_data/epifluorescence/2022-04-08_16-12_ZIM1661_BAG_worm1_Ch1bigtiff_masked.btf'
+# with tiff.TiffFile(input_filepath, multifile=False) as tif:
+#     for i, page in enumerate(tif.pages):
+#         img=page.asarray()
+#         n_values, intensity = measure_mask(img, 250)
+#         print(i, n_values, intensity)
+#         #if intensity!=intensity2: print("False")
+#         if i == 500: break
