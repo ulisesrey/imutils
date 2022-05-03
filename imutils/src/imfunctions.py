@@ -48,7 +48,7 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
         if len(frameSize) == 3:
             frame_height, frame_width, _ = tif.pages[0].shape
             video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
-                                        frameSize=(frame_width, frame_height), isColor=True)
+                                        frameSize=(frame_width, frame_height), isColor=False)
 
         # if image is single channel get height and width
         if len(frameSize) == 2:
