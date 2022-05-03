@@ -17,6 +17,7 @@ import os
 import matplotlib.pyplot as plt
 
 
+
 def unet_segmentation(img, model):
     """
     Segment an image based on the model loaded.
@@ -26,7 +27,7 @@ def unet_segmentation(img, model):
     :param model: unet model
     :return: segmented_img
     """
-    img_original_shape=img.shape
+    h, w = img.shape
     # run U-Net network:
     img = cv2.resize(img, (256, 256))
     img = np.reshape(img, img.shape + (1,))
@@ -34,10 +35,14 @@ def unet_segmentation(img, model):
 
     img = img / 255
     results = model.predict(img)
+    print(results.shape)
     # reshape results
-    results_reshaped = results.reshape(img_original_shape)
+    results_reshaped = results.reshape((256,256))
+    print(results_reshaped.shape)
     # resize results
-    results_reshaped = cv2.resize(results_reshaped, (w, h))
+    results = cv2.resize(results_reshaped, (w, h)) # cv2 expects w, h in this order
+
+
     # multiply it by 255
     segmented_img = results * 255
 
@@ -151,11 +156,16 @@ def training_results_figure(training_folder):
 
     return fig, (ax1, ax2, ax3)
 
-training_results_path='/Volumes/scratch/neurobiology/zimmer/ulises/code/unet-master/data/worm_segmentation_all_worms/training_results/*'
+# training_results_path='/Volumes/scratch/neurobiology/zimmer/ulises/code/unet-master/data/worm_segmentation_all_worms/training_results/*'
+#
+# training_folders=glob.glob(training_results_path)
+#
+# for training_folder in natsorted(training_folders):
+#     fig, (ax1, ax2, ax3) = training_results_figure(training_folder)
+#     fig.suptitle(os.path.basename(training_folder))
+#     plt.show()
 
-training_folders=glob.glob(training_results_path)
-
-for training_folder in natsorted(training_folders):
-    fig, (ax1, ax2, ax3) = training_results_figure(training_folder)
-    fig.suptitle(os.path.basename(training_folder))
-    plt.show()
+# input_filepath='/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20220127/data/worm6/2022-01-27_22-09-19_worm6-channel-0-behaviour-/2022-01-27_22-09-19_worm6-channel-0-behaviour-bigtiff_AVG_background_substracted.btf'
+# output_filepath='/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20220127/data/worm6/2022-01-27_22-09-19_worm6-channel-0-behaviour-/2022-01-27_22-09-19_worm6-channel-0-behaviour-bigtiff_AVG_background_substracted_unet_segmented.btf'
+# weights_path='/Volumes/scratch/neurobiology/zimmer/ulises/code/unet-master/data/2022_04_24_worm_segmentation_all_worms_good_background/training_results/2626248_1_w_validation_2batchsize_500steps_100epochs_patience/unet_master.hdf5'
+# unet_segmentation_stack(input_filepath, output_filepath, weights_path)
