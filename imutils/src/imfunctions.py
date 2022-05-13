@@ -818,38 +818,4 @@ def distance_to_image_center(image_shape, points):
     result = center - np.asarray(points)
     return result
 
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    import glob
-
-    project_path = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/'
-    img_path = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-bigtiff.btf'
-
-    dlc_coords = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-bigtiffDLC_resnet50_new_worms_5_7_8Apr15shuffle1_57500.h5'
-
-    center_coords = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
-    center_coords = center_coords[['X', 'Y']].values
-    center_coords = - center_coords
-
-    df = pd.read_hdf(dlc_coords)
-
-    points = df[df.columns.levels[0][0]]['head'][['x', 'y']][:].values
-
-    # Specificy the point in the image that corresponds to stage position
-    center_of_img = np.asarray((448, 464))
-
-    result = center_of_img - np.asarray(points)
-
-
-    px2mm_ratio = 0.00325
-    result_mm = result * px2mm_ratio
-
-    # somehow x coordinates needed to be substracted, whereas y coordinates added
-    abs_coords[:, 0] = center_coords[:, 0] - result_mm[:, 0]
-    abs_coords[:, 1] = center_coords[:, 1] + result_mm[:, 1]
-
-    abs_coords_df=pd.DataFrame(abs_coords)
-    print(os.path.join(project_path, 'nose_coords_mm.csv'))
-    abs_coords_df.to_csv(os.path.join(project_path, 'nose_coords_mm.csv'))
-    print('end of generating head good coordinates')
+#if __name__ == "__main__":
