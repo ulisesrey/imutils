@@ -807,7 +807,7 @@ def measure_mask(img, threshold):
 
     return n_values, intensity
 
-def distance_to_image_center(image_shape, point):
+def distance_to_image_center(image_shape, points):
     """
     Calculate the distance (in px) from the center of the image to the point coords
     :param image_shape: tuple, shape of the image
@@ -815,7 +815,7 @@ def distance_to_image_center(image_shape, point):
     :return: np.array containing the x,y distance
     """
     center = np.asarray(image_shape)/2
-    result = np.asarray(point) - center
+    result = center - np.asarray(points)
     return result
 
 if __name__ == "__main__":
@@ -830,16 +830,26 @@ if __name__ == "__main__":
 
     center_coords = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
     center_coords = center_coords[['X', 'Y']].values
+    center_coords = - center_coords
+
     df = pd.read_hdf(dlc_coords)
     df.head()
+
     points = df[df.columns.levels[0][0]]['head'][['x', 'y']][:].values
+
     with tiff.TiffFile(img_path) as tif:
         img_shape = tif.pages[0].asarray().shape
         print('img shape is', img_shape)
-    # img_shape = (900, 900)
-    # points = ([800, 400], [150, 500], [450, 460])
-    # center_coords = ([2, 0], [3, -1], [4, -2])
-    result = distance_to_image_center(img_shape, points)
+
+    #I think this could be wrong because the BAG is not at the center of the beh image
+    #result = distance_to_image_center(img_shape, points)
+
+    #Instead it is in:
+    center_of_img = np.asarray((448, 464))
+
+    result = center_of_img - np.asarray(points)
+
+    # result = np.fliplr(np.flipud(result))
 
     px2mm_ratio = 0.00325
 
@@ -847,8 +857,12 @@ if __name__ == "__main__":
     #print(type(result))
     result_mm = result * px2mm_ratio
 
-    abs_coords = center_coords + result_mm
-    print(abs_coords)
+    #before
+    abs_coords = center_coords - result_mm
+    #now
+    abs_coords[:, 0] = center_coords[:, 0] - result_mm[:, 0]
+    abs_coords[:, 1] = center_coords[:, 1] + result_mm[:, 1]
+    #print(abs_coords)
 
     # plt.plot(points)
     # plt.plot(abs_coords)
@@ -858,7 +872,7 @@ if __name__ == "__main__":
     abs_coords_df=pd.DataFrame(abs_coords)
     print(os.path.join(project_path, 'nose_coords_mm.csv'))
     abs_coords_df.to_csv(os.path.join(project_path, 'nose_coords_mm.csv'))
-    print('end')
+    print('end of generating head good coordinates')
 # input_filepath='/Users/ulises.rey/local_data/epifluorescence/2022-04-08_16-12_ZIM1661_BAG_worm1_Ch1bigtiff_masked.btf'
 # with tiff.TiffFile(input_filepath, multifile=False) as tif:
 #     for i, page in enumerate(tif.pages):
