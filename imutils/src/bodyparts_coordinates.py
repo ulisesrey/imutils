@@ -21,8 +21,8 @@ def generate_absolute_coordinates(bodypart_coordinates, image_center_coordinates
 
     # somehow x coordinates needed to be substracted, whereas y coordinates added
     absolute_coordinates_df = pd.DataFrame()
-    absolute_coordinates_df['X'] = stage_coordinates[:, 0] - result_mm[:, 0]
-    absolute_coordinates_df['Y'] = stage_coordinates[:, 1] + result_mm[:, 1]
+    absolute_coordinates_df['x'] = stage_coordinates[:, 0] - result_mm[:, 0]
+    absolute_coordinates_df['y'] = stage_coordinates[:, 1] + result_mm[:, 1]
 
     return absolute_coordinates_df
 
@@ -36,9 +36,7 @@ def generate_absolute_coordinates_wrapper(project_path, image_center_coordinates
     :return:
     """
     stage_coordinates = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
-    stage_coordinates = stage_coordinates[['X', 'Y']].values
-    # convert to negative so they fit the orientation of the image
-    stage_coordinates = - stage_coordinates
+    stage_coordinates = stage_coordinates[['x', 'y']].values
 
     dlc_df = pd.read_hdf(glob.glob(os.path.join(project_path, '*behaviour*/*behaviour*.h5'))[0])
     bodypart_coordinates = dlc_df[dlc_df.columns.levels[0][0]]['head'][['x', 'y']][:].values
@@ -55,12 +53,14 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--project_path", required=True, help="path to project folder")
-    ap.add_argument("-img_center_coords", "--image_center_coordinates", required=True, help="")
-    ap.add_argument("-px_dim", "--pixel_dimensions", required=True, help="")
+    ap.add_argument("-img_center_coords", "--image_center_coordinates", nargs='+', type=float, required=True, help="")
+    ap.add_argument("-px_dim", "--pixel_dimensions", type=float, required=True, help="")
     args = vars(ap.parse_args())
 
     project_path = args['project_path']
-    image_center_coordinates = args['image_center_coordinates']
+    image_center_coordinates = tuple(args['image_center_coordinates'])
+    print(image_center_coordinates)
+    print(type(image_center_coordinates))
     pixel_dimensions = args['pixel_dimensions']
 
     generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions)
