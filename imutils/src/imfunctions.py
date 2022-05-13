@@ -833,51 +833,23 @@ if __name__ == "__main__":
     center_coords = - center_coords
 
     df = pd.read_hdf(dlc_coords)
-    df.head()
 
     points = df[df.columns.levels[0][0]]['head'][['x', 'y']][:].values
 
-    with tiff.TiffFile(img_path) as tif:
-        img_shape = tif.pages[0].asarray().shape
-        print('img shape is', img_shape)
-
-    #I think this could be wrong because the BAG is not at the center of the beh image
-    #result = distance_to_image_center(img_shape, points)
-
-    #Instead it is in:
+    # Specificy the point in the image that corresponds to stage position
     center_of_img = np.asarray((448, 464))
 
     result = center_of_img - np.asarray(points)
 
-    # result = np.fliplr(np.flipud(result))
 
     px2mm_ratio = 0.00325
-
-    print(result)
-    #print(type(result))
     result_mm = result * px2mm_ratio
 
-    #before
-    abs_coords = center_coords - result_mm
-    #now
+    # somehow x coordinates needed to be substracted, whereas y coordinates added
     abs_coords[:, 0] = center_coords[:, 0] - result_mm[:, 0]
     abs_coords[:, 1] = center_coords[:, 1] + result_mm[:, 1]
-    #print(abs_coords)
 
-    # plt.plot(points)
-    # plt.plot(abs_coords)
-    # plt.show()
-    # fig, ax = plt.subplots()
-    # ax.scatter(abs_coords[:, 0], abs_coords[:, 1])
     abs_coords_df=pd.DataFrame(abs_coords)
     print(os.path.join(project_path, 'nose_coords_mm.csv'))
     abs_coords_df.to_csv(os.path.join(project_path, 'nose_coords_mm.csv'))
     print('end of generating head good coordinates')
-# input_filepath='/Users/ulises.rey/local_data/epifluorescence/2022-04-08_16-12_ZIM1661_BAG_worm1_Ch1bigtiff_masked.btf'
-# with tiff.TiffFile(input_filepath, multifile=False) as tif:
-#     for i, page in enumerate(tif.pages):
-#         img=page.asarray()
-#         n_values, intensity = measure_mask(img, 250)
-#         print(i, n_values, intensity)
-#         #if intensity!=intensity2: print("False")
-#         if i == 500: break
