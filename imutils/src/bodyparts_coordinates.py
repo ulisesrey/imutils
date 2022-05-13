@@ -1,37 +1,66 @@
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    import glob
-    import os
-    import numpy as np
+import pandas as pd
+import glob
+import os
+import numpy as np
 
 
+def generate_absolute_coordinates(bodypart_coordinates, image_center_coordinates, stage_coordinates, pixel_dimensions):
+    """
 
-    #variables
-    image_center_coordinates = np.asarray((448, 464))
-    px2mm_ratio = 0.00325
-    # bodypart='head' future implementation
-    project_path = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/'
+    :param bodypart_coords:
+    :param image_center_coordinates:
+    :param stage_coordinates:
+    :param pixel_dimensions:
+    :return:
+    """
+    image_center_coordinates = np.asarray(image_center_coordinates)
 
-    center_coords = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
-    center_coords = center_coords[['X', 'Y']].values
-    # convert to negative so they fit the orientation of the image
-    center_coords = - center_coords
+    result = image_center_coordinates - np.asarray(bodypart_coordinates)
 
-    dlc_df = pd.read_hdf(glob.glob(os.path.join(project_path, '*behaviour*/*behaviour*.h5'))[0])
-    points = dlc_df[dlc_df.columns.levels[0][0]]['head'][['x', 'y']][:].values
-
-    # Specificy the point in the image that corresponds to stage position
-    result = image_center_coordinates - np.asarray(points)
-
-    result_mm = result * px2mm_ratio
+    result_mm = result * pixel_dimensions
 
     # somehow x coordinates needed to be substracted, whereas y coordinates added
-    abs_coords_df=pd.DataFrame()
-    abs_coords_df['X'] = center_coords[:, 0] - result_mm[:, 0]
-    abs_coords_df['Y'] = center_coords[:, 1] + result_mm[:, 1]
+    absolute_coordinates_df = pd.DataFrame()
+    absolute_coordinates_df['X'] = stage_coordinates[:, 0] - result_mm[:, 0]
+    absolute_coordinates_df['Y'] = stage_coordinates[:, 1] + result_mm[:, 1]
 
-    print(os.path.join(project_path, 'nose_coords_mm.csv'))
-    abs_coords_df.to_csv(os.path.join(project_path, 'nose_coords_mm.csv'))
+    return absolute_coordinates_df
 
-    print('end of generating head good coordinates')
+
+def generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions):
+    """
+
+    :param project_path: str
+    :param image_center_coordinates: tuple with the coordinates of the stage in the behaviour camera (not the center of the image necesarilly!)
+    :param pixel_dimensions:
+    :return:
+    """
+    stage_coordinates = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
+    stage_coordinates = stage_coordinates[['X', 'Y']].values
+    # convert to negative so they fit the orientation of the image
+    stage_coordinates = - stage_coordinates
+
+    dlc_df = pd.read_hdf(glob.glob(os.path.join(project_path, '*behaviour*/*behaviour*.h5'))[0])
+    bodypart_coordinates = dlc_df[dlc_df.columns.levels[0][0]]['head'][['x', 'y']][:].values
+
+    absolute_coordinates_df = generate_absolute_coordinates(bodypart_coordinates, image_center_coordinates,
+                                                            stage_coordinates, pixel_dimensions)
+
+    absolute_coordinates_df.to_csv(os.path.join(project_path, 'nose_coords_mm.csv'))
+
+
+if __name__ == "__main__":
+
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-p", "--project_path", required=True, help="path to project folder")
+    ap.add_argument("-img_center_coords", "--image_center_coordinates", required=True, help="")
+    ap.add_argument("-px_dim", "--pixel_dimensions", required=True, help="")
+    args = vars(ap.parse_args())
+
+    project_path = args['project_path']
+    image_center_coordinates = args['image_center_coordinates']
+    pixel_dimensions = args['pixel_dimensions']
+
+    generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions)
