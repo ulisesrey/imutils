@@ -206,9 +206,9 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     output_tif.write(final_img, photometric='minisblack', contiguous=True)
 
 
-def stack_substract_background(input_filepath, output_filepath, background_img_filepath, invert=True):
+def stack_subtract_background(input_filepath, output_filepath, background_img_filepath, invert=True):
     """
-    Substract the background image from a btf stack
+    Subtract the background image from a btf stack
     Parameters:
     ----------
     input_filepath, str
@@ -224,7 +224,7 @@ def stack_substract_background(input_filepath, output_filepath, background_img_f
     """
     # load background image
     bg_img = tiff.imread(background_img_filepath)
-    
+
     if invert:
         bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
 
