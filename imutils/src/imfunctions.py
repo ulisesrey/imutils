@@ -206,7 +206,7 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
                     output_tif.write(final_img, photometric='minisblack', contiguous=True)
 
 
-def stack_substract_background(input_filepath, output_filepath, background_img_filepath):
+def stack_substract_background(input_filepath, output_filepath, background_img_filepath, invert=True):
     """
     Substract the background image from a btf stack
     Parameters:
@@ -217,20 +217,24 @@ def stack_substract_background(input_filepath, output_filepath, background_img_f
     path to where the file will be written
     background_img_filepath, str
     path to the background image
+    inverse, bool
+    It is default True because the function before did not have this parameter and was doing the inverse by default
     Returns:
     ----------
     """
     # load background image
     bg_img = tiff.imread(background_img_filepath)
-    # invert it
-    bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
+    
+    if invert:
+        bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         with tiff.TiffFile(input_filepath, multifile=False) as tif:
             for i, page in enumerate(tif.pages):
                 img = page.asarray()
-                inv_img = cv2.bitwise_not(img)
-                new_img = cv2.subtract(inv_img, bg_img)
+                if invert:
+                    img = cv2.bitwise_not(img)
+                new_img = cv2.subtract(img, bg_img)
                 tif_writer.write(new_img, photometric='minisblack',  contiguous=True)
 
 
