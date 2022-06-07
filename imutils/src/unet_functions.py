@@ -62,7 +62,8 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
             #run network
             segmented_img=unet_segmentation(img, model)
             # convert to 8bit
-            segmented_img = segmented_img.astype(np.uint8)
+            # segmented_img = segmented_img*255
+            # segmented_img = segmented_img.astype(np.uint8)
             # write
             tif_writer.write(segmented_img, contiguous=True)
 
