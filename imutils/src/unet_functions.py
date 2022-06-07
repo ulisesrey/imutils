@@ -42,7 +42,7 @@ def unet_segmentation(img, model):
     # resize results
     results = cv2.resize(results_reshaped, (w, h)) # cv2 expects w, h in this order
 
-    return segmented_img
+    return results
 
 
 def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
