@@ -42,11 +42,6 @@ def unet_segmentation(img, model):
     # resize results
     results = cv2.resize(results_reshaped, (w, h)) # cv2 expects w, h in this order
 
-
-    # multiply it by 255
-    segmented_img = results * 255
-
-
     return segmented_img
 
 
