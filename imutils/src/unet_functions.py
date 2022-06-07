@@ -35,10 +35,10 @@ def unet_segmentation(img, model):
 
     img = img / 255
     results = model.predict(img)
-    print(results.shape)
+    #print(results.shape)
     # reshape results
     results_reshaped = results.reshape((256,256))
-    print(results_reshaped.shape)
+    #print(results_reshaped.shape)
     # resize results
     results = cv2.resize(results_reshaped, (w, h)) # cv2 expects w, h in this order
 
@@ -61,7 +61,9 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
             img=page.asarray()
             #run network
             segmented_img=unet_segmentation(img, model)
-            #write
+            # convert to 8bit
+            segmented_img = segmented_img.astype(np.uint8)
+            # write
             tif_writer.write(segmented_img, contiguous=True)
 
 def testGenerator(test_path, target_size = (256,256),flag_multi_class = False, as_gray = True):
