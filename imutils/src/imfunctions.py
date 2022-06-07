@@ -811,7 +811,7 @@ def measure_mask(img, threshold):
 
     return n_values, intensity
 
-def distance_to_image_center(image_shape, points):
+def distance_to_image_center(image_shape, point):
     """
     Calculate the distance (in px) from the center of the image to the point coords
     :param image_shape: tuple, shape of the image
@@ -819,7 +819,5 @@ def distance_to_image_center(image_shape, points):
     :return: np.array containing the x,y distance
     """
     center = np.asarray(image_shape)/2
-    result = center - np.asarray(points)
+    result = np.asarray(point) - center
     return result
-
-# if __name__ == "__main__":
