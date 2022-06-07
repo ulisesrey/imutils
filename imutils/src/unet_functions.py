@@ -9,6 +9,7 @@ from natsort import natsorted
 import skimage.io as io
 import skimage.transform as trans
 from skimage import img_as_ubyte
+from skimage import exposure
 
 import pandas as pd
 from natsort import natsorted
@@ -62,6 +63,7 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
             #run network
             segmented_img=unet_segmentation(img, model)
             # convert to 8bit
+            segmented_img=exposure.rescale_intensity(segmented_img, in_range='uint8')
             # segmented_img = segmented_img*255
             # segmented_img = segmented_img.astype(np.uint8)
             # write
