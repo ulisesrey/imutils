@@ -6,12 +6,14 @@ from sklearn.decomposition import PCA
 import tifffile as tiff
 import zarr
 
-
+print('Use PCA_slider_wbfm.py instead')
 # LOAD PCA DATA
-path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
+path='/Users/ulises.rey/local_data/MondaySeminar3/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_K.csv'#'/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
+#'/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
 #'/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/binary_skeleton_output/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_Y_coords.csv'#2020-07-01_18-36-25_control_worm6-_spline_K.csv'#'/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
 #img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
-img_path='/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/skeleton_images/2020-07-01_13-21-00_chemotaxisl_worm1-channel-0-bigtiff.btf'
+img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/2020-07-01_13-21-00_chemotaxisl_worm1-channel-0-bigtiff.btf'
+    #'/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-channel-0-bigtiff_new.btf'#'/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/skeleton_images/2020-07-01_13-21-00_chemotaxisl_worm1-channel-0-bigtiff.btf'
 # has no reversals path='/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/all_good_skeleton/2020-06-30_18-17-47_chemotaxis_worm5_spline_K.csv'
 
 df=pd.read_csv(path, header=None)

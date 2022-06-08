@@ -8,10 +8,16 @@ import zarr
 
 
 # LOAD PCA DATA
-path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
+#path to chemotaxis worm
+path='/Users/ulises.rey/local_data/MondaySeminar3/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_K.csv'#'/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
+#path to wbfm worm3 worm
+path ='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
 
 #'/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/binary_skeleton_output/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_Y_coords.csv'#2020-07-01_18-36-25_control_worm6-_spline_K.csv'#'/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
 #img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
+#path to chemotaxis worm
+img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/2020-07-01_13-21-00_chemotaxisl_worm1-channel-0-bigtiff.btf'
+#path to wbfm worm3 worm
 img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf/2021-03-04_16-17-30_worm3_ZIM2051-channel-0-bigtiff_new.btf'
 # has no reversals path='/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/all_good_skeleton/2020-06-30_18-17-47_chemotaxis_worm5_spline_K.csv'
 
@@ -21,7 +27,6 @@ img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf/2021-03-04_16
 #img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
 #img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-channel-0-bigtiff_new.btf'
 
-
 df=pd.read_csv(path, header=None)
 
 df.shape
@@ -30,26 +35,33 @@ store=tiff.imread(img_path, aszarr=True)
 img = zarr.open(store, mode='r')
 print(img.shape)
 
-
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True) #alternative change nans to zeros
-features = np.arange(3,99)# Separating out the features (starting bodypart, ending bodypart)
+features = np.arange(5,90)# Separating out the features (starting bodypart, ending bodypart)
+#time=np.arange(0,len(df))
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
 
 #PCA
+# pca = PCA(n_components=5)
+# principalComponents = pca.fit_transform(data)
+# print(principalComponents.shape)
+# principalDf = pd.DataFrame(data = principalComponents, columns = ['PC1', 'PC2', 'PC3','PC4','PC5'])# 'PC6', 'PC7', 'PC8','PC9','PC10'])
+# print(principalDf.shape)
+
+#PCA fit and transform separately
 pca = PCA(n_components=5)
-principalComponents = pca.fit_transform(data)
+pca.fit(data)
+principalComponents = pca.transform(df.loc[:, features].values)
 print(principalComponents.shape)
 principalDf = pd.DataFrame(data = principalComponents, columns = ['PC1', 'PC2', 'PC3','PC4','PC5'])# 'PC6', 'PC7', 'PC8','PC9','PC10'])
 print(principalDf.shape)
 
-avg_win=16#167
+avg_win=167#167
 x=principalDf.loc[:,'PC1'].rolling(window=avg_win, center=True).mean()
 y=principalDf.loc[:,'PC2'].rolling(window=avg_win, center=True).mean()
 z=principalDf.loc[:,'PC3'].rolling(window=avg_win, center=True).mean()
-
 
 # Create the figure and the line that we will manipulate
 fig = plt.figure(figsize=plt.figaspect(0.5), dpi=200)
@@ -64,7 +76,6 @@ print(type(x))
 print(x.iloc[-1])
 #pointer makes the program crash, so it is now working now, see line 121
 pointer, = ax1.plot(x.iloc[-1], y.iloc[-1], z.iloc[-1], 'go')
-
 
 # lim_value=2#0.2
 # ax1.set_xlim([-lim_value,lim_value])
@@ -84,7 +95,7 @@ start_slider = Slider(
     ax=start_ax,
     label='Starting time',
     valmin=0,
-    valmax=50000,
+    valmax=6000,
     valinit=1,
     valstep=1
 )
@@ -94,7 +105,7 @@ cursor_slider = Slider(
     ax=cursor_ax,
     label='current time',
     valmin=0,
-    valmax=50000,
+    valmax=6000,
     valinit=5000,
     valstep=1
 )
