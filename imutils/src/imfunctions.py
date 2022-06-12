@@ -266,6 +266,7 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
     """
     Produce a binary image based on contour and inner contour sizes.
     better than the make_binary before which was on centerline package
+    TODO: Split into several functions. stack_binary already exists. From that oen could have the fill inner contours
     Parameters:
     -----------
     A lot, too many?
