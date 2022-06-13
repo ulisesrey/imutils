@@ -258,7 +258,22 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, low
             img = page.asarray()
             # apply threshold
             ret, new_img = cv2.threshold(img, lower_threshold, higher_threshold, cv2.THRESH_BINARY)
+            #convert matrix to np.uint
+            new_img = new_img * 255
+            new_img = new_img.astype(np.uint8)
             tif_writer.write(new_img, contiguous=True)
+
+
+def stack_subsample(stack_input_filepath, stack_output_filepath, range):
+    """Subsample the stack based on the given range
+
+    """
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
+        with tiff.TiffFile(stack_input_filepath, multifile=False) as tif:
+            for i, page in enumerate(tif.pages[range]):
+                # loads the first frame
+                img = page.asarray()
+                tif_writer.write(img, contiguous=True)
 
 
 def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, lower_threshold,
