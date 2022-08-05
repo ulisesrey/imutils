@@ -58,7 +58,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Description of your program')
     parser.add_argument('-i', '--i_path', help='input filepath', required=True)
     parser.add_argument('-o', '--o_path', help='output folder', required=True)
-    parser.add_argument('-s', '--subsample', help='subsample', required=False)
+    parser.add_argument('-s', '--subsample', help='subsample', type=int, required=False)
 
     args = vars(parser.parse_args())
     input_filepath = args['i_path']
