@@ -1,5 +1,6 @@
 import argparse
 from imutils.src import imfunctions
+from imutils.src import unet_functions
 
 FUNCTION_MAP = {'tiff2avi': imfunctions.tiff2avi,
                 'ometiff2bigtiff': imfunctions.ometiff2bigtiff,
@@ -8,11 +9,13 @@ FUNCTION_MAP = {'tiff2avi': imfunctions.tiff2avi,
                 'z_projection_parser': imfunctions.z_projection_parser,
                 'stack_subtract_background': imfunctions.stack_subtract_background,
                 'make_contour_based_binary': imfunctions.make_contour_based_binary,
-                'unet_segmentation_stack': imfunctions.unet_segmentation_stack,
+                'unet_segmentation_stack': unet_functions.unet_segmentation_stack,
                 'unet_segmentation_contours_with_children': imfunctions.unet_segmentation_contours_with_children,
                 'erode': imfunctions.erode,
                 'make_hyperstack_from_ometif': imfunctions.make_hyperstack_from_ometif,
-                'stack_make_binary': imfunctions.stack_make_binary
+                'stack_make_binary': imfunctions.stack_make_binary,
+                'images2stack': imfunctions.images2stack,
+                'stack_extract_and_save_contours_with_children':imfunctions.stack_extract_and_save_contours_with_children
                 }
 
 
@@ -110,6 +113,18 @@ parser_l.add_argument("-o", "--stack_output_filepath", required=True, help="path
 parser_l.add_argument("-lt", "--lower_threshold", required=True, type=float, help="lower_threshold")
 parser_l.add_argument("-ht", "--higher_threshold", required=True, type=float, help="higher_threshold")
 
+#parser for images2stack
+parser_m= subparsers.add_parser('images2stack', help='images2stack help')
+parser_m.add_argument("-p", "--path", required=True, help="path to folder")
+parser_m.add_argument("-o", "--output_filename", required=True, help="path to the output file")
+
+#parser for stack_extract_and_save_contours_with_children
+parser_n = subparsers.add_parser(description='Description of your program')
+parser_n.add_argument('-bi', '--bi_path', help='binary input filepath', required=True)
+parser_n.add_argument('-ri', '--ri_path', help='raw input filepath', required=True)
+parser_n.add_argument('-o', '--o_path', help='output folder', required=True)
+parser_n.add_argument('-ct', '--crop_true', action='store_true', help='set crop to True', required=False)
+parser_n.add_argument('-s', '--subsample', help='subsample', type=int, required=False)
 
 #create below the parser for another function
 
