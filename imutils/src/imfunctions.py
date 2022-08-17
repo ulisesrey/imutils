@@ -279,7 +279,7 @@ def stack_subsample(stack_input_filepath, stack_output_filepath, range):
 def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, lower_threshold,
                               higher_threshold, contour_size, tolerance, inner_contour_area_to_fill):
     """
-    Produce a binary image based on contour and inner contour sizes.
+    Produce a binary image based on contour and inner contour sizes, by calling draw_some_contours()
     better than the make_binary before which was on centerline package
     TODO: Split into several functions. stack_binary already exists. From that oen could have the fill inner contours
     Parameters:
@@ -480,7 +480,7 @@ def extract_frames(input_image, output_folder, frames_list):
 
 def add_zeros_to_filename(path, len_max_number=6):
     """
-    Change the filename of images from img235.png to img00235.png depending on len_max_number
+    Change the filename of images inside the path from img235.png to img00235.png depending on len_max_number
     It has a sister function: add_zeros_to_csv
     Parameters:
     -----------
@@ -542,6 +542,10 @@ def images2stack(path, output_filename):
     with tiff.TiffWriter(output_filename, imagej=True) as tif:
         for filename in files:
             # if the images are tiff
+            print(filename)
+            #skip files that start with '.'
+            if filename.startswith('.'): continue
+
             if filename.endswith(('.tif', '.tiff')):
                 image = tiff.imread(os.path.join(path, filename))
             # if the images are png
@@ -760,6 +764,8 @@ def extract_contours_with_children(img):
     contours that have a children, list of contours with children
     Important does not return the children, only the contour that has children.
     """
+
+    #important, findCountour() has different outputs depending on CV version!
     _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # print(len(cnts))
     # print(hierarchy)
@@ -774,6 +780,60 @@ def extract_contours_with_children(img):
             # make the crop
             # cnt_img=img[y:y+h,x:x+w]
     return contours_with_children
+
+
+def crop_image_from_contour(img, contour):
+    """crop the image based on a contour
+    Parameters:
+    -----------
+    img, img
+    contour, contour object
+    returns:
+    cnt_img
+    """
+    x, y, w, h = cv2.boundingRect(contour)
+    # make the crop
+    cnt_img = img[y:y + h, x:x + w]
+
+    return cnt_img
+
+
+def stack_extract_and_save_contours_with_children(binary_input_filepath, raw_input_filepath, output_folder, crop=False,
+                                                  subsample=250):
+    """
+
+    :param binary_input_filepath: image from where the contours will be extracted
+    :param raw_input_filepath: image that will be cropped based on the binary contours (can be the same as binary_input_filepath)
+    :param output_folder: folder where to save the images
+    :param subsample: subsample rate to not to save all the images.
+    :return: None
+    """
+
+    file_basename = os.path.splitext(os.path.basename(raw_input_filepath))[0]
+    print(file_basename)
+
+    with tiff.TiffFile(binary_input_filepath) as tif_binary, tiff.TiffFile(raw_input_filepath) as tif_raw:
+        for i, page in enumerate(tif_binary.pages):
+            if i % subsample != 0: continue
+            img = page.asarray()
+
+            # extract contours with children
+            contours_with_children = extract_contours_with_children(img)
+
+            for cnt_idx, cnt in enumerate(contours_with_children):
+                # get the raw image
+                raw_img = tif_raw.pages[i].asarray()
+                # if crop == True make the crop on the raw image
+                if crop==True:
+                    raw_img = crop_image_from_contour(raw_img, cnt)
+                # TODO: add zeros to str(i) so that it can be more easily read by natsort algorithms
+                # TODO: or write it in the style of extract_frames where each image is saved in the directory
+                output_filepath = os.path.join(output_folder,
+                                               file_basename + '_frame_' + str(i) + '_cnt_' + str(cnt_idx) + '.tiff')
+                print(output_filepath)
+                tiff.imwrite(output_filepath, raw_img)
+    return None
+
 
 
 def measure_mask(img, threshold):
@@ -797,6 +857,7 @@ def distance_to_image_center(image_shape, point):
     center = np.asarray(image_shape)/2
     result = np.asarray(point) - center
     return result
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
