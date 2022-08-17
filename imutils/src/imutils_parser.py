@@ -119,11 +119,11 @@ parser_m.add_argument("-p", "--path", required=True, help="path to folder")
 parser_m.add_argument("-o", "--output_filename", required=True, help="path to the output file")
 
 #parser for stack_extract_and_save_contours_with_children
-parser_n = subparsers.add_parser(description='Description of your program')
-parser_n.add_argument('-bi', '--bi_path', help='binary input filepath', required=True)
-parser_n.add_argument('-ri', '--ri_path', help='raw input filepath', required=True)
-parser_n.add_argument('-o', '--o_path', help='output folder', required=True)
-parser_n.add_argument('-ct', '--crop_true', action='store_true', help='set crop to True', required=False)
+parser_n = subparsers.add_parser('stack_extract_and_save_contours_with_children', description='Description of your program')
+parser_n.add_argument('-bi', '--binary_input_filepath', help='binary input filepath', required=True)
+parser_n.add_argument('-ri', '--raw_input_filepath', help='raw input filepath', required=True)
+parser_n.add_argument('-o', '--output_folder', help='output folder', required=True)
+parser_n.add_argument('-ct', '--crop', action='store_true', help='set crop to True', required=False)
 parser_n.add_argument('-s', '--subsample', help='subsample', type=int, required=False)
 
 #create below the parser for another function
