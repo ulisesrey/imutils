@@ -19,6 +19,10 @@ import matplotlib.pyplot as plt
 
 import time
 
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import jaccard_score
+from sklearn.metrics import f1_score
+
 
 
 def unet_segmentation(img, model):
@@ -157,16 +161,78 @@ def training_results_figure(training_folder):
         print('no history file for this model: ', training_folder)
 
     # plt.show()
-    img = mpimg.imread(os.path.join(training_folder, 'test_predictions', '39_predict.png'))
+    img = mpimg.imread(os.path.join(training_folder, 'test_predictions', '15_predict.png'))
     ax3.imshow(img)
     ax3.set_axis_off()
 
     return fig, (ax1, ax2, ax3)
 
 
+def compare_images_metrics(img_ground_truth_list, img_predicted_test_list, threshold):
+    """
+    return a dataframe of accuracy metrics (accuracy_score, jaccard_score and f1_score) for the list of images.
+
+    :param ground_truth_images:
+    :param test_images:
+    :return:
+    """
+    metrics_list = ['accuracy_score', 'jaccard_score', 'f1_score']
+
+    img_ground_truth_list = natsorted(img_ground_truth_list)
+    img_predicted_test_list = natsorted(img_predicted_test_list)
+
+    df = pd.DataFrame()
+    for metric in metrics_list:
+        print(metric)
+        score_list = []
+        for i, element in enumerate(img_ground_truth_list):
+            print(i, ' element in ground truth image list')
+            print(element)
+            ground_truth_img = tiff.imread(element)
+            test_predicted_img = tiff.imread(img_predicted_test_list[i])
+            #threshold = 0.1
+            test_predicted_img[test_predicted_img < threshold] = 0
+            test_predicted_img[test_predicted_img >= threshold] = 255
+
+            if metric == 'accuracy_score':
+                print('calculating score with metric: ', metric)
+                score = accuracy_score(ground_truth_img.flatten(),
+                                                                  test_predicted_img.flatten())
+                print(score)
+            if metric == 'jaccard_score':
+                print('calculating score with metric: ', metric)
+                score = jaccard_score(ground_truth_img.flatten(),
+                                                                test_predicted_img.flatten(), pos_label=255,
+                                                                average='binary')
+                print(score)
+            if metric == 'f1_score':
+                print('calculating score with metric: ', metric)
+                score = f1_score(ground_truth_img.flatten(), test_predicted_img.flatten(),
+                                                      pos_label=255, average='binary')
+            print(score)
+
+            score_list.append(score)
+            print('score list is ', score_list)
+        df[metric] = score_list
+    return df
+
+
+def fetch_files_to_compare(ground_truth_path, predicted_test_path):
+    """
+    TODO: Should this be done in bash?
+    :param ground_truth_path:
+    :param predicted_test_path:
+    :return:
+    """
+    img_ground_truth_list = natsorted(glob.glob(ground_truth_path + '*.tif*'))
+    img_predicted_test_list = natsorted(glob.glob(predicted_test_path + '*.tif*'))
+
+    return img_ground_truth_list, img_predicted_test_list
+
+
 if __name__ == "__main__":
 
-    training_results_path='/Volumes/scratch/neurobiology/zimmer/ulises/code/unet-master/data/2022_04_24_worm_segmentation_all_worms_good_background/training_results/*'
+    training_results_path='/Volumes/scratch/neurobiology/zimmer/ulises/code/unet-master/data/2022_08_18_coiled_segmentation_background_normalized/training_results/*'
 
     training_folders=glob.glob(training_results_path)
 
