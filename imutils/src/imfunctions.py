@@ -349,6 +349,7 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
                 # make the crop
                 cnt_img = new_img[y:y + h, x:x + w]
 
+                #TODO: can the unet_functions.unet_segmentation() be used here instead of all this, to produce results_reshaped?
                 # run U-Net network:
                 cnt_img = cv2.resize(cnt_img, (256, 256))
                 cnt_img = np.reshape(cnt_img, cnt_img.shape + (1,))
@@ -482,6 +483,7 @@ def add_zeros_to_filename(path, len_max_number=6):
     """
     Change the filename of images inside the path from img235.png to img00235.png depending on len_max_number
     It has a sister function: add_zeros_to_csv
+    # TODO: make it less specific, so it does not required the 'img' string
     Parameters:
     -----------
     path: str,
@@ -826,10 +828,11 @@ def stack_extract_and_save_contours_with_children(binary_input_filepath, raw_inp
                 # if crop == True make the crop on the raw image
                 if crop==True:
                     raw_img = crop_image_from_contour(raw_img, cnt)
-                # TODO: add zeros to str(i) so that it can be more easily read by natsort algorithms
-                # TODO: or write it in the style of extract_frames where each image is saved in the directory
+                # add zeros to str(i) so that it can be more easily read by natsort algorithms
+                while (len(str(i)))<6:
+                    i= "0"+str(i)
                 output_filepath = os.path.join(output_folder,
-                                               file_basename + '_frame_' + str(i) + '_cnt_' + str(cnt_idx) + '.tiff')
+                                               file_basename + '_frame_' + i + '_cnt_' + str(cnt_idx) + '.tiff')
                 print(output_filepath)
                 tiff.imwrite(output_filepath, raw_img)
     return None
