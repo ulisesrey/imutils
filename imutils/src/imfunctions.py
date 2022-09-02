@@ -342,8 +342,8 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
             # find contours with children
             contours_with_children = extract_contours_with_children(img)
 
-            #If there are not contours_with_children, write binary too
-            if contours_with_children is None:
+            #If there are no contours_with_children (empty list), write binary too
+            if contours_with_children==[]:
                 tif_writer.write(img, contiguous=True)
                 continue
 
