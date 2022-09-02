@@ -374,7 +374,7 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
                 # paste it into the binary image
                 img[y:y + h, x:x + w] = results_reshaped
 
-            tif_writer.write(new_img, contiguous=True)
+            tif_writer.write(img, contiguous=True)
 
 
 def erode(binary_input_filepath, output_filepath):
