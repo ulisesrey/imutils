@@ -219,7 +219,7 @@ def compare_images_metrics(img_ground_truth_list, img_predicted_test_list, thres
 
 def fetch_files_to_compare(ground_truth_path, predicted_test_path):
     """
-    TODO: Should this be done in bash?
+    TODO: Should this be done in bash? or does it need a function at all?
     :param ground_truth_path:
     :param predicted_test_path:
     :return:
