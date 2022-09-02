@@ -348,7 +348,7 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
                 continue
 
             # make a copy of the original image here in order to paste more than one contour with children
-            #TODO: Is these copy needed?
+            #TODO: Is this copy needed?
             new_img = raw_tif.pages[i].asarray()
             for cnt_idx, cnt in enumerate(contours_with_children):
                 x, y, w, h = cv2.boundingRect(cnt)
