@@ -48,7 +48,7 @@ def unet_segmentation(img, model):
     #print(results_reshaped.shape)
     # resize results
     results = cv2.resize(results_reshaped, (w, h)) # cv2 expects w, h in this order
-
+    #TODO: Test if it is okay to multiply the result by *255, like in unet_segment_cntours_with_children, which produces a normal stack (not too heavy)
     return results
 
 
