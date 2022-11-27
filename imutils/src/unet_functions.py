@@ -70,6 +70,8 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
             #run network
             start = time.time()
             segmented_img = unet_segmentation(img, model)
+            segmented_img = segmented_img*255
+            segmented_img = segmented_img.astype('uint8')
             end = time.time()
             total_time = end - start
             print('total time: ', total_time)
