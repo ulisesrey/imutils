@@ -356,6 +356,7 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
                 cnt_img = new_img[y:y + h, x:x + w]
 
                 #TODO: can the unet_functions.unet_segmentation() be used here instead of all this, to produce results_reshaped?
+                #TODO: Be careful, because that function does NOT normalize to 255!
                 # run U-Net network:
                 cnt_img = cv2.resize(cnt_img, (256, 256))
                 cnt_img = np.reshape(cnt_img, cnt_img.shape + (1,))
@@ -623,6 +624,18 @@ def stack2images(input_filename, output_path):
                 filename = 'image' + str(idx) + '.tif'
             tiff.imwrite(os.path.join(output_path, filename), img)
 
+
+def tiff2png_list(tiff_img_list):
+    """
+    Convert images in the list from tiff to png. There is compression happening.
+    :param tiff_img_list:
+    :return:
+    """
+    for img_path in tiff_img_list:
+        img = tiff.imread(img_path)
+        new_filename = os.path.splitext(img_path)[0]+".png"
+        io.imsave(new_filename, img)
+    return None
 
 def contours_length(img):
     """
