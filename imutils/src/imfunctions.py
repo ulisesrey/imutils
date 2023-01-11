@@ -239,7 +239,7 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
 
 
 def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, lower_threshold: float,
-                      higher_threshold: float):
+                      max_val: float):
     """
     write a binary stack based on lower and higher threshold
     Parameters:
@@ -247,7 +247,7 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, low
     stack_input_filepath, str
     stack_output_filepath, str
     lower_threshold, float
-    higher_threshold, float
+    max_val, float
     Returns:
     -------------
     None
@@ -257,9 +257,9 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, low
         for i, page in enumerate(tif.pages):
             img = page.asarray()
             # apply threshold
-            ret, new_img = cv2.threshold(img, lower_threshold, higher_threshold, cv2.THRESH_BINARY)
+            ret, new_img = cv2.threshold(img, lower_threshold, max_val, cv2.THRESH_BINARY)
             #convert matrix to np.uint
-            new_img = new_img * 255
+            #new_img = new_img * 255
             new_img = new_img.astype(np.uint8)
             tif_writer.write(new_img, contiguous=True)
 
