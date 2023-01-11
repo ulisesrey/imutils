@@ -238,16 +238,16 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
                 tif_writer.write(new_img, photometric='minisblack',  contiguous=True)
 
 
-def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, lower_threshold: int,
-                      higher_threshold: int):
+def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, lower_threshold: float,
+                      higher_threshold: float):
     """
     write a binary stack based on lower and higher threshold
     Parameters:
     -------------
     stack_input_filepath, str
     stack_output_filepath, str
-    lower_threshold, int
-    higher_threshold, int
+    lower_threshold, float
+    higher_threshold, float
     Returns:
     -------------
     None
