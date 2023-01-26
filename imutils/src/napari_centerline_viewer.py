@@ -18,17 +18,24 @@ merged_spline_data_path = "/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/2022
 spline_df = pd.read_csv(merged_spline_data_path, header=[0,1], index_col=0)
 
 # df.loc[0]['0'][["x", "y"]]
-x = spline_df.xs(('x',), level=('coords',), axis=1)#spline_df.loc[frame][:,'x'].values
-y = spline_df.xs(('y',), level=('coords',), axis=1)#spline_df.loc[frame][:,'y'].valuesy
+#x = spline_df.xs(('x',), level=('coords',), axis=1)#spline_df.loc[frame][:,'x'].values
+#y = spline_df.xs(('y',), level=('coords',), axis=1)#spline_df.loc[frame][:,'y'].valuesy
+
+points = (
+    spline_df.rename_axis("index")
+    .stack("segment")
+    .reset_index()[["index", "x", "y"]]
+    .to_numpy()
+)
 
 #melt (I dont think I need this)
 #x = x.melt(ignore_index = False)['value']
 #y = y.melt(ignore_index = False)['value']
 
 #time vector
-t_vec = np.expand_dims(np.array(list(spline_df.index), dtype=int), axis=1)
+#t_vec = np.expand_dims(np.array(list(spline_df.index), dtype=int), axis=1)
 
-points = np.stack((x,y), axis=2)
+#points = np.stack((x,y), axis=2)
 print(points.shape)
 
 
@@ -65,6 +72,7 @@ for img_path in img_path_list:
     viewer.add_image(img, blending='additive')
 
     #points layer
+    points_layer = viewer.add_points(points)
     # points_layer = viewer.add_points(
     #     data=points,
     #     properties=point_properties,
