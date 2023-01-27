@@ -50,6 +50,7 @@ for img_path in img_path_list:
         properties=point_properties,
         face_color='confidence',
         face_colormap='bwr',
+        face_contrast_limits=[-0.02, 0.02],
         size=5
     )
 
