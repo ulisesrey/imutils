@@ -7,3 +7,4 @@ imutils/test_images/test_results/kymo6_cropped_16_7fps.avi
 *.mp4
 *.avi
 *.pdf
+/build/lib/*
