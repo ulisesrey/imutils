@@ -5,7 +5,7 @@ import skimage.transform as trans
 import numpy as np
 from keras.models import *
 from keras.layers import *
-from keras.optimizers import *
+from tensorflow.keras.optimizers import *
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras.callbacks import EarlyStopping
 from keras import backend as keras
@@ -53,9 +53,9 @@ def unet(pretrained_weights = None,input_size = (256,256,1)):
     conv9 = Conv2D(2, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
     conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
 
-    # model = Model(input = inputs, output = conv10) #New tensorflow does not need this
+    model = Model(inputs = inputs, outputs = conv10) #New tensorflow does not need this
     # https://stackoverflow.com/questions/60690327/typeerror-keyword-argument-not-understood-inputs
-    model = Model()
+    #model = Model()
 
     model.compile(optimizer = Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
     
