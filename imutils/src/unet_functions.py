@@ -159,9 +159,11 @@ def training_results_figure(training_folder):
         print('no history file for this model: ', training_folder)
 
     # plt.show()
-    img = mpimg.imread(os.path.join(training_folder, 'test_predictions', '15_predict.png'))
-    ax3.imshow(img)
-    ax3.set_axis_off()
+    try:
+        img = mpimg.imread(os.path.join(training_folder, 'test_predictions', '15_predict.png'))
+        ax3.imshow(img)
+        ax3.set_axis_off()
+    except: print("could not read image 15_predict.png in test predictions folder")
 
     return fig, (ax1, ax2, ax3)
 
@@ -230,7 +232,7 @@ def fetch_files_to_compare(ground_truth_path, predicted_test_path):
 
 if __name__ == "__main__":
 
-    training_results_path='/Volumes/scratch/neurobiology/zimmer/ulises/code/unet-master/data/2022_08_18_coiled_segmentation_background_normalized/training_results/*'
+    training_results_path="/Volumes/scratch/neurobiology/zimmer/ulises/code/unet-master/data/2023_worm_coiled_segmentation/training_results/*"
 
     training_folders=glob.glob(training_results_path)
 
