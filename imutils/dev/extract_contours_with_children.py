@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import cv2
 import os
 
-from imutils.src.imfunctions import crop_image_from_contour
 
 
 
 
+# I THINK THIS CAN BE RUN NOW FORM IMFUCTIONS_PARSER
 
 
 
@@ -31,5 +31,6 @@ if __name__ == "__main__":
     crop = args['crop_true']
     subsample = args['subsample']
 
+    #probably needs to be imfunctions.stack_extract_and_save_contours_with_children()
     stack_extract_and_save_contours_with_children(binary_input_filepath, raw_input_filepath, output_folder, crop,
                                                   subsample=subsample)
