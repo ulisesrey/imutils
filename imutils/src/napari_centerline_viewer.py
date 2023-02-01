@@ -4,15 +4,21 @@ import napari
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import glob
+import os
 
+# Fetch project folders
 
-# I think following these instructions it should be doable to read the csv and draw the points on top:
-#https://napari.org/stable/howtos/layers/points.html
-#Section : Setting edge or face color with a colormap¶
+projects = glob.glob("/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221123/data/*worm1*/*BH*/")[0]
+print(projects)
 
+img_path_list=glob.glob(os.path.join(projects, "*background_subtracted_normalised.btf"))
+print(img_path_list)
 
 # read csv file, ideally the reformatted one
-merged_spline_data_path = "/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221127/data/ZIM2165_Gcamp7b_worm1/2022-11-27_15-14_ZIM2165_worm1_GC7b_Ch0-BH/2022-11-27_15-14_ZIM2165_worm1_GC7b_Ch0-BHbigtiff_skeleton_merged_spline_data.csv"
+merged_spline_data_path = glob.glob(os.path.join(projects, "*skeleton_merged_spline_data.csv"))[0]
+print(merged_spline_data_path)
+
 spline_df = pd.read_csv(merged_spline_data_path, header=[0,1], index_col=0)
 #rolling average
 spline_df = spline_df.rolling(48, center=True, min_periods=24).mean()
@@ -32,7 +38,6 @@ point_properties = {
 }
 
 
-img_path_list=["/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221127/data/ZIM2165_Gcamp7b_worm1/2022-11-27_15-14_ZIM2165_worm1_GC7b_Ch0-BH/2022-11-27_15-14_ZIM2165_worm1_GC7b_Ch0-BHbigtiff_AVG_background_subtracted_normalised_unet_segmented_weights_5358068_1_mask_coil_segmented_mask.btf"]
 
 # with napari.gui_qt() as app:
 viewer = napari.Viewer()
@@ -51,7 +56,7 @@ for img_path in img_path_list:
         face_color='confidence',
         face_colormap='bwr',
         face_contrast_limits=[-0.02, 0.02],
-        size=5
+        size=2
     )
 
 napari.run()
