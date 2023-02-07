@@ -65,7 +65,7 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     video_out.release()
 
 
-def ometiff2bigtiff(path):
+def ometiff2bigtiff(path, output_filename=None):
     """
     List all ome.tiff in a directory and make them one bigtiff
     Somehow it gives an error for the last ome tiff, but resulting .btf is fine.
@@ -77,13 +77,16 @@ def ometiff2bigtiff(path):
     -----------
     path: str,
         Path to the directory containing the several ome tiff files.
-
+    output_filename: str,
+    if not defined it will be generated based on the path name.
     """
     print(path)
-    if path.endswith('/'):
-        output_filename = path + re.split('/', path)[-2] + 'bigtiff.btf'
-    else:
-        output_filename = path + '/' + re.split('/', path)[-1] + 'bigtiff.btf'
+    if output_filename is None:
+        if path.endswith('/'):
+            output_filename = path + re.split('/', path)[-2] + 'bigtiff.btf'
+        else:
+            output_filename = path + '/' + re.split('/', path)[-1] + 'bigtiff.btf'
+
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
         # print(f'list of files is {os.listdir(path)}')
         for file in natsorted(os.listdir(path)):
@@ -238,8 +241,8 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
                 tif_writer.write(new_img, photometric='minisblack',  contiguous=True)
 
 
-def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, lower_threshold: float,
-                      max_val: float):
+def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, threshold: float,
+                      max_value: float):
     """
     write a binary stack based on lower and higher threshold
     Parameters:
@@ -257,7 +260,7 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, low
         for i, page in enumerate(tif.pages):
             img = page.asarray()
             # apply threshold
-            ret, new_img = cv2.threshold(img, lower_threshold, max_val, cv2.THRESH_BINARY)
+            ret, new_img = cv2.threshold(img, threshold, max_val, cv2.THRESH_BINARY)
             #convert matrix to np.uint
             #new_img = new_img * 255
             new_img = new_img.astype(np.uint8)
@@ -879,6 +882,7 @@ def distance_to_image_center(image_shape, point):
     center = np.asarray(image_shape)/2
     result = np.asarray(point) - center
     return result
+
 
 
 if __name__ == "__main__":
