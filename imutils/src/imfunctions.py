@@ -260,7 +260,7 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, thr
         for i, page in enumerate(tif.pages):
             img = page.asarray()
             # apply threshold
-            ret, new_img = cv2.threshold(img, threshold, max_val, cv2.THRESH_BINARY)
+            ret, new_img = cv2.threshold(img, threshold, max_value, cv2.THRESH_BINARY)
             #convert matrix to np.uint
             #new_img = new_img * 255
             new_img = new_img.astype(np.uint8)
@@ -279,16 +279,24 @@ def stack_subsample(stack_input_filepath, stack_output_filepath, range):
                 tif_writer.write(img, contiguous=True)
 
 
-def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, lower_threshold,
-                              higher_threshold, contour_size, tolerance, inner_contour_area_to_fill):
+def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, threshold,
+                              max_value, contour_size, tolerance, inner_contour_area_to_fill):
+
     """
     Produce a binary image based on contour and inner contour sizes, by calling draw_some_contours()
     better than the make_binary before which was on centerline package
     TODO: Split into several functions. stack_binary already exists. From that oen could have the fill inner contours
     Parameters:
     -----------
-    A lot, too many?
-
+    :param stack_input_filepath:
+    :param stack_output_filepath:
+    :param median_blur: (needs an odd number)
+    :param threshold:
+    :param max_value:
+    :param contour_size:
+    :param tolerance: contour sizes will be considered between contour_size*-tolerance and cotnour_size*tolerance
+    :param inner_contour_area_to_fill: all inner contours below this value will be filled (will be part of the worm)
+    :return:
     Returns:
     --------
     """
@@ -302,7 +310,7 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
                     img = cv2.medianBlur(img, median_blur)
 
                 # apply threshold
-                ret, new_img = cv2.threshold(img, lower_threshold, higher_threshold, cv2.THRESH_BINARY)
+                ret, new_img = cv2.threshold(img, threshold, max_value, cv2.THRESH_BINARY)
                 # draw_some_contours does not need imfunctions.draw_some_contours in here. But outside this file.
                 worm_contour_img = draw_some_contours(new_img, contour_size=contour_size, tolerance=tolerance,
                                                       inner_contour_area_to_fill=inner_contour_area_to_fill)
