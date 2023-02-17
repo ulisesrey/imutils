@@ -266,6 +266,27 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, thr
             new_img = new_img.astype(np.uint8)
             tif_writer.write(new_img, contiguous=True)
 
+def stack_normalise(stack_input_filepath: str, stack_output_filepath: str, alpha: float,
+                      beta: float):
+    """
+    Normalise the stack
+    Parameters:
+    -------------
+    stack_input_filepath, str
+    stack_output_filepath, str
+    alpha, float
+    beta, float
+    Returns:
+    -------------
+    None
+    """
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath,
+                                                                                           multifile=False) as tif:
+        for i, page in enumerate(tif.pages):
+            img = page.asarray()
+            normalised_img = cv2.normalize(img, None, alpha=alpha, beta=beta, norm_type=cv2.NORM_MINMAX)
+            tif_writer.write(normalised_img, contiguous=True)
+
 
 def stack_subsample(stack_input_filepath, stack_output_filepath, range):
     """Subsample the stack based on the given range
