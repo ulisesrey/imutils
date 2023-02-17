@@ -14,6 +14,7 @@ FUNCTION_MAP = {'tiff2avi': imfunctions.tiff2avi,
                 'erode': imfunctions.erode,
                 'make_hyperstack_from_ometif': imfunctions.make_hyperstack_from_ometif,
                 'stack_make_binary': imfunctions.stack_make_binary,
+                'stack_normalise': imfunctions.stack_normalise,
                 'images2stack': imfunctions.images2stack,
                 'stack_extract_and_save_contours_with_children':imfunctions.stack_extract_and_save_contours_with_children
                 }
@@ -36,6 +37,7 @@ parser_a.add_argument("-fps", "--fps", required=True, help="Frames per second")
 # create the parser for the "b" command
 parser_b = subparsers.add_parser('ometiff2bigtiff', help='ometiff2bigtiff help')
 parser_b.add_argument("-path", "--path", required=True, help="path to the input folder")
+parser_b.add_argument("-output_filename", "--output_filename", required=False, help="output_filename string, should end with .btf")
 
 
 # create the parser for the "c" command
@@ -65,6 +67,7 @@ parser_f= subparsers.add_parser('stack_subtract_background', help='stack_subtrac
 parser_f.add_argument("-i", "--input_filepath", required=True, type=str, help="path to the input image")
 parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
 parser_f.add_argument("-bg", "--background_img_filepath", required=True, type=str, help="string with the background_img_filepath")
+parser_f.add_argument("-invert", "--invert", required=True, type=bool, help="decide whether to invert or not the image")
 
 
 #parser for make_contour_based_binary
@@ -72,8 +75,8 @@ parser_g= subparsers.add_parser('make_contour_based_binary', help='help')
 parser_g.add_argument("-i", "--stack_input_filepath", required=True, help="path to the input image")
 parser_g.add_argument("-o", "--stack_output_filepath", required=True, help="path to the output image")
 parser_g.add_argument("-blur", "--median_blur", required=True, type=int, help="median blur that will be applied")
-parser_g.add_argument("-lt", "--lower_threshold", required=True, type=float, help="lower_threshold")
-parser_g.add_argument("-ht", "--higher_threshold", required=True, type=float, help="higher_threshold")
+parser_g.add_argument("-th", "--threshold", required=True, type=float, help="threshold")
+parser_g.add_argument("-max_val", "--max_value", required=True, type=float, help="new value of pixels above threshold")
 parser_g.add_argument("-cs", "--contour_size", required=True, type=float, help="contour_size")
 parser_g.add_argument("-t", "--tolerance", required=True, type=float, help="tolerance, percentage from which the contours can deviate from contour size")
 parser_g.add_argument("-ics", "--inner_contour_area_to_fill", required=True, type=float, help="inner_contour_area_to_fill")
@@ -106,25 +109,32 @@ parser_k.add_argument("-t", "--dtype", required=True, type=str, help="data type"
 parser_k.add_argument("-imagej", "--imagej", required=True, type=bool, help="imagej")
 parser_k.add_argument("-m", "--metadata", required=True, type=dict, help="metadata")
 
-#parser for make__binary
+#parser for make_binary
 parser_l= subparsers.add_parser('stack_make_binary', help='stack_substract_background help')
 parser_l.add_argument("-i", "--stack_input_filepath", required=True, help="path to the input image")
 parser_l.add_argument("-o", "--stack_output_filepath", required=True, help="path to the output image")
-parser_l.add_argument("-lt", "--lower_threshold", required=True, type=float, help="lower_threshold")
-parser_l.add_argument("-ht", "--higher_threshold", required=True, type=float, help="higher_threshold")
+parser_l.add_argument("-th", "--threshold", required=True, type=float, help="threshold")
+parser_l.add_argument("-max_val", "--max_value", required=True, type=float, help="max value that will be assigned")
+
+#parser for stack_normalise
+parser_m= subparsers.add_parser('stack_normalise', help='stack_normalise help')
+parser_m.add_argument("-i", "--stack_input_filepath", required=True, help="path to the input image")
+parser_m.add_argument("-o", "--stack_output_filepath", required=True, help="path to the output image")
+parser_m.add_argument("-a", "--alpha", required=True, type=float, help="min")
+parser_m.add_argument("-b", "--beta", required=True, type=float, help="max")
 
 #parser for images2stack
-parser_m= subparsers.add_parser('images2stack', help='images2stack help')
-parser_m.add_argument("-p", "--path", required=True, help="path to folder")
-parser_m.add_argument("-o", "--output_filename", required=True, help="path to the output file")
+parser_n= subparsers.add_parser('images2stack', help='images2stack help')
+parser_n.add_argument("-p", "--path", required=True, help="path to folder")
+parser_n.add_argument("-o", "--output_filename", required=True, help="path to the output file")
 
 #parser for stack_extract_and_save_contours_with_children
-parser_n = subparsers.add_parser('stack_extract_and_save_contours_with_children', description='Description of your program')
-parser_n.add_argument('-bi', '--binary_input_filepath', help='binary input filepath', required=True)
-parser_n.add_argument('-ri', '--raw_input_filepath', help='raw input filepath', required=True)
-parser_n.add_argument('-o', '--output_folder', help='output folder', required=True)
-parser_n.add_argument('-ct', '--crop', action='store_true', help='set crop to True', required=False)
-parser_n.add_argument('-s', '--subsample', help='subsample', type=int, required=False)
+parser_o = subparsers.add_parser('stack_extract_and_save_contours_with_children', description='Description of your program')
+parser_o.add_argument('-bi', '--binary_input_filepath', help='binary input filepath', required=True)
+parser_o.add_argument('-ri', '--raw_input_filepath', help='raw input filepath', required=True)
+parser_o.add_argument('-o', '--output_folder', help='output folder', required=True)
+parser_o.add_argument('-ct', '--crop', action='store_true', help='set crop to True', required=False)
+parser_o.add_argument('-s', '--subsample', help='subsample', type=int, required=False)
 
 #create below the parser for another function
 
