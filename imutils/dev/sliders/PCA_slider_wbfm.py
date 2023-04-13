@@ -5,20 +5,22 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import tifffile as tiff
 import zarr
+import os
+import glob
 
 
 # LOAD PCA DATA
 #path to chemotaxis worm
-path='/Users/ulises.rey/local_data/MondaySeminar3/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_K.csv'#'/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
+#path='/Users/ulises.rey/local_data/MondaySeminar3/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_K.csv'#'/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
 #path to wbfm worm3 worm
-path ='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
+#path ='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
 
 #'/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/binary_skeleton_output/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_Y_coords.csv'#2020-07-01_18-36-25_control_worm6-_spline_K.csv'#'/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
 #img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
 #path to chemotaxis worm
-img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/2020-07-01_13-21-00_chemotaxisl_worm1-channel-0-bigtiff.btf'
+#img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/2020-07-01_13-21-00_chemotaxisl_worm1-channel-0-bigtiff.btf'
 #path to wbfm worm3 worm
-img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf/2021-03-04_16-17-30_worm3_ZIM2051-channel-0-bigtiff_new.btf'
+#img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf/2021-03-04_16-17-30_worm3_ZIM2051-channel-0-bigtiff_new.btf'
 # has no reversals path='/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/all_good_skeleton/2020-06-30_18-17-47_chemotaxis_worm5_spline_K.csv'
 
 #WBFM_worm
@@ -26,6 +28,13 @@ img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf/2021-03-04_16
 #'/Volumes/groups/zimmer/Ulises/wbfm/chemotaxis_assay/2020_Only_behaviour/btf_all_binary_after_new_unet_raw_eroded_twice_29322956_3_w_validation500steps_100epochs/binary_skeleton_output/2020-07-01_13-21-00_chemotaxisl_worm1-_spline_Y_coords.csv'#2020-07-01_18-36-25_control_worm6-_spline_K.csv'#'/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
 #img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
 #img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-channel-0-bigtiff_new.btf'
+
+#NEW WBFM worms
+main_path = "/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221123/data/ZIM2165_Gcamp7b_worm10/2022-11-23_15-32_ZIM2165_worm10_Ch0-BH"
+path = glob.glob(os.path.join(main_path,"skeleton_spline_K_signed_avg.csv"))[0]
+img_path = glob.glob(os.path.join(main_path,"raw_stack_AVG_background_subtracted_normalised.btf"))[0]
+
+print(path)
 
 df=pd.read_csv(path, header=None)
 
@@ -35,10 +44,15 @@ store=tiff.imread(img_path, aszarr=True)
 img = zarr.open(store, mode='r')
 print(img.shape)
 
+# read PCA values from .csv file
+principalDf=pd.read_csv("/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221123/data/ZIM2165_Gcamp7b_worm10/2022-11-23_15-32_ZIM2165_worm10_Ch0-BH/principal_components.csv")
+print(principalDf.head(2))
+
+#Or do PCA on the spline file
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True) #alternative change nans to zeros
-features = np.arange(5,90)# Separating out the features (starting bodypart, ending bodypart)
+features = np.arange(30,80)# Separating out the features (starting bodypart, ending bodypart)
 #time=np.arange(0,len(df))
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
@@ -58,7 +72,7 @@ print(principalComponents.shape)
 principalDf = pd.DataFrame(data = principalComponents, columns = ['PC1', 'PC2', 'PC3','PC4','PC5'])# 'PC6', 'PC7', 'PC8','PC9','PC10'])
 print(principalDf.shape)
 
-avg_win=167#167
+avg_win=1#167
 x=principalDf.loc[:,'PC1'].rolling(window=avg_win, center=True).mean()
 y=principalDf.loc[:,'PC2'].rolling(window=avg_win, center=True).mean()
 z=principalDf.loc[:,'PC3'].rolling(window=avg_win, center=True).mean()
@@ -95,7 +109,7 @@ start_slider = Slider(
     ax=start_ax,
     label='Starting time',
     valmin=0,
-    valmax=6000,
+    valmax=40000,
     valinit=1,
     valstep=1
 )
@@ -105,7 +119,7 @@ cursor_slider = Slider(
     ax=cursor_ax,
     label='current time',
     valmin=0,
-    valmax=6000,
+    valmax=40000,
     valinit=5000,
     valstep=1
 )
@@ -119,9 +133,9 @@ def update(val):
     line_all.set_ydata(y[start_c:current_time])
     line_all.set_3d_properties(z[start_c:current_time])
 
-    line.set_xdata(x[current_time-600:current_time])
-    line.set_ydata(y[current_time-600:current_time])
-    line.set_3d_properties(z[current_time-600:current_time])
+    line.set_xdata(x[current_time-10:current_time])
+    line.set_ydata(y[current_time-10:current_time])
+    line.set_3d_properties(z[current_time-10:current_time])
 
     pointer.set_xdata(x[current_time])
     pointer.set_ydata(y[current_time])
