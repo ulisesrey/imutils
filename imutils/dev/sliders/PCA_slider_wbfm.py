@@ -45,14 +45,14 @@ img = zarr.open(store, mode='r')
 print(img.shape)
 
 # read PCA values from .csv file
-principalDf=pd.read_csv("/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221123/data/ZIM2165_Gcamp7b_worm10/2022-11-23_15-32_ZIM2165_worm10_Ch0-BH/principal_components.csv")
+principalDf = pd.read_csv(glob.glob(os.path.join(main_path,"principal_components.csv"))[0])
 print(principalDf.head(2))
 
 #Or do PCA on the spline file
 #What to do with Nas?
 #df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True) #alternative change nans to zeros
-features = np.arange(30,80)# Separating out the features (starting bodypart, ending bodypart)
+features = np.arange(30, 80)# Separating out the features (starting bodypart, ending bodypart)
 #time=np.arange(0,len(df))
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
@@ -65,12 +65,12 @@ print('data shape: ', data.shape)
 # print(principalDf.shape)
 
 #PCA fit and transform separately
-pca = PCA(n_components=5)
-pca.fit(data)
-principalComponents = pca.transform(df.loc[:, features].values)
-print(principalComponents.shape)
-principalDf = pd.DataFrame(data = principalComponents, columns = ['PC1', 'PC2', 'PC3','PC4','PC5'])# 'PC6', 'PC7', 'PC8','PC9','PC10'])
-print(principalDf.shape)
+# pca = PCA(n_components=5)
+# pca.fit(data)
+# principalComponents = pca.transform(df.loc[:, features].values)
+# print(principalComponents.shape)
+# principalDf = pd.DataFrame(data = principalComponents, columns = ['PC1', 'PC2', 'PC3','PC4','PC5'])# 'PC6', 'PC7', 'PC8','PC9','PC10'])
+# print(principalDf.shape)
 
 avg_win=1#167
 x=principalDf.loc[:,'PC1'].rolling(window=avg_win, center=True).mean()
