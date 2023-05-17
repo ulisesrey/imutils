@@ -230,6 +230,9 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
 
     if invert:
         bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
+        print("inverting background image")
+    else:
+        print("using background as it is")
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         with tiff.TiffFile(input_filepath, multifile=False) as tif:
@@ -728,6 +731,20 @@ def z_projection(img, projection_type, axis=0):
 
     return projected_img
 
+def stack_z_projection(input_path, output_path, projection_type, axis=0):
+    """
+
+    Parameters:
+    :param input_path:
+    :param output_path:
+    :param projection_type:
+    :param axis:
+    :return:
+    """
+    stack = tiff.imread(input_path)
+    projected_img = z_projection(stack, projection_type, axis)
+    tiff.imwrite(output_path, projected_img)
+    return None
 
 def z_projection_parser(hyperstack_filepath, output_filepath, projection_type, axis):
     """
@@ -914,47 +931,48 @@ def distance_to_image_center(image_shape, point):
 
 
 
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    import glob
+#if __name__ == "__main__":
+    # import matplotlib.pyplot as plt
+    # import pandas as pd
+    # import glob
+    #
+    # project_path = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/'
+    # img_path = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-bigtiff.btf'
+    #
+    # dlc_coords = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-bigtiffDLC_resnet50_new_worms_5_7_8Apr15shuffle1_57500.h5'
+    #
+    # center_coords = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
+    # center_coords = center_coords[['X', 'Y']].values
+    # df = pd.read_hdf(dlc_coords)
+    # df.head()
+    # points = df[df.columns.levels[0][0]]['head'][['x', 'y']][:].values
+    # with tiff.TiffFile(img_path) as tif:
+    #     img_shape = tif.pages[0].asarray().shape
+    #     print('img shape is', img_shape)
+    # # img_shape = (900, 900)
+    # # points = ([800, 400], [150, 500], [450, 460])
+    # # center_coords = ([2, 0], [3, -1], [4, -2])
+    # result = distance_to_image_center(img_shape, points)
+    #
+    # px2mm_ratio = 0.00325
+    #
+    # print(result)
+    # #print(type(result))
+    # result_mm = result * px2mm_ratio
+    #
+    # abs_coords = center_coords + result_mm
+    # print(abs_coords)
+    #
+    # # plt.plot(points)
+    # # plt.plot(abs_coords)
+    # # plt.show()
+    # # fig, ax = plt.subplots()
+    # # ax.scatter(abs_coords[:, 0], abs_coords[:, 1])
+    # abs_coords_df=pd.DataFrame(abs_coords)
+    # print(os.path.join(project_path, 'nose_coords_mm.csv'))
+    # abs_coords_df.to_csv(os.path.join(project_path, 'nose_coords_mm.csv'))
+    # print('end')
 
-    project_path = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/'
-    img_path = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-bigtiff.btf'
-
-    dlc_coords = '/Volumes/scratch/neurobiology/zimmer/ulises/active_sensing/epifluorescence_recordings/20220408/data/ZIM1661_worm3/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-/2022-04-08_17-22-49_ZIM1661_BAG_worm3-channel-0-behaviour-bigtiffDLC_resnet50_new_worms_5_7_8Apr15shuffle1_57500.h5'
-
-    center_coords = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
-    center_coords = center_coords[['X', 'Y']].values
-    df = pd.read_hdf(dlc_coords)
-    df.head()
-    points = df[df.columns.levels[0][0]]['head'][['x', 'y']][:].values
-    with tiff.TiffFile(img_path) as tif:
-        img_shape = tif.pages[0].asarray().shape
-        print('img shape is', img_shape)
-    # img_shape = (900, 900)
-    # points = ([800, 400], [150, 500], [450, 460])
-    # center_coords = ([2, 0], [3, -1], [4, -2])
-    result = distance_to_image_center(img_shape, points)
-
-    px2mm_ratio = 0.00325
-
-    print(result)
-    #print(type(result))
-    result_mm = result * px2mm_ratio
-
-    abs_coords = center_coords + result_mm
-    print(abs_coords)
-
-    # plt.plot(points)
-    # plt.plot(abs_coords)
-    # plt.show()
-    # fig, ax = plt.subplots()
-    # ax.scatter(abs_coords[:, 0], abs_coords[:, 1])
-    abs_coords_df=pd.DataFrame(abs_coords)
-    print(os.path.join(project_path, 'nose_coords_mm.csv'))
-    abs_coords_df.to_csv(os.path.join(project_path, 'nose_coords_mm.csv'))
-    print('end')
 # input_filepath='/Users/ulises.rey/local_data/epifluorescence/2022-04-08_16-12_ZIM1661_BAG_worm1_Ch1bigtiff_masked.btf'
 # with tiff.TiffFile(input_filepath, multifile=False) as tif:
 #     for i, page in enumerate(tif.pages):
