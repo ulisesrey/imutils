@@ -704,6 +704,7 @@ def contours_length(img):
 
 def z_projection(img, projection_type, axis=0):
     """
+    Careful: mean projection might change dtype to float32
     Parameters:
     ------------
     img, 3-D numpy array
@@ -731,18 +732,20 @@ def z_projection(img, projection_type, axis=0):
 
     return projected_img
 
-def stack_z_projection(input_path, output_path, projection_type, axis=0):
+def stack_z_projection(input_path, output_path, projection_type, dtype, axis=0):
     """
 
     Parameters:
     :param input_path:
     :param output_path:
     :param projection_type:
+    :param dtype:
     :param axis:
     :return:
     """
     stack = tiff.imread(input_path)
     projected_img = z_projection(stack, projection_type, axis)
+    projected_img = projected_img.astype(dtype)
     tiff.imwrite(output_path, projected_img)
     return None
 
