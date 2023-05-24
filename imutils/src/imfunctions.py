@@ -81,6 +81,11 @@ def ometiff2bigtiff(path, output_filename=None):
     if not defined it will be generated based on the path name.
     """
     print(path)
+    # find number of files in path that end with "ome.tif"
+    num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
+    if num_files == 0:
+        print("Aborted because no ome.tiff files found in path, therefore no bigtiff was created.")
+        return
     if output_filename is None:
         if path.endswith('/'):
             output_filename = path + re.split('/', path)[-2] + 'bigtiff.btf'
