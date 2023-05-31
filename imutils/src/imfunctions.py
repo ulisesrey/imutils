@@ -217,6 +217,7 @@ def max_projection_3d(input_filepath, output_filepath, fold_increase=3, nplanes=
 def stack_subtract_background(input_filepath, output_filepath, background_img_filepath, invert=True):
     """
     Subtract the background image from a btf stack
+    its parser in imutils_parser.py might not work due to being it boolean
     Parameters:
     ----------
     input_filepath, str
@@ -230,6 +231,8 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
     Returns:
     ----------
     """
+    print("Do not use this function with a parser unless you are sure it works (See docstring)")
+
     # load background image
     bg_img = tiff.imread(background_img_filepath)
 
@@ -843,7 +846,7 @@ def extract_contours_with_children(img):
     Important does not return the children, only the contour that has children.
     """
 
-    #important, findCountour() has different outputs depending on CV version!
+    #important, findCountour() has different outputs depending on CV version! _, cnts, hierarchy or cnts, hierarchy
     _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # print(len(cnts))
     # print(hierarchy)
