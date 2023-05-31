@@ -63,6 +63,7 @@ parser_e.add_argument("-type", "--projection_type", required=True, type=str, hel
 parser_e.add_argument("-axis", "--axis", required=True, type=int, help="int or float containing the axis from which to make z projection")
 
 #parser for stack_substract_background
+# IMPORTANT! NOT SURE IT WORKS WITH THE INVERT!
 parser_f= subparsers.add_parser('stack_subtract_background', help='stack_subtract_background help')
 parser_f.add_argument("-i", "--input_filepath", required=True, type=str, help="path to the input image")
 parser_f.add_argument("-o", "--output_filepath", required=True, type=str, help="path to the output image")
