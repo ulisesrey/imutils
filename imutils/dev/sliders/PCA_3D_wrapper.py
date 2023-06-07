@@ -8,46 +8,49 @@ import pandas as pd
 from sklearn.decomposition import PCA
 import tifffile as tiff
 import zarr
+import glob
+import os
+from curvature.src.annotate_reversals import *
 
 # LOAD PCA DATA
 #path = '/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6_spline_K.csv'
-path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'#'/Volumes/groups/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K.csv'
+#NEW WBFM worms
+main_path = "/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221123/data/ZIM2165_Gcamp7b_worm10/2022-11-23_15-32_ZIM2165_worm10_Ch0-BH"
+path = glob.glob(os.path.join(main_path,"skeleton_spline_K_signed_avg.csv"))[0]
 
+avg_win = 1
 
+#Calculate PCA
 df = pd.read_csv(path, header=None)
-
-df.shape
-
-
-avg_win = 167*1
-
-# read cross product calculated elsewhere:
-#cross_product_path = '/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff_cross_product.csv'
-cross_product_path = '/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-_spline_K_cross_product.csv'
-cross_product_df = pd.read_csv(cross_product_path)
-cross_product_array = np.array(cross_product_df['Cross Product'].rolling(window=avg_win, center=True).mean())
-cross_product_array=cross_product_array*-1
-# plt.plot(cross_product_array[250:2500])
-# plt.hlines(0, xmin=250, xmax=2500)
 
 # What to do with Nas?
 # df.dropna(inplace=True) #Drop NaNs, required otherwise pca.fit_transform(x) does not run
 df.fillna(0, inplace=True)  # alternative change nans to zeros
-features = np.arange(3, 90)  # Separating out the features (starting bodypart, ending bodypart)
+features = np.arange(30, 80)  # Separating out the features (starting bodypart, ending bodypart)
 data = df.loc[:, features].values
 print('data shape: ', data.shape)
-
+#
 # PCA
 pca = PCA(n_components=3)
 principalComponents = pca.fit_transform(data)
 print(principalComponents.shape)
-principalDf = pd.DataFrame(data=principalComponents,
+principal_components_df = pd.DataFrame(data=principalComponents,
                            columns=['PC1', 'PC2', 'PC3'])#, 'PC4', 'PC5'])  # 'PC6', 'PC7', 'PC8','PC9','PC10'])
-print(principalDf.shape)
+print(principal_components_df.shape)
 
-x = principalDf.loc[:, 'PC1'].rolling(window=avg_win).mean()
-y = principalDf.loc[:, 'PC2'].rolling(window=avg_win).mean()
-z = principalDf.loc[:, 'PC3'].rolling(window=avg_win).mean()
+
+
+#calculate cross product here
+#principal_components_df = pd.read_csv(glob.glob(os.path.join(main_path,"principal_components.csv"))[0])
+pc1_pc2_df = extract_vectors_from_PC_df(principal_components_df, avg_win=avg_win)
+cross_product_df = calculate_cross_product(pc1_pc2_df)
+cross_product_array = np.array(cross_product_df['Cross_Product'].rolling(window=avg_win, center=True).mean())
+cross_product_array=cross_product_array#*-1
+
+
+x = principal_components_df.loc[:, 'PC1'].rolling(window=avg_win).mean()
+y = principal_components_df.loc[:, 'PC2'].rolling(window=avg_win).mean()
+z = principal_components_df.loc[:, 'PC3'].rolling(window=avg_win).mean()
 
 
 start_frame, end_frame = 250, 100000 #2050, 4000#250, 100000
