@@ -7,13 +7,15 @@ import pandas as pd
 
 #path to PC
 #wbfm
-path='/Users/ulises.rey/local_data/Oriana_worm3/worm3_Oriana_PCA_5Components.csv'
+path="/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221127/data/ZIM2165_Gcamp7b_worm1/2022-11-27_15-14_ZIM2165_worm1_GC7b_Ch0-BH/principal_components.csv"
+    #'/Users/ulises.rey/local_data/Oriana_worm3/worm3_Oriana_PCA_5Components.csv'
 #skeleton behaviour
 #path='/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/worm3/wbfm_worm3_PCA.csv'
 df=pd.read_csv(path)#, header=None)
 
 #path to motor state annotation
-path_motor_state='/Users/ulises.rey/local_data/Oriana_worm3/w3_state.csv'
+path_motor_state="/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221127/data/ZIM2165_Gcamp7b_worm1/2022-11-27_15-14_ZIM2165_worm1_GC7b_Ch0-BH/principal_components.csv"
+    #'/Users/ulises.rey/local_data/Oriana_worm3/w3_state.csv'
 #skeleton behaviour
 #path_motor_state='/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/worm3/beh_annotation_16_subsamples_timeseries_with_long_reversals.csv'
 motor_state_df=pd.read_csv(path_motor_state)
@@ -21,7 +23,7 @@ motor_state_df=pd.read_csv(path_motor_state)
 avg_win=10#167
 
 #merge the dataframes
-df['motor_state']=motor_state_df['state']
+df['motor_state']=motor_state_df['PC3'] #motor_state_df['state']
 
 #define writer
 Writer = animation.writers['ffmpeg']
@@ -34,6 +36,13 @@ color_dict = {'forward': u'blue',
               'sustained reversal': u'green',
               'ventral turn': u'orange',
               'dorsal turn': u'yellow'}
+
+## all black colordict
+# color_dict = {'forward': u'black',
+#               'reversal': u'black',
+#               'sustained reversal': u'black',
+#               'ventral turn': u'black',
+#               'dorsal turn': u'black'}
 
 x=df.loc[:,['PC1']].rolling(window=avg_win, center=True).mean().values.flatten()
 y=df.loc[:,['PC2']].rolling(window=avg_win, center=True).mean().values.flatten()
@@ -83,5 +92,5 @@ lim=0.2
 ax1.set_xlim([-lim,lim])
 ax1.set_ylim([-lim,lim])
 ax1.set_zlim([-lim,lim])
-anim.save('worm3_Oriana_PCA.mp4', writer=writer, dpi=300)
+anim.save('worm1_Ulises_PCA.mp4', writer=writer, dpi=300)
 plt.show()
