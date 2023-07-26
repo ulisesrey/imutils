@@ -32,12 +32,12 @@ beh_df = pd.read_csv(beh_path, index_col=0)
 
 
 # #get x and y coords in the correct format
-points = (np.ones((beh_df.shape[0], 2)) * 100)
+points = np.ones((beh_df.shape[0], 2)) * 100
 
 
 # get k curvature as a point property under confidence
 point_properties = {
-    'confidence': beh_df["turn"].to_numpy()
+    'confidence': np.linspace(-1, 1, beh_df.shape[0])#beh_df.to_numpy()[:,0]# np.array(beh_df["turn"], dtype=np.uint8)
 }
 
 # OR USE THEXT PARAMETERS
@@ -68,10 +68,12 @@ for img_path in img_path_list:
         face_color='confidence',
         face_colormap='bwr',
         face_contrast_limits=[-1, 1],
-        size=5
+        size=50
     )
 
 napari.run()
 
 print('end')
+
+print('something else')
 
