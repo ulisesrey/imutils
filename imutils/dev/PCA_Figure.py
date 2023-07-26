@@ -26,24 +26,24 @@ df['motor_state']=motor_state_df['state']
 #subsample
 
 #color dictionary
-color_dict = {'forward': u'blue',
+color_dict = {'forward': u'purple',
               'reversal': u'red',
               'sustained reversal': u'red',
-              'ventral turn': u'orange',
-              'dorsal turn': u'orange'}
-#all black colordict
-color_dict = {'forward': u'black',
-              'reversal': u'black',
-              'sustained reversal': u'black',
-              'ventral turn': u'black',
-              'dorsal turn': u'black'}
+              'ventral turn': u'purple',
+              'dorsal turn': u'purple'}
+## all black colordict
+# color_dict = {'forward': u'black',
+#               'reversal': u'black',
+#               'sustained reversal': u'black',
+#               'ventral turn': u'black',
+#               'dorsal turn': u'black'}
 print(len(df))
 #oriana chip
 start_time=1000
 end_time=1590
 # oriana chip new
-start_time=0
-end_time=2941
+# start_time=0
+# end_time=2941
 #behaviour
 # start_time=1400
 # end_time=2200
