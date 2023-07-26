@@ -953,18 +953,18 @@ def stack_self_touch(binary_path, external_contour_area, internal_contour_area):
     :param external_contour_area: area range of the external contour (min and max), e.g. [7000, 20000]
     :param internal_contour_area: area range the internal contour (min and max), e.g. [100, 2000]
     """
-    df = pd.DataFrame(columns=['self_touch'])
+    df = pd.DataFrame()
 
     with tiff.TiffFile(binary_path) as tif_binary:
         for i, page in enumerate(tif_binary.pages):
             img = page.asarray()
             contours_with_children = find_specific_contours_with_specific_children(img, external_contour_area, internal_contour_area)
             if contours_with_children:
-                print('self touch')
-                df.append({'self_touch': 1}, ignore_index=True)
+                #print('self touch')
+                df = df.append({'self_touch': 1}, ignore_index=True)
             else:
-                print('no self touch')
-                df.append({'self_touch': 0}, ignore_index=True)
+                #print('no self touch')
+                df = df.append({'self_touch': 0}, ignore_index=True)
     return df
 
 def measure_mask(img, threshold):
