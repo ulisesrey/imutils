@@ -27,7 +27,7 @@ def generate_absolute_coordinates(bodypart_coordinates, image_center_coordinates
     return absolute_coordinates_df
 
 
-def generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions):
+def generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions, bodypart_name):
     """
 
     :param project_path: str
@@ -39,12 +39,12 @@ def generate_absolute_coordinates_wrapper(project_path, image_center_coordinates
     stage_coordinates = stage_coordinates[['x', 'y']].values
 
     dlc_df = pd.read_hdf(glob.glob(os.path.join(project_path, '*BH/*.h5'))[0])
-    bodypart_coordinates = dlc_df[dlc_df.columns.levels[0][0]]['pharynx'][['x', 'y']][:].values
+    bodypart_coordinates = dlc_df[dlc_df.columns.levels[0][0]][bodypart_name][['x', 'y']][:].values
 
     absolute_coordinates_df = generate_absolute_coordinates(bodypart_coordinates, image_center_coordinates,
                                                             stage_coordinates, pixel_dimensions)
 
-    absolute_coordinates_df.to_csv(os.path.join(project_path, 'pharynx_coords_mm.csv'))
+    absolute_coordinates_df.to_csv(os.path.join(project_path, bodypart_name, '_coords_mm.csv'))
 
 
 
@@ -106,6 +106,7 @@ if __name__ == "__main__":
     ap.add_argument("-p", "--project_path", required=True, help="path to project folder")
     ap.add_argument("-img_center_coords", "--image_center_coordinates", nargs='+', type=float, required=True, help="")
     ap.add_argument("-px_dim", "--pixel_dimensions", type=float, required=True, help="")
+    ap.add_argument("-bodypart_name", "--bodypart_name", type=str, required=True, help="")
     args = vars(ap.parse_args())
 
     project_path = args['project_path']
@@ -113,5 +114,6 @@ if __name__ == "__main__":
     print(image_center_coordinates)
     print(type(image_center_coordinates))
     pixel_dimensions = args['pixel_dimensions']
+    bodypart_name = args['bodypart_name']
 
-    generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions)
+    generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions, bodypart_name)
