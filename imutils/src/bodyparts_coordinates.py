@@ -38,13 +38,13 @@ def generate_absolute_coordinates_wrapper(project_path, image_center_coordinates
     stage_coordinates = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
     stage_coordinates = stage_coordinates[['x', 'y']].values
 
-    dlc_df = pd.read_hdf(glob.glob(os.path.join(project_path, '*BH*/*BH*.h5'))[0])
-    bodypart_coordinates = dlc_df[dlc_df.columns.levels[0][0]]['head'][['x', 'y']][:].values
+    dlc_df = pd.read_hdf(glob.glob(os.path.join(project_path, '*BH/*.h5'))[0])
+    bodypart_coordinates = dlc_df[dlc_df.columns.levels[0][0]]['pharynx'][['x', 'y']][:].values
 
     absolute_coordinates_df = generate_absolute_coordinates(bodypart_coordinates, image_center_coordinates,
                                                             stage_coordinates, pixel_dimensions)
 
-    absolute_coordinates_df.to_csv(os.path.join(project_path, 'nose_coords_mm.csv'))
+    absolute_coordinates_df.to_csv(os.path.join(project_path, 'pharynx_coords_mm.csv'))
 
 
 
@@ -61,6 +61,7 @@ def generate_absolute_coordinates_spline_wrapper(project_path, body_segment, ima
     :return: 
     """
     stage_coordinates = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
+    # TODO: maybe there should be an if statement in case x,y are lowercase
     stage_coordinates = stage_coordinates[['X', 'Y']].values
 
     #dlc_df = pd.read_hdf(glob.glob(os.path.join(project_path, '*BH*/*BH*.h5'))[0])
@@ -86,30 +87,31 @@ def generate_absolute_coordinates_spline_wrapper(project_path, body_segment, ima
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
-    project_path = "/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221127/data/ZIM2165_Gcamp7b_worm1"
-    image_center_coordinates= (340,320) #(0,0)#(344, 350) #(317, 324) #(448, 464)
-    body_segment = 15
-    absolute_coordinates_df = generate_absolute_coordinates_spline_wrapper(project_path, body_segment=body_segment, image_center_coordinates=image_center_coordinates,
-                                                 pixel_dimensions=0.00325)
-    fig, ax = plt.subplots()
-    absolute_coordinates_df.plot(x='x', y='y', ax=ax)
-    stage_coordinates = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
-    stage_coordinates.plot(x='X', y='Y', ax=ax)
-    plt.gca().invert_xaxis()
-    plt.gca().invert_yaxis()
-    plt.show()
-    # import argparse
-    #
-    # ap = argparse.ArgumentParser()
-    # ap.add_argument("-p", "--project_path", required=True, help="path to project folder")
-    # ap.add_argument("-img_center_coords", "--image_center_coordinates", nargs='+', type=float, required=True, help="")
-    # ap.add_argument("-px_dim", "--pixel_dimensions", type=float, required=True, help="")
-    # args = vars(ap.parse_args())
-    #
-    # project_path = args['project_path']
-    # image_center_coordinates = tuple(args['image_center_coordinates'])
-    # print(image_center_coordinates)
-    # print(type(image_center_coordinates))
-    # pixel_dimensions = args['pixel_dimensions']
-    #
-    # generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions)
+    # project_path = "/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221127/data/ZIM2165_Gcamp7b_worm1"
+    # image_center_coordinates= (340,320) #(0,0)#(344, 350) #(317, 324) #(448, 464)
+    # body_segment = 15
+    # absolute_coordinates_df = generate_absolute_coordinates_spline_wrapper(project_path, body_segment=body_segment, image_center_coordinates=image_center_coordinates,
+    #                                              pixel_dimensions=0.00325)
+    # fig, ax = plt.subplots()
+    # absolute_coordinates_df.plot(x='x', y='y', ax=ax)
+    # stage_coordinates = pd.read_csv(glob.glob(os.path.join(project_path, '*TablePos*'))[0])
+    # stage_coordinates.plot(x='X', y='Y', ax=ax)
+    # plt.gca().invert_xaxis()
+    # plt.gca().invert_yaxis()
+    # plt.show()
+
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-p", "--project_path", required=True, help="path to project folder")
+    ap.add_argument("-img_center_coords", "--image_center_coordinates", nargs='+', type=float, required=True, help="")
+    ap.add_argument("-px_dim", "--pixel_dimensions", type=float, required=True, help="")
+    args = vars(ap.parse_args())
+
+    project_path = args['project_path']
+    image_center_coordinates = tuple(args['image_center_coordinates'])
+    print(image_center_coordinates)
+    print(type(image_center_coordinates))
+    pixel_dimensions = args['pixel_dimensions']
+
+    generate_absolute_coordinates_wrapper(project_path, image_center_coordinates, pixel_dimensions)
