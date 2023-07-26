@@ -29,8 +29,8 @@ import glob
 #img_path='/Users/ulises.rey/local_code/PCA_test/2020-07-01_18-36-25_control_worm6-channel-0-bigtiff.btf.tif'
 #img_path='/Volumes/project/neurobiology/zimmer/Ulises/wbfm/dat/btf_binary/2021-03-04_16-17-30_worm3_ZIM2051-channel-0-bigtiff_new.btf'
 
-#NEW WBFM worms
-main_path = "/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221123/data/ZIM2165_Gcamp7b_worm10/2022-11-23_15-32_ZIM2165_worm10_Ch0-BH"
+# NEW WBFM worms
+main_path = glob.glob("/Volumes/scratch/neurobiology/zimmer/ulises/wbfm/20221127/data/*worm1/*Ch0-BH")[0]
 path = glob.glob(os.path.join(main_path,"skeleton_spline_K_signed_avg.csv"))[0]
 img_path = glob.glob(os.path.join(main_path,"raw_stack_AVG_background_subtracted_normalised.btf"))[0]
 
