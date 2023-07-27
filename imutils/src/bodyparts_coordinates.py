@@ -44,7 +44,7 @@ def generate_absolute_coordinates_wrapper(project_path, image_center_coordinates
     absolute_coordinates_df = generate_absolute_coordinates(bodypart_coordinates, image_center_coordinates,
                                                             stage_coordinates, pixel_dimensions)
 
-    absolute_coordinates_df.to_csv(os.path.join(project_path, bodypart_name, '_coords_mm.csv'))
+    absolute_coordinates_df.to_csv(os.path.join(project_path, bodypart_name + '_coords_mm.csv'))
 
 
 
