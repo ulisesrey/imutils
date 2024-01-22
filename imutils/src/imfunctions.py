@@ -100,8 +100,7 @@ def ometiff2bigtiff(path, output_filename=None):
                 # print(os.path.join(path, file))
                 with tiff.TiffFile(os.path.join(path, file)) as tif:
                     # print('length of pages is: ', len(tif.pages))
-                    # this needs to be printed for the function to work in some cases, see https://github.com/ulisesrey/imutils/issues/12
-                    print('length of series is: ', len(tif.series))
+                    # print('length of series is: ', len(tif.series))
                     for idx, page in enumerate(tif.pages):
                         # print(idx)
                         img = page.asarray()
