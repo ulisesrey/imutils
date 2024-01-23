@@ -244,7 +244,7 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
         print("using background as it is")
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(input_filepath, multifile=False) as tif:
+        with tiff.TiffFile(input_filepath) as tif:
             for i, page in enumerate(tif.pages):
                 img = page.asarray()
                 if invert:
