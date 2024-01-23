@@ -152,9 +152,9 @@ def main(arg_list=None):
     func = FUNCTION_MAP[args.subparser_name]
     # the passed arguments can be taken into a dict like this
     func_args = vars(args)
-    print("func_args:", func_args)
     # remove "subparser_name" - it's not a valid argument
     del func_args['subparser_name']
+    print("func_args:", func_args)
     # now call the function with its arguments
     func(**func_args)
 
