@@ -1,8 +1,9 @@
 
 def unet(pretrained_weights = None,input_size = (256,256,1)):
-    from keras.models import *
-    from keras.layers import *
-    from tensorflow.keras.optimizers import *
+
+    from keras.models import Model
+    from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, Dropout, concatenate
+    from keras.optimizers import Adam
 
     inputs = Input(input_size)
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(inputs)
