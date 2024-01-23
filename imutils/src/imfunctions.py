@@ -365,6 +365,7 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
 
     """
 
+    from imutils.src.model import unet
     model = unet()
     model.load_weights(weights_path)
 

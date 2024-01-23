@@ -1,10 +1,10 @@
 #imports
 import cv2
+import numpy as np
 import tifffile as tiff
 import glob
 import os
 # unet model is here (too)
-from imutils.src.model import *
 from natsort import natsorted
 import skimage.io as io
 import skimage.transform as trans
@@ -23,6 +23,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import jaccard_score
 from sklearn.metrics import f1_score
 
+from imutils.src.model import unet
 
 
 def unet_segmentation(img, model):
