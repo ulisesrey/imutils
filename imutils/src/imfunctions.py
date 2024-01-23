@@ -42,7 +42,7 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     fps = float(fps)
 
     # tiff read object
-    with tiff.TiffFile(tiff_path, multifile=False) as tif:
+    with tiff.TiffFile(tiff_path) as tif:
         # print(tif)
         frameSize = tif.pages[0].shape
         # if image has channels get height and width (ignore 3rd output)
@@ -132,7 +132,7 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
             this_ome_tiff = os.path.join(path, file)
             print("Currently reading: ")
             print(this_ome_tiff)
-            with tiff.TiffFile(this_ome_tiff, multifile=False) as tif:
+            with tiff.TiffFile(this_ome_tiff) as tif:
                 for i, page in enumerate(tif.pages):
                     print(f'Page {i}/{len(tif.pages)} in file {i_file}')
                     # Bottleneck line
@@ -305,7 +305,7 @@ def stack_subsample(stack_input_filepath, stack_output_filepath, range):
 
     """
     with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(stack_input_filepath, multifile=False) as tif:
+        with tiff.TiffFile(stack_input_filepath) as tif:
             for i, page in enumerate(tif.pages[range]):
                 # loads the first frame
                 img = page.asarray()
@@ -334,7 +334,7 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
     --------
     """
     with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(stack_input_filepath, multifile=False) as tif:
+        with tiff.TiffFile(stack_input_filepath) as tif:
             for i, page in enumerate(tif.pages):
                 # loads the first frame
                 img = page.asarray()
@@ -369,8 +369,8 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
     model = unet()
     model.load_weights(weights_path)
 
-    with tiff.TiffFile(binary_input_filepath, multifile=False) as binary_tif, \
-            tiff.TiffFile(raw_input_filepath, multifile=False) as raw_tif, \
+    with tiff.TiffFile(binary_input_filepath) as binary_tif, \
+            tiff.TiffFile(raw_input_filepath) as raw_tif, \
             tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
 
         for i, page in enumerate(binary_tif.pages):
@@ -432,7 +432,7 @@ def erode(binary_input_filepath, output_filepath):
     Binary file
     output_filepath, str
     """
-    with tiff.TiffFile(binary_input_filepath, multifile=False) as tif, tiff.TiffWriter(output_filepath,
+    with tiff.TiffFile(binary_input_filepath) as tif, tiff.TiffWriter(output_filepath,
                                                                                        bigtiff=True) as tif_writer:
         for i, page in enumerate(tif.pages):
             img = page.asarray()
@@ -475,7 +475,7 @@ def make_hyperstack_from_ometif(input_path, output_filepath, shape, dtype, image
     for file in natsorted(os.listdir(input_path)):
         if file.endswith('ome.tif'):
             # print(os.path.join(path,file))
-            with tiff.TiffFile(os.path.join(input_path, file), multifile=False) as tif:
+            with tiff.TiffFile(os.path.join(input_path, file)) as tif:
                 for idx, page in enumerate(tif.pages):
                     img = page.asarray()
                     hyperstack[t_index, z_index] = img
@@ -522,7 +522,7 @@ def extract_frames(input_image, output_folder, frames_list):
     else:
         print(output_folder, 'already exists')
 
-    with tiff.TiffFile(input_image, multifile=False) as tif:
+    with tiff.TiffFile(input_image) as tif:
         # iterate over the frames in the list
         # for i, page in enumerate(tif.pages[frames_list]):
         for frame in frames_list:
@@ -1036,7 +1036,7 @@ def distance_to_image_center(image_shape, point):
     # print('end')
 
 # input_filepath='/Users/ulises.rey/local_data/epifluorescence/2022-04-08_16-12_ZIM1661_BAG_worm1_Ch1bigtiff_masked.btf'
-# with tiff.TiffFile(input_filepath, multifile=False) as tif:
+# with tiff.TiffFile(input_filepath) as tif:
 #     for i, page in enumerate(tif.pages):
 #         img=page.asarray()
 #         n_values, intensity = measure_mask(img, 250)

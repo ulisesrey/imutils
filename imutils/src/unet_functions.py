@@ -63,7 +63,7 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
     print('loading weights..')
     model.load_weights(weights_path)
 
-    with tiff.TiffFile(input_filepath, multifile=False) as tif,\
+    with tiff.TiffFile(input_filepath) as tif,\
             tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         for i, page in enumerate(tif.pages):
             img=page.asarray()

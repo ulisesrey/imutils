@@ -87,7 +87,7 @@ def binarize_btf(input_path,output_path,median_blur,lower_threshold,higher_thres
     
     #create reader and writer objects
     with tiff.TiffWriter(output_path, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(input_path, multifile=False) as tif:
+        with tiff.TiffFile(input_path) as tif:
         
             #read in pages
             for i, page in enumerate(tif.pages):
@@ -144,8 +144,8 @@ def calculate_signal_2(rfp_mask_filepath,rfp_filepath,gcamp_filepath,background_
     rfp_signal=[]
     
     with tiff.TiffFile(rfp_mask_filepath, multifile=True) as tif_mask,\
-        tiff.TiffFile(gcamp_filepath, multifile=False) as tif_gcamp,\
-        tiff.TiffFile(rfp_filepath, multifile=False) as tif_rfp:
+        tiff.TiffFile(gcamp_filepath) as tif_gcamp,\
+        tiff.TiffFile(rfp_filepath) as tif_rfp:
        
         for i, page in enumerate(tif_mask.pages):
             if i>len(tif_gcamp.pages)-1:break
@@ -194,8 +194,8 @@ def calculate_background_2(rfp_mask_filepath,rfp_filepath,gcamp_filepath):
     rfp_background=[]
 
     with tiff.TiffFile(rfp_mask_filepath, multifile=True) as tif_mask,\
-        tiff.TiffFile(gcamp_filepath, multifile=False) as tif_gcamp,\
-        tiff.TiffFile(rfp_filepath, multifile=False) as tif_rfp:
+        tiff.TiffFile(gcamp_filepath) as tif_gcamp,\
+        tiff.TiffFile(rfp_filepath) as tif_rfp:
 
         for i, page in enumerate(tif_mask.pages):
 
