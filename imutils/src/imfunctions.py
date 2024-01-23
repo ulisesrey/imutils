@@ -1,11 +1,12 @@
+import os
 import re
 
 import cv2
+import numpy as np
+import pandas as pd
 import tifffile as tiff
 from natsort import natsorted
 from skimage.morphology import binary_erosion
-import pandas as pd
-from imutils.src.model import *
 
 
 def tiff2avi(tiff_path, avi_path, fourcc, fps):
