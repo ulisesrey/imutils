@@ -741,7 +741,7 @@ def z_projection(img, projection_type, axis=0):
     return projected_img
 
 
-def stack_z_projection(input_path, output_path, projection_type, dtype, axis=0):
+def stack_z_projection(input_path, output_path, projection_type, dtype='uint16', axis=0):
     """
 
     Parameters:
