@@ -740,6 +740,7 @@ def z_projection(img, projection_type, axis=0):
 
     return projected_img
 
+
 def stack_z_projection(input_path, output_path, projection_type, dtype, axis=0):
     """
 
@@ -757,9 +758,13 @@ def stack_z_projection(input_path, output_path, projection_type, dtype, axis=0):
     tiff.imwrite(output_path, projected_img)
     return None
 
+
 def z_projection_parser(hyperstack_filepath, output_filepath, projection_type, axis):
     """
     parser do run the z_projection function
+
+    Warning: Write permission is required for this function
+
     Parameters:
     ----------
     img_path, str
@@ -773,9 +778,7 @@ def z_projection_parser(hyperstack_filepath, output_filepath, projection_type, a
     Writes the projection. Function itself returns None
     """
     # load hyperstack in memory map
-    # hyperstack = tiff.memmap(hyperstack_filepath, dtype='uint16')
-    # No memory map, which requires write permissions
-    hyperstack = tiff.imread(hyperstack_filepath)
+    hyperstack = tiff.memmap(hyperstack_filepath, dtype='uint16')
     # crate writer object
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         # iterate for each volume of the hyperstack
