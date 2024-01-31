@@ -773,7 +773,9 @@ def z_projection_parser(hyperstack_filepath, output_filepath, projection_type, a
     Writes the projection. Function itself returns None
     """
     # load hyperstack in memory map
-    hyperstack = tiff.memmap(hyperstack_filepath, dtype='uint16')
+    # hyperstack = tiff.memmap(hyperstack_filepath, dtype='uint16')
+    # No memory map, which requires write permissions
+    hyperstack = tiff.imread(hyperstack_filepath)
     # crate writer object
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         # iterate for each volume of the hyperstack
