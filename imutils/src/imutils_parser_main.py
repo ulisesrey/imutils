@@ -154,6 +154,7 @@ def main(arg_list=None):
     func_args = vars(args)
     # remove "subparser_name" - it's not a valid argument
     del func_args['subparser_name']
+    print("func_args:", func_args)
     # now call the function with its arguments
     func(**func_args)
 

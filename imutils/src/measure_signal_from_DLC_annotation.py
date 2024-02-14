@@ -13,7 +13,7 @@ def measure_signal_from_coords(image_path, coords, dist):
     total_intensity = []
     # TODO:  add max intensity
 
-    with tiff.TiffFile(image_path, multifile=False) as tif:
+    with tiff.TiffFile(image_path) as tif:
         for i, page in enumerate(tif.pages):
             #print(i)
             img = page.asarray()

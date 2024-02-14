@@ -1,11 +1,12 @@
+import os
 import re
 
 import cv2
+import numpy as np
+import pandas as pd
 import tifffile as tiff
 from natsort import natsorted
 from skimage.morphology import binary_erosion
-import pandas as pd
-from imutils.src.model import *
 
 
 def tiff2avi(tiff_path, avi_path, fourcc, fps):
@@ -41,7 +42,7 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     fps = float(fps)
 
     # tiff read object
-    with tiff.TiffFile(tiff_path, multifile=False) as tif:
+    with tiff.TiffFile(tiff_path) as tif:
         # print(tif)
         frameSize = tif.pages[0].shape
         # if image has channels get height and width (ignore 3rd output)
@@ -131,7 +132,7 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
             this_ome_tiff = os.path.join(path, file)
             print("Currently reading: ")
             print(this_ome_tiff)
-            with tiff.TiffFile(this_ome_tiff, multifile=False) as tif:
+            with tiff.TiffFile(this_ome_tiff) as tif:
                 for i, page in enumerate(tif.pages):
                     print(f'Page {i}/{len(tif.pages)} in file {i_file}')
                     # Bottleneck line
@@ -243,7 +244,7 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
         print("using background as it is")
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(input_filepath, multifile=False) as tif:
+        with tiff.TiffFile(input_filepath) as tif:
             for i, page in enumerate(tif.pages):
                 img = page.asarray()
                 if invert:
@@ -266,8 +267,7 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, thr
     -------------
     None
     """
-    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath,
-                                                                                           multifile=False) as tif:
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath) as tif:
         for i, page in enumerate(tif.pages):
             img = page.asarray()
             # apply threshold
@@ -291,8 +291,7 @@ def stack_normalise(stack_input_filepath: str, stack_output_filepath: str, alpha
     -------------
     None
     """
-    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath,
-                                                                                           multifile=False) as tif:
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath) as tif:
         for i, page in enumerate(tif.pages):
             img = page.asarray()
             normalised_img = cv2.normalize(img, None, alpha=alpha, beta=beta, norm_type=cv2.NORM_MINMAX)
@@ -304,7 +303,7 @@ def stack_subsample(stack_input_filepath, stack_output_filepath, range):
 
     """
     with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(stack_input_filepath, multifile=False) as tif:
+        with tiff.TiffFile(stack_input_filepath) as tif:
             for i, page in enumerate(tif.pages[range]):
                 # loads the first frame
                 img = page.asarray()
@@ -333,7 +332,7 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
     --------
     """
     with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(stack_input_filepath, multifile=False) as tif:
+        with tiff.TiffFile(stack_input_filepath) as tif:
             for i, page in enumerate(tif.pages):
                 # loads the first frame
                 img = page.asarray()
@@ -364,11 +363,12 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
 
     """
 
+    from imutils.src.model import unet
     model = unet()
     model.load_weights(weights_path)
 
-    with tiff.TiffFile(binary_input_filepath, multifile=False) as binary_tif, \
-            tiff.TiffFile(raw_input_filepath, multifile=False) as raw_tif, \
+    with tiff.TiffFile(binary_input_filepath) as binary_tif, \
+            tiff.TiffFile(raw_input_filepath) as raw_tif, \
             tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
 
         for i, page in enumerate(binary_tif.pages):
@@ -430,7 +430,7 @@ def erode(binary_input_filepath, output_filepath):
     Binary file
     output_filepath, str
     """
-    with tiff.TiffFile(binary_input_filepath, multifile=False) as tif, tiff.TiffWriter(output_filepath,
+    with tiff.TiffFile(binary_input_filepath) as tif, tiff.TiffWriter(output_filepath,
                                                                                        bigtiff=True) as tif_writer:
         for i, page in enumerate(tif.pages):
             img = page.asarray()
@@ -473,7 +473,7 @@ def make_hyperstack_from_ometif(input_path, output_filepath, shape, dtype, image
     for file in natsorted(os.listdir(input_path)):
         if file.endswith('ome.tif'):
             # print(os.path.join(path,file))
-            with tiff.TiffFile(os.path.join(input_path, file), multifile=False) as tif:
+            with tiff.TiffFile(os.path.join(input_path, file)) as tif:
                 for idx, page in enumerate(tif.pages):
                     img = page.asarray()
                     hyperstack[t_index, z_index] = img
@@ -520,7 +520,7 @@ def extract_frames(input_image, output_folder, frames_list):
     else:
         print(output_folder, 'already exists')
 
-    with tiff.TiffFile(input_image, multifile=False) as tif:
+    with tiff.TiffFile(input_image) as tif:
         # iterate over the frames in the list
         # for i, page in enumerate(tif.pages[frames_list]):
         for frame in frames_list:
@@ -740,7 +740,8 @@ def z_projection(img, projection_type, axis=0):
 
     return projected_img
 
-def stack_z_projection(input_path, output_path, projection_type, dtype, axis=0):
+
+def stack_z_projection(input_path, output_path, projection_type, dtype='uint16', axis=0):
     """
 
     Parameters:
@@ -757,9 +758,13 @@ def stack_z_projection(input_path, output_path, projection_type, dtype, axis=0):
     tiff.imwrite(output_path, projected_img)
     return None
 
+
 def z_projection_parser(hyperstack_filepath, output_filepath, projection_type, axis):
     """
     parser do run the z_projection function
+
+    Warning: Write permission is required for this function
+
     Parameters:
     ----------
     img_path, str
@@ -1034,7 +1039,7 @@ def distance_to_image_center(image_shape, point):
     # print('end')
 
 # input_filepath='/Users/ulises.rey/local_data/epifluorescence/2022-04-08_16-12_ZIM1661_BAG_worm1_Ch1bigtiff_masked.btf'
-# with tiff.TiffFile(input_filepath, multifile=False) as tif:
+# with tiff.TiffFile(input_filepath) as tif:
 #     for i, page in enumerate(tif.pages):
 #         img=page.asarray()
 #         n_values, intensity = measure_mask(img, 250)

@@ -17,8 +17,7 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, low
     -------------
     None
     """
-    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath,
-                                                                                           multifile=False) as tif:
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath) as tif:
         for i, page in enumerate(tif.pages):
             img = page.asarray()
             # apply threshold
