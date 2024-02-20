@@ -311,7 +311,7 @@ def stack_subsample(stack_input_filepath, stack_output_filepath, range):
 
 
 def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, threshold,
-                              max_value, contour_size, tolerance, inner_contour_area_to_fill, gaussian_blur=0.0):
+                              max_value, contour_size, tolerance, inner_contour_area_to_fill, gaussian_blur=0):
 
     """
     Produce a binary image based on contour and inner contour sizes, by calling draw_some_contours()
