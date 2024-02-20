@@ -311,7 +311,7 @@ def stack_subsample(stack_input_filepath, stack_output_filepath, range):
 
 
 def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, threshold,
-                              max_value, contour_size, tolerance, inner_contour_area_to_fill):
+                              max_value, contour_size, tolerance, inner_contour_area_to_fill, gaussian_blur=0.0):
 
     """
     Produce a binary image based on contour and inner contour sizes, by calling draw_some_contours()
@@ -337,6 +337,9 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
                 # loads the first frame
                 img = page.asarray()
                 # median Blur
+                if gaussian_blur != 0:
+                    img = cv2.GaussianBlur(img, (gaussian_blur, gaussian_blur), 0)
+
                 if median_blur != 0:
                     img = cv2.medianBlur(img, median_blur)
 
