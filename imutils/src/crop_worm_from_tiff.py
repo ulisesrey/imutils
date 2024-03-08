@@ -83,8 +83,7 @@ def save_to_excel(x_roi_data, y_roi_data, excel_file):
 
 def main(arg_list=None):
 
-    print(arg_list)
-
+    #print(arg_list)
     parser = argparse.ArgumentParser(description="crop_worm_from_binary_mask_tiff")
     parser.add_argument("--binary_stack", required=True)
     parser.add_argument("--output", required=True)
@@ -96,8 +95,7 @@ def main(arg_list=None):
     output = args.output
     excel_file = args.excel_file
     crop_size = tuple(map(int, args.crop_size.split(',')))
-    
-    print(crop_size)
+
     search_margin = 50  # Define how far from the last known position to search, adjust as needed
 
     print(f"Excel file path: {excel_file}")
