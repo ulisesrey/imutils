@@ -69,7 +69,7 @@ def export_video(cropped_video_stack, output, frame_rate, crop_size):
     #generating new video name "video_cropped.avi"
 
     # Splitting the path and getting the file name and extension
-    video_dir, video_file = os.path.split(video_path)
+    video_dir, video_file = os.path.split(output)
     video_name, video_extension = os.path.splitext(video_file)
 
     # Creating the new file name with "_cropped" suffix
