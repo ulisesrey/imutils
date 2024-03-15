@@ -52,7 +52,9 @@ def export_BTF(cropped_stack, output, crop_size):
     print(f"Exported cropped stack to {output_file}")
 
 def read_from_excel(excel_file):
-    df = pd.read_excel(excel_file)
+    # Specify the engine 'openpyxl' to read xlsx files
+    df = pd.read_excel(excel_file, engine='openpyxl')
+    # Convert the 'x_roi' and 'y_roi' columns to lists and return them
     return df['x_roi'].tolist(), df['y_roi'].tolist()
 
 def main(arg_list=None):
@@ -60,7 +62,7 @@ def main(arg_list=None):
     parser.add_argument("--stack_path", required=True)
     parser.add_argument("--excel_file", required=True, help="Input Excel file with ROI data")
     parser.add_argument("--crop_size", required=True, help="Crop size in format 'width,height'")
-    args = parser.parse_args()
+    args = parser.parse_args(arg_list)
 
     stack_path = args.stack_path
     excel_file = args.excel_file
