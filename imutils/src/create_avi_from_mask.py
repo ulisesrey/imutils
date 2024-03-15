@@ -153,6 +153,7 @@ def main(arg_list=None):
     print("Processing video...")
     cropped_video_stack = crop_avi_as_well(video_path, x_roi_data, y_roi_data, fps, crop_size)
 
+    print("Number of frames in cropped video stack:", len(cropped_video_stack))
 
     print("Exporting video...")
     export_video(cropped_video_stack, video_path, fps, crop_size)
