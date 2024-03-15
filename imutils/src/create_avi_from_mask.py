@@ -103,7 +103,7 @@ def main(arg_list=None):
     parser.add_argument("--fps", required=True)
     parser.add_argument("--excel_file", required=True, help="Input Excel file with ROI data")
     parser.add_argument("--crop_size", required=True, help="Crop size in format 'width,height'")
-    args = parser.parse_args()
+    args = parser.parse_args(arg_list)
 
     video_path = args.video
     fps = float(args.fps)
