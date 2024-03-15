@@ -1,5 +1,5 @@
 # This script processes a video file by cropping it based on regions of interest (ROIs) defined in an Excel file ('roi_data').
-
+import sys
 import os
 import numpy as np
 import cv2
@@ -10,6 +10,19 @@ import pandas as pd
 def crop_avi_as_well(video, x_roi_data, y_roi_data, fps, crop_size):
     # Open the video file
     cap = cv2.VideoCapture(video)
+
+    # Check if the video opened successfully
+    if not cap.isOpened():
+        print("Error: Could not open video.")
+        return []
+
+    # Get the total number of frames in the video
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # Check if the length of the ROI data matches the total frames in the video
+    if total_frames > len(x_roi_data) or total_frames > len(y_roi_data):
+        print(f"Warning: The video has {total_frames} frames but the ROI data has only {len(x_roi_data)} X-coordinates and {len(y_roi_data)} Y-coordinates.")
+        print("The video will be processed up to the length of the ROI data.")
 
     # Create an empty NumPy array to store grayscale values
     new_roi_array = []
@@ -44,7 +57,6 @@ def crop_avi_as_well(video, x_roi_data, y_roi_data, fps, crop_size):
                 roi_y + roi_height <= frame.shape[0]
         ):
             # Extract the grayscale ROI from the original frame
-            #frame_roi = frame[roi_y:roi_y + roi_height, roi_x:roi_x + roi_width]
             frame_roi = cv2.cvtColor(frame[roi_y:roi_y + roi_height, roi_x:roi_x + roi_width], cv2.COLOR_BGR2GRAY)
             # Append the grayscale values of the ROI to the list
             new_roi_array.append(frame_roi)
@@ -62,7 +74,9 @@ def crop_avi_as_well(video, x_roi_data, y_roi_data, fps, crop_size):
 
     return new_roi_array
 
+
 def export_video(cropped_video_stack, output, frame_rate, crop_size):
+
     roi_width, roi_height = crop_size
 
     #generating new video name "video_cropped.avi"
@@ -92,11 +106,32 @@ def export_video(cropped_video_stack, output, frame_rate, crop_size):
 
     print("Crop Size:", crop_size)
 
+
 def read_from_excel(excel_file):
-    # Specify the engine 'openpyxl' to read xlsx files
-    df = pd.read_excel(excel_file, engine='openpyxl')
-    # Convert the 'x_roi' and 'y_roi' columns to lists and return them
-    return df['x_roi'].tolist(), df['y_roi'].tolist()
+    try:
+        # Attempt to read the Excel file
+        df = pd.read_excel(excel_file, engine='openpyxl')
+
+        # Check if the necessary columns are present
+        if 'x_roi' not in df.columns or 'y_roi' not in df.columns:
+            # If either column is missing, raise a ValueError
+            raise ValueError("Excel file is missing required 'x_roi' or 'y_roi' columns.")
+
+        # Convert the 'x_roi' and 'y_roi' columns to lists and return them
+        return df['x_roi'].tolist(), df['y_roi'].tolist()
+    except FileNotFoundError:
+        # Handle the case where the Excel file doesn't exist
+        print(f"Error: The file {excel_file} does not exist.")
+        return [], []  # Return empty lists as a fail-safe
+    except ValueError as ve:
+        # Handle missing column error
+        print(f"Error: {ve}")
+        return [], []  # Return empty lists as a fail-safe
+    except Exception as e:
+        # Handle any other exceptions that may occur
+        print(f"An unexpected error occurred: {e}")
+        return [], []  # Return empty lists as a fail-safe
+
 
 def main(arg_list=None):
     parser = argparse.ArgumentParser(description="Process and export cropped video")

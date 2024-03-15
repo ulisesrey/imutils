@@ -2,7 +2,6 @@ import os
 import numpy as np
 import argparse
 import pandas as pd
-from PIL import Image
 import tifffile as tf
 
 def crop_BTF(tiff_stack, x_roi_data, y_roi_data, crop_size):
