@@ -11,54 +11,44 @@ def crop_avi_as_well(video, x_roi_data, y_roi_data, fps, crop_size):
     # Open the video file
     cap = cv2.VideoCapture(video)
 
-    # Create an empty NumPy array to store grayscale values
-    new_roi_array = []
+    # Get the total number of frames in the video
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
+    # Adjust the length of ROI data to match the number of frames if necessary
+    min_length = min(len(x_roi_data), len(y_roi_data), total_frames)
+    x_roi_data = x_roi_data[:min_length]
+    y_roi_data = y_roi_data[:min_length]
+
+    # Pre-allocate list with None to improve memory management
+    new_roi_array = [None] * min_length
+
+    frame_number = 0  # Initialize frame number
     while True:
-        frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))  # Get the current frame number
         ret, frame = cap.read()  # Read the next frame
 
-        if not ret:
-            break  # Break the loop when there are no more frames
+        if not ret or frame_number >= min_length:
+            break  # Break the loop when there are no more frames or data points
 
-        # Debugging print statements
-        print("Frame number (from video):", frame_number)
-        print("Type of frame_number:", type(frame_number))
-        print("Length of x_roi_data:", len(x_roi_data))
-
-        # Ensure the frame number is within the range of x_roi_data and y_roi_data
-        if frame_number < len(x_roi_data):
-            roi_x = x_roi_data[frame_number]
-            roi_y = y_roi_data[frame_number]
-        else:
-            print("Frame number is out of range of ROI data. Skipping frame.")
-            continue
-
+        roi_x, roi_y = x_roi_data[frame_number], y_roi_data[frame_number]
         roi_width, roi_height = crop_size
 
-        # Ensure ROI coordinates are within frame boundaries, else skip
-        if (
-                roi_x >= 0 and
-                roi_y >= 0 and
-                roi_x + roi_width <= frame.shape[1] and
-                roi_y + roi_height <= frame.shape[0]
-        ):
-            # Extract the grayscale ROI from the original frame
-            # frame_roi = frame[roi_y:roi_y + roi_height, roi_x:roi_x + roi_width]
+        # Check if ROI coordinates are within frame boundaries
+        if 0 <= roi_x < frame.shape[1] - roi_width and 0 <= roi_y < frame.shape[0] - roi_height:
+            # Extract and convert the ROI to grayscale
             frame_roi = cv2.cvtColor(frame[roi_y:roi_y + roi_height, roi_x:roi_x + roi_width], cv2.COLOR_BGR2GRAY)
-            # Append the grayscale values of the ROI to the list
-            new_roi_array.append(frame_roi)
+            new_roi_array[frame_number] = frame_roi
         else:
-            # Create an empty frame (all black) when the ROI is out of bounds
-            empty_frame = np.zeros((roi_height, roi_width), dtype=np.uint8)
-            # Append the empty frame to the list
-            new_roi_array.append(empty_frame)
-            # Print a message indicating that an empty frame is added
-            print(f"Frame {frame_number}: ROI is out of bounds. Adding an empty frame...")
+            # Create an empty frame (all black) and append to the list if the ROI is out of bounds
+            new_roi_array[frame_number] = np.zeros((roi_height, roi_width), dtype=np.uint8)
 
-    # Release the video capture object and close the OpenCV windows
+        frame_number += 1  # Increment the frame number
+
+    # Release the video capture object
     cap.release()
-    cv2.destroyAllWindows()
+
+    # Remove any remaining None values in case the video was shorter than expected
+    new_roi_array = [frame if frame is not None else np.zeros((roi_height, roi_width), dtype=np.uint8) for frame in
+                     new_roi_array]
 
     return new_roi_array
 
