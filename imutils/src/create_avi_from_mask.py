@@ -31,9 +31,6 @@ def crop_avi_as_well(video, x_roi_data, y_roi_data, fps, crop_size):
         frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))  # Get the current frame number
         ret, frame = cap.read()  # Read the next frame
 
-        if not ret:
-            break  # Break the loop when there are no more frames
-
         # Debugging print statements
         print("Frame number (from video):", frame_number)
         print("Type of frame_number:", type(frame_number))
@@ -88,8 +85,12 @@ def export_video(cropped_video_stack, output, frame_rate, crop_size):
     # Creating the new file name with "_cropped" suffix
     new_video_name = video_name + "_cropped" + video_extension
 
+    print("Cropped video name:", new_video_name)
+
     # Creating the new video output path
     video_output = os.path.join(video_dir, new_video_name)
+
+    print("Videopath:", video_output)
 
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Use the XVID codec for AVI
@@ -151,6 +152,7 @@ def main(arg_list=None):
 
     print("Processing video...")
     cropped_video_stack = crop_avi_as_well(video_path, x_roi_data, y_roi_data, fps, crop_size)
+
 
     print("Exporting video...")
     export_video(cropped_video_stack, video_path, fps, crop_size)
