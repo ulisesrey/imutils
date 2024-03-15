@@ -5,8 +5,7 @@ import numpy as np
 import cv2
 import argparse
 import pandas as pd
-import openpyxl
-from openpyxl.utils.dataframe import dataframe_to_rows
+
 
 def crop_avi_as_well(video, x_roi_data, y_roi_data, fps, crop_size):
     # Open the video file
@@ -94,7 +93,9 @@ def export_video(cropped_video_stack, output, frame_rate, crop_size):
     print("Crop Size:", crop_size)
 
 def read_from_excel(excel_file):
-    df = pd.read_excel(excel_file)
+    # Specify the engine 'openpyxl' to read xlsx files
+    df = pd.read_excel(excel_file, engine='openpyxl')
+    # Convert the 'x_roi' and 'y_roi' columns to lists and return them
     return df['x_roi'].tolist(), df['y_roi'].tolist()
 
 def main(arg_list=None):
