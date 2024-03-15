@@ -11,25 +11,15 @@ def crop_avi_as_well(video, x_roi_data, y_roi_data, fps, crop_size):
     # Open the video file
     cap = cv2.VideoCapture(video)
 
-    # Check if the video opened successfully
-    if not cap.isOpened():
-        print("Error: Could not open video.")
-        return []
-
-    # Get the total number of frames in the video
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    # Check if the length of the ROI data matches the total frames in the video
-    if total_frames > len(x_roi_data) or total_frames > len(y_roi_data):
-        print(f"Warning: The video has {total_frames} frames but the ROI data has only {len(x_roi_data)} X-coordinates and {len(y_roi_data)} Y-coordinates.")
-        print("The video will be processed up to the length of the ROI data.")
-
     # Create an empty NumPy array to store grayscale values
     new_roi_array = []
 
     while True:
         frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))  # Get the current frame number
         ret, frame = cap.read()  # Read the next frame
+
+        if not ret:
+            break  # Break the loop when there are no more frames
 
         # Debugging print statements
         print("Frame number (from video):", frame_number)
@@ -54,6 +44,7 @@ def crop_avi_as_well(video, x_roi_data, y_roi_data, fps, crop_size):
                 roi_y + roi_height <= frame.shape[0]
         ):
             # Extract the grayscale ROI from the original frame
+            # frame_roi = frame[roi_y:roi_y + roi_height, roi_x:roi_x + roi_width]
             frame_roi = cv2.cvtColor(frame[roi_y:roi_y + roi_height, roi_x:roi_x + roi_width], cv2.COLOR_BGR2GRAY)
             # Append the grayscale values of the ROI to the list
             new_roi_array.append(frame_roi)
