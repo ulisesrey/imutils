@@ -2,6 +2,7 @@ import cv2
 import argparse
 import pickle
 import os
+import sys
 
 def save_var_to_pickle(cfactor, path):
     # Remove the file extension from the path
@@ -69,13 +70,13 @@ def compress_avi(path, downsampled_video, frame_rate):
     video.release()
     out.release()
 
-if __name__ == "__main__":
+def main(arg_list=None):
 
     parser = argparse.ArgumentParser(description="downsample video for DLC")
     parser.add_argument("--video", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--fps", required=True)
-    args = parser.parse_args()
+    args = parser.parse_args(arg_list)
 
     path = args.video
     output = args.output
@@ -89,3 +90,7 @@ if __name__ == "__main__":
     print("output_folder:",  output_folder[0])
 
     compress_avi(path, output, frame_rate)
+
+if __name__ == "__main__":
+
+    main(sys.argv[1:])  # exclude the script name from the args when called from shell
