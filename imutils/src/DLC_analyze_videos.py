@@ -18,15 +18,13 @@ def main(arg_list=None):
     print(path_config_file)
     VideoType = 'avi'
 
-    #don't edit these:
-    #videos dont need to be on the config file: https://gitter.im/DeepLabCut/community?at=5e8f90a85d148a0460f7664a
-
-
     print("Videofilepath: ", videofile_path)
 
     #although this code on the jupyternotebook works, i had an error while using the .py file. It went away with gputouse=None (although I was in a GPU env)
     deeplabcut.analyze_videos(path_config_file, videofile_path, videotype=VideoType, gputouse=None, save_as_csv=True)
     deeplabcut.filterpredictions(path_config_file, videofile_path, videotype=VideoType, save_as_csv=True, windowlength=3)
+
+    deeplabcut.create_labeled_video(path_config_file, videofile_path, videotype=VideoType, save_frames=False)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
