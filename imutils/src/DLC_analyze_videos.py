@@ -7,7 +7,7 @@ import sys
 
 def main(arg_list=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument(" --path_config_file", required=True, help="path to config file")
+    parser.add_argument("--path_config_file", required=True, help="path to config file")
     parser.add_argument("--videofile_path", required=True, help="path to the videofile")
     #args = vars(ap.parse_args())
     args = parser.parse_args(arg_list)
