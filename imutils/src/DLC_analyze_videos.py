@@ -6,20 +6,21 @@ import sys
 
 
 def main(arg_list=None):
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-path_config_file", "--path_config_file", required=True, help="path to config file")
-    ap.add_argument("-videofile_path", "--videofile_path", required=True, help="path to the videofile")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(" --path_config_file", required=True, help="path to config file")
+    parser.add_argument("--videofile_path", required=True, help="path to the videofile")
     #args = vars(ap.parse_args())
-    args = ap.parse_args(arg_list)
+    args = parser.parse_args(arg_list)
 
     print(args)
-    path_config_file = args['path_config_file']
+    path_config_file = args.path_config_file
+    videofile_path = args.videofile_path
     print(path_config_file)
+    VideoType = 'avi'
 
     #don't edit these:
     #videos dont need to be on the config file: https://gitter.im/DeepLabCut/community?at=5e8f90a85d148a0460f7664a
-    VideoType = 'avi'
-    videofile_path = args['videofile_path']
+
 
     print("Videofilepath: ", videofile_path)
 
