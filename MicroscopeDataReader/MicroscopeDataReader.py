@@ -7,7 +7,7 @@ from typing import Union # from pthon 3.10 it could be | instead of Union
 from packaging import version
 
 class MicroscopeDataReader:
-    def __init__(self, path: Union[Path,str], force_tifffile: bool = False):
+    def __init__(self, path: Union[Path,str], force_tifffile: bool = False, is_btf: bool = False, btf_num_slices: int = None):
         """
         Reads data from a microscope data file. The file can be a NDTiff file or a MMStack file.
         If the file is a NDTiff file, the data is read using the ndtiff package.
@@ -21,6 +21,8 @@ class MicroscopeDataReader:
         Args:
             path (Path or str): Path to the file or directory containing the data
             force_tifffile (bool, optional): If True, the file is read with tifffile. Defaults to False.
+            is_btf (bool, optional): If True, the file is a BTF file. Defaults to False.
+            btf_num_slices (int, optional): If is_btf is True, the number of slices of the BTF file have to be specified. Defaults to None.
         """
         self._force_tifffile = force_tifffile
         self.logger = logging.getLogger(__name__)
@@ -37,10 +39,15 @@ class MicroscopeDataReader:
         self.axis_string = 'PTCZYX'
         self._axis_string_tifffile = 'RTCZYX'
         self._check_directory_path(path)
+        self.btf_num_slices = btf_num_slices
+        self.is_btf: bool = is_btf
         self.is_ndtiff: bool = False
         self.is_mm_stack: bool = False
         self._data_store = None
-        self._open_dataset()
+        if is_btf:
+            self._read_btf_tifffile()
+        else:
+            self._open_dataset()
         
         
     
@@ -73,6 +80,7 @@ class MicroscopeDataReader:
         self.logger.info(f"Reading Dataset from: {self.directory_path}")
         if (self.directory_path/'NDTiff.index').exists():
             self.logger.info(f"Found NDTiff.index file in {self.directory_path}")
+            self.is_btf = False
             self.is_mm_stack = False
             self.is_ndtiff = True
             if self._force_tifffile:
@@ -87,6 +95,7 @@ class MicroscopeDataReader:
             self.first_tiff_file = self.directory_path.name + '_MMStack.ome.tif'
         if (self.directory_path / self.first_tiff_file).exists():
             self.logger.info(f"Found {self.directory_path}/{self.first_tiff_file} file in {self.directory_path}")
+            self.is_btf = False
             self.is_mm_stack = True
             self.is_ndtiff = False
             self._read_tifffile()
@@ -128,6 +137,20 @@ class MicroscopeDataReader:
         self._fix_axis_order_and_shape(axes, dask_array)
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
+    
+    def _read_btf_tifffile(self):
+        filepath = self.directory_path / self.first_tiff_file
+        if not filepath.exists():
+            self.logger.error(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
+            raise FileNotFoundError(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
+        self.logger.info(f"Reading data from {self.directory_path} as btf file")
+        import tifffile as tff
+        if version.parse(tff.__version__) < version.parse(self._tifffile_version):
+            self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+            raise ImportError(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+        self._data_store = tff.TiffFile(filepath, mode='r', )
+        self.logger.warning(f"Big Tiff is not supported yet")
+        self.logger.info(f"Data store: {self._data_store}")
     
     def _fix_axis_order_and_shape(self, axes: str, dask_array: dask.array):
         # fix axis order to be PTCZYX
@@ -179,6 +202,50 @@ class MicroscopeDataReader:
             return self._dask_array[position, time, channel, z, :, :].compute()
         return None
     
+    def get_frame(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0) -> np.array:
+        """
+        Reads a single y,x image from the data set.
+            The image is selected by the position, time, channel and z values.
+        
+        Args:
+            position (int, optional): position. Defaults to 0.
+            time (int, optional): time. Defaults to 0.
+            channel (int, optional): channel. Defaults to 0.
+            z (int, optional): z-axis. Defaults to 0.
+            
+        Returns:
+            np.array: xy image
+        """
+        return self.read_image(position, time, channel, z)
+    
+    def read_single_volume(self, position: int = 0, time: int = 0, channel: int = 0) -> np.array:
+        """Read a single volume from the data set
+            The volume is selected by the position, time and channel values.
+        
+        Args:
+            position (int, optional): position. Defaults to 0.
+            time (int, optional): time. Defaults to 0.
+            channel (int, optional): channel. Defaults to 0.
+            
+        Returns:
+            np.array: volume[z,y,x]
+        """
+        return self._dask_array[position, time, channel, :, :, :].compute()
+    
+    def get_single_volume(self, position: int = 0, time: int = 0, channel: int = 0) -> np.array:
+        """Read a single volume from the data set
+            The volume is selected by the position, time and channel values.
+        
+        Args:
+            position (int, optional): position. Defaults to 0.
+            time (int, optional): time. Defaults to 0.
+            channel (int, optional): channel. Defaults to 0.
+            
+        Returns:
+            np.array: volume[z,y,x]
+        """
+        return self.read_single_volume(position, time, channel)
+    
     def get_axes_order(self) -> list:
         """
         Returns the axis order of the dask array
@@ -197,6 +264,96 @@ class MicroscopeDataReader:
         """
         return self.axis_string
     
+    def get_data_shape(self) -> tuple:
+        """
+        Returns the shape of the data set [position, time, channel, z, y, x]
+        
+        Returns:
+            tuple: shape
+        """
+        return self._dask_array.shape
+    
+    def get_image_shape(self) -> tuple:
+        """
+        Returns the shape of the images [y, x]
+        
+        Returns:
+            tuple: shape
+        """
+        return self._dask_array.shape[-2:]
+    
+    def get_volume_shape(self) -> tuple:
+        """
+        Returns the shape of the volumes [z, y, x]
+        
+        Returns:
+            tuple: shape
+        """
+        return self._dask_array.shape[-3:]
+    
+    def get_number_of_positions(self) -> int:
+        """
+        Returns the amount of positions
+        
+        Returns:
+            int: amount of positions
+        """
+        return self._dask_array.shape[0]
+    
+    def get_number_of_timepoints(self) -> int:
+        """
+        Returns the amount of timepoints
+        
+        Returns:
+            int: amount of timepoints
+        """
+        return self._dask_array.shape[1]
+    
+    def get_number_of_channels(self) -> int:
+        """
+        Returns the amount of channels
+        
+        Returns:
+            int: amount of channels
+        """
+        return self._dask_array.shape[2]
+    
+    def get_number_of_z_slices(self) -> int:
+        """
+        Returns the amount of slices
+        
+        Returns:
+            int: amount of slices
+        """
+        return self._dask_array.shape[3]
+    
+    def get_total_number_of_frames(self) -> int:
+        """
+        Returns the total amount of frames
+        
+        Returns:
+            int: total amount of frames
+        """
+        return self.dask_array.shape[0] * self.dask_array.shape[1] * self.dask_array.shape[2] * self.dask_array.shape[3]
+    
+    def get_number_of_volumes(self) -> int:
+        """
+        Returns the amount of volumes
+        
+        Returns:
+            int: amount of volumes
+        """
+        return self._dask_array.shape[0] * self._dask_array.shape[1] * self._dask_array.shape[2]
+    
+    def get_data_type(self) -> str:
+        """
+        Returns the data type of the data set
+        
+        Returns:
+            str: data type
+        """
+        return self._dask_array.dtype
+    
     def open_in_napari(self):
         """
         Opens the data set in napari using view_image. This assumes the image is floats (not ints, like segmentation)
@@ -205,6 +362,25 @@ class MicroscopeDataReader:
         viewer = napari.view_image(self._dask_array, multiscale=False, rgb=False, axis_labels=self.axis_order)
         return viewer
     
+    def _get_single_volume_from_btf(fname: typing.Union[str, Path], which_vol: int, num_slices: int, alpha: float = 1.0,
+                      dtype: str = 'uint8') -> np.ndarray:
+        # Convert to page coordinates
+        start_ind = num_slices * which_vol
+        key = range(start_ind, start_ind + num_slices)
+        if type(fname) == str:
+            dat = (alpha * tifffile.imread(fname, key=key)).astype(dtype)
+        elif type(fname) == tifffile.TiffFile:
+            dat = np.array([(alpha * (fname.pages[i].asarray())).astype(dtype) for i in key])
+        # dat = (alpha*np.array(fname.pages[start_ind:start_ind+num_slices])).astype(dtype)
+        else:
+            raise ValueError("Must pass open tifffile or file path")
+
+    def _generate_ome_metadata(self):
+        from omexmlClass import OMEXML
+        my_ome_mxl = OMEXML()
+        my_ome_mxl.set_image_count(1000)
+        my_ome_mxl.Plane
+        
     @property
     def dask_array(self):
         return self._dask_array
