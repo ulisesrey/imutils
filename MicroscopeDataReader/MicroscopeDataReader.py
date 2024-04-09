@@ -20,7 +20,8 @@ class MicroscopeDataReader:
         self.logger = logging.getLogger(__name__)
         # make sure logging works:
         if not self.logger.hasHandlers():
-            logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+            log_format = '%(asctime)s.%(msecs)03d | %(levelname)-8s |\033[1;36m %(message)s\033[0m \033[5m | %(name)s \033[0m\033[3m- %(funcName)s -\033[0m \033[1mLine %(lineno)d\033[0m'
+            logging.basicConfig(level=logging.DEBUG, format=log_format, datefmt="%Y-%m-%d %H:%M:%S")
         self._tifffile_version = '2023.7.10'
         self.directory_path: Path = None
         self.first_tiff_file: str = None
@@ -126,11 +127,11 @@ class MicroscopeDataReader:
         # checking for axis order RTCZYX:
         for i, org in enumerate(self._axis_string_tifffile):
             org_axis_position[i] = axes.find(org)
-            self.logger.debug(f"Axis {i}, {org} is at position {org_axis_position[i]}")
+            self.logger.debug(f"Axis {i}, {org}, is at position {org_axis_position[i]}")
         self.logger.info(f"Org axis order, position of PTCZYX: {org_axis_position}")
         # reorder axis to PTCZYX
         for i in range(len(org_axis_position)):
-            self.logger.debug(f"Axis {i}, {self.axis_order[i]} is at position {org_axis_position[i]}")
+            self.logger.debug(f"Axis {i}, {self.axis_order[i]}, is at position {org_axis_position[i]}")
             if org_axis_position[i] == -1:
                 self.logger.debug(f"Adding axis {i}, {self.axis_order[i]}")
                 dask_array = dask.array.expand_dims(dask_array, i)
@@ -145,9 +146,9 @@ class MicroscopeDataReader:
                 org_axis_position[i] = i
                 org_axis_position[old_axis] = old_axis
             else:
-                self.logger.debug(f"Axis {i}, {self.axis_order[i]} is at position {org_axis_position[i]}")
+                self.logger.debug(f"Axis {i}, {self.axis_order[i]}, nothing to do")
         
-        self.logger.info(f"New axis order: {org_axis_position}")
+        self.logger.info(f"New axis order [p,t,c,z,y,x]: {org_axis_position}")
         self._dask_array = dask_array
         
     def read_image(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0) -> np.array:
