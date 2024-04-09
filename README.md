@@ -21,7 +21,7 @@ This package has some image processing tools written by Ulises.
 ## Read Microscopy (Micromanager) dataset:
 #### Open Dataset:
 ```
->> from MicroscopeDataReader import MicroscopeDataReader
+>> from MicroscopeDataReader.MicroscopeDataReader import MicroscopeDataReader
 >> my_dataet = MicroscopeDataReader(dataset_path)
 ```
 #### Get Data as lacy loaded dask array:
