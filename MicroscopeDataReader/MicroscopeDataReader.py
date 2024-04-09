@@ -362,18 +362,18 @@ class MicroscopeDataReader:
         viewer = napari.view_image(self._dask_array, multiscale=False, rgb=False, axis_labels=self.axis_order)
         return viewer
     
-    def _get_single_volume_from_btf(fname: typing.Union[str, Path], which_vol: int, num_slices: int, alpha: float = 1.0,
-                      dtype: str = 'uint8') -> np.ndarray:
-        # Convert to page coordinates
-        start_ind = num_slices * which_vol
-        key = range(start_ind, start_ind + num_slices)
-        if type(fname) == str:
-            dat = (alpha * tifffile.imread(fname, key=key)).astype(dtype)
-        elif type(fname) == tifffile.TiffFile:
-            dat = np.array([(alpha * (fname.pages[i].asarray())).astype(dtype) for i in key])
-        # dat = (alpha*np.array(fname.pages[start_ind:start_ind+num_slices])).astype(dtype)
-        else:
-            raise ValueError("Must pass open tifffile or file path")
+    # def _get_single_volume_from_btf(fname: Union[str, Path], which_vol: int, num_slices: int, alpha: float = 1.0,
+    #                   dtype: str = 'uint8') -> np.ndarray:
+    #     # Convert to page coordinates
+    #     start_ind = num_slices * which_vol
+    #     key = range(start_ind, start_ind + num_slices)
+    #     if type(fname) == str:
+    #         dat = (alpha * tifffile.imread(fname, key=key)).astype(dtype)
+    #     elif type(fname) == tifffile.TiffFile:
+    #         dat = np.array([(alpha * (fname.pages[i].asarray())).astype(dtype) for i in key])
+    #     # dat = (alpha*np.array(fname.pages[start_ind:start_ind+num_slices])).astype(dtype)
+    #     else:
+    #         raise ValueError("Must pass open tifffile or file path")
 
     def _generate_ome_metadata(self):
         from omexmlClass import OMEXML
