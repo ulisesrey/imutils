@@ -41,8 +41,8 @@ class MicroscopeDataReader:
         self._check_directory_path(path)
         self.btf_num_slices = btf_num_slices
         self.is_btf: bool = is_btf
-        self.is_ndtiff: bool = False
-        self.is_mm_stack: bool = False
+        self._is_ndtiff: bool = False
+        self._is_tiffile: bool = False
         self._data_store = None
         if is_btf:
             self._read_btf_tifffile()
@@ -81,8 +81,8 @@ class MicroscopeDataReader:
         if (self.directory_path/'NDTiff.index').exists():
             self.logger.info(f"Found NDTiff.index file in {self.directory_path}")
             self.is_btf = False
-            self.is_mm_stack = False
-            self.is_ndtiff = True
+            self._is_tiffile = False
+            self._is_ndtiff = True
             if self._force_tifffile:
                 self.logger.info(f"Force reading with tiffile: {self.directory_path}")
                 if self.first_tiff_file is None:
@@ -96,8 +96,8 @@ class MicroscopeDataReader:
         if (self.directory_path / self.first_tiff_file).exists():
             self.logger.info(f"Found {self.directory_path}/{self.first_tiff_file} file in {self.directory_path}")
             self.is_btf = False
-            self.is_mm_stack = True
-            self.is_ndtiff = False
+            self._is_tiffile = True
+            self._is_ndtiff = False
             self._read_tifffile()
             return
         else:
@@ -125,9 +125,9 @@ class MicroscopeDataReader:
         self._data_store = tff.TiffFile(filepath, mode='r')
         if not self._data_store.is_micromanager:
             self.logger.error(f"File {filepath} is not a Micromanager file")
-        if self.is_mm_stack and not self._data_store.is_mmstack:
+        if self._is_tiffile and not self._data_store.is_mmstack:
             self.logger.error(f"File {filepath} is not a MMStack file")
-        if self.is_ndtiff and not self._data_store.is_ndtiff:
+        if self._is_ndtiff and not self._data_store.is_ndtiff:
             self.logger.error(f"File {filepath} is not a NDTiff file")
         axes = self._data_store.series[0].axes
         dask_array = dask.array.from_zarr(self._data_store.aszarr())
@@ -149,8 +149,50 @@ class MicroscopeDataReader:
             self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
             raise ImportError(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
         self._data_store = tff.TiffFile(filepath, mode='r', )
-        self.logger.warning(f"Big Tiff is not supported yet")
+        dask_array = dask.array.from_zarr(self._data_store.aszarr())
+        if not len(dask_array.shape) == 3:
+            self.logger.error(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
+            raise ValueError(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
+        if self.btf_num_slices is None:
+            self.logger.warning(f"Number of slices in BTF file is not specified")
+            self._read_MMStack_metadata_file_num_slices()
+        if dask_array.shape[0] % self.btf_num_slices > 0:
+            self.logger.error(f"Number of slices doesen't mach the timepoints in the BTF file")
+            raise ValueError(f"Number of slices doesen't mach the timepoints in the BTF file")
+        dask_array = dask_array.reshape((dask_array.shape[0]//self.btf_num_slices, self.btf_num_slices, dask_array.shape[1], dask_array.shape[2]))
+        dask_array = dask.array.expand_dims(dask_array, axis=(0,2))
+        self._dask_array = dask_array
+        self._is_tiffile = True
+        self._is_ndtiff = False
         self.logger.info(f"Data store: {self._data_store}")
+        self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
+    
+    def _read_MMStack_metadata_file_num_slices(self):
+        import json
+        my_path = Path(self.directory_path).glob("*_MMStack_metadata.txt")
+        if all(False for _ in my_path):
+            self.logger.error(f"Could not find *_MMStack_metadata.txt file in {self.directory_path}")
+            raise FileNotFoundError(f"Could not find *_MMStack_metadata.txt file in {self.directory_path}")
+        my_path = Path(self.directory_path).glob("*_MMStack_metadata.txt")
+        for file in my_path:
+            z_slices = 0
+            self.logger.info(f"Reading metadata file {file}")
+            with open(file, 'r') as f:
+                json_file = json.load(f)
+                for key in json_file.keys():
+                    if "FrameKey" in key:
+                        arr = key.split("-")
+                        #print(arr)
+                        new_z = int(arr[-1])
+                        if new_z >= z_slices:
+                            z_slices = new_z
+                        else:
+                            break
+            self.btf_num_slices = z_slices + 1
+            self.logger.info(f"Number of slices in {file.name}: {self.btf_num_slices}")
+            return
+        self.logger.error(f"Could not find number of slices in metadata file")
+        raise FileNotFoundError(f"Could not find number of slices in metadata file")
     
     def _fix_axis_order_and_shape(self, axes: str, dask_array: dask.array):
         # fix axis order to be PTCZYX
@@ -196,9 +238,9 @@ class MicroscopeDataReader:
         Returns:
             np.array: xy image
         """
-        if self.is_ndtiff:
+        if self._is_ndtiff:
             return self._data_store.read_image(position = position, time = time, channel=channel, z=z)
-        if self.is_mm_stack:
+        if self._is_tiffile:
             return self._dask_array[position, time, channel, z, :, :].compute()
         return None
     
@@ -361,19 +403,6 @@ class MicroscopeDataReader:
         import napari
         viewer = napari.view_image(self._dask_array, multiscale=False, rgb=False, axis_labels=self.axis_order)
         return viewer
-    
-    # def _get_single_volume_from_btf(fname: Union[str, Path], which_vol: int, num_slices: int, alpha: float = 1.0,
-    #                   dtype: str = 'uint8') -> np.ndarray:
-    #     # Convert to page coordinates
-    #     start_ind = num_slices * which_vol
-    #     key = range(start_ind, start_ind + num_slices)
-    #     if type(fname) == str:
-    #         dat = (alpha * tifffile.imread(fname, key=key)).astype(dtype)
-    #     elif type(fname) == tifffile.TiffFile:
-    #         dat = np.array([(alpha * (fname.pages[i].asarray())).astype(dtype) for i in key])
-    #     # dat = (alpha*np.array(fname.pages[start_ind:start_ind+num_slices])).astype(dtype)
-    #     else:
-    #         raise ValueError("Must pass open tifffile or file path")
 
     def _generate_ome_metadata(self):
         from omexmlClass import OMEXML
