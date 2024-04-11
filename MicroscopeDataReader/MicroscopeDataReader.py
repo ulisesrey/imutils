@@ -107,7 +107,7 @@ class MicroscopeDataReader:
     def _read_ndtiff(self):
         self.logger.info(f"Reading data from {self.directory_path} as ndtiff file")
         from ndtiff import Dataset
-        self._data_store = Dataset(self.directory_path)
+        self._data_store = Dataset(str(self.directory_path))
         self._dask_array = self._data_store.as_array()
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions [position?,t,channel?,z,y,x]: {self._dask_array.shape}")
