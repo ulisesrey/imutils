@@ -12,9 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Zimmer-lab/imutils",
-    packages=(setuptools.find_packages()), #+['MicroscopeDataReader']
-    py_modules=['MicroscopeDataReader/MicroscopeDataReader'],
-    #package_dir={"":"},
+    packages=(setuptools.find_packages()),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
