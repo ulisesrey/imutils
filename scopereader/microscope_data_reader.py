@@ -10,20 +10,24 @@ class MicroscopeDataReader:
     """
     Reads data from microscope data sets. The folder can be a NDTiff data store or a MMStack data store.
     If the folder is a NDTiff datastore, the data is read using the ndtiff package else tifffile is used.
-    
-    If a folder is passed, specific naming conventions are assumed.
-    For ndtiff (if force_tifffile is True):
-        first_tiff_file = self.directory_path.name + '_NDTiffStack.tif'
-    and for MMStack:
-        first_tiff_file = self.directory_path.name + '_MMStack.ome.tif'
-    
-    Args:
-        path (Path or str): Path to the file or directory containing the data
-        force_tifffile (bool, optional): If True, the file is read with tifffile. Defaults to False.
-        is_btf (bool, optional): If True, the file is a BTF file. Defaults to False.
-        btf_num_slices (int, optional): If is_btf is True, the number of slices of the BTF file have to be specified. Defaults to None.
     """
     def __init__(self, path: Union[Path,str], force_tifffile: bool = False, is_btf: bool = False, btf_num_slices: int = None):
+        """
+        Reads data from microscope data sets. The folder can be a NDTiff data store or a MMStack data store.
+        If the folder is a NDTiff datastore, the data is read using the ndtiff package else tifffile is used.
+        
+        If a folder is passed, specific naming conventions are assumed.
+        For ndtiff (if force_tifffile is True):
+            first_tiff_file = self.directory_path.name + '_NDTiffStack.tif'
+        and for MMStack:
+            first_tiff_file = self.directory_path.name + '_MMStack.ome.tif'
+        
+        Args:
+            path (Path or str): Path to the file or directory containing the data
+            force_tifffile (bool, optional): If True, the file is read with tifffile. Defaults to False.
+            is_btf (bool, optional): If True, the file is a BTF file. Defaults to False.
+            btf_num_slices (int, optional): If is_btf is True, the number of slices of the BTF file have to be specified. Defaults to None.
+        """
         self._force_tifffile = force_tifffile
         self.logger = logging.getLogger(__name__)
         # make sure logging works:
