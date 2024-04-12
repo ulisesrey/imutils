@@ -53,12 +53,36 @@ class MicroscopeDataReader:
         else:
             self._open_dataset()
         
-        
+    def __enter__(self):
+        self.logger.warning("Try to open the Microscope Data Reader once for your project. "
+                            "Opening the file is a lot of work for me. "
+                            "In other words, don't repeat with MicroscopeDataReader(...) as md: ... ")
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.logger.warning(f"I hope this was the only occation you needed this file ;-)")
+        self.close()
     
     def __del__(self):
         self.logger.info(f"Closing Microscope Data Reader")
         if self._data_store is not None:
             self._data_store.close()
+    
+    def close(self):
+        self.logger.info(f"Closing Microscope Data Reader")
+        self.directory_path: Path = None
+        self.first_tiff_file: str = None
+        self._tff_dask_array: dask.array = None
+        self._dask_array: dask.array = None
+        self.axis_order = ['position', 'time', 'channel', 'z', 'y', 'x']
+        self.axis_string = 'PTCZYX'
+        self._axis_string_tifffile = 'RTCZYX'
+        self._is_btf: bool = False
+        self._is_ndtiff: bool = False
+        self._is_tiffile: bool = False
+        if self._data_store is not None:
+            self._data_store.close()
+        self._data_store = None
     
     def _check_directory_path(self, directory_path: Union[Path,str]) -> None:
          # Check if file_path is of type pathlib.Path
