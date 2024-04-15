@@ -24,7 +24,7 @@ See documentation (docs)
 ## Read Microscopy (Micromanager) dataset:
 #### Open Dataset:
 ```
->> from MicroscopeDataReader.MicroscopeDataReader import MicroscopeDataReader
+>> from scopereader import MicroscopeDataReader
 >> my_dataet = MicroscopeDataReader(dataset_path)
 ```
 #### Get Data as lazy loaded dask array:
