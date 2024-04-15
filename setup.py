@@ -5,18 +5,18 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="imutils",
-    version="0.0.1.2",
+    version="0.0.2.0",
     author="Ulises Rey",
-    author_email="ulises.rey@imp.ac.at",
+    author_email="Lukas.Hille@univie.ac.at",
     description="A small package with image processing utilities",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://bitbucket.vbc.ac.at/users/ulises.rey/repos/imutils/browse",
-    packages=setuptools.find_packages(),
+    url="https://github.com/Zimmer-lab/imutils",
+    packages=(setuptools.find_packages()),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.8',
 )
