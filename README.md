@@ -18,22 +18,26 @@ for details.
 # Description
 ## General:
 This package has some image processing tools written by Ulises.
+## LoguruConfigurator:
+A simple to use logging library.
+See documentation (docs)
 ## Read Microscopy (Micromanager) dataset:
 #### Open Dataset:
 ```
 >> from MicroscopeDataReader.MicroscopeDataReader import MicroscopeDataReader
 >> my_dataet = MicroscopeDataReader(dataset_path)
 ```
-#### Get Data as lacy loaded dask array:
+#### Get Data as lazy loaded dask array:
 ```
 >> dask_array = my_dataset.dask_array
->> my_dataset.get_axes_order() > ['position', 'time', 'channel', 'z', 'y', 'x']
->> my_dataset.get_axes_string() > PTCZYX
+>> my_dataset.get_axis_order() > ['position', 'time', 'channel', 'z', 'y', 'x']
+>> my_dataset.get_axis_string() > PTCZYX
 ```
 #### Get single image as nparry (loaded into memory)
 ```
 # image = my_dataset.read_image(position = position, time = time, channel=channel, z=z)
->> image = my_dataset.read_image(time = 42) # not given arguments are 0
+# (or get_frame)
+>> image = my_dataset.get_frame(time = 42) # not given arguments are 0
 ```
 #### View dataset with napari
 ```

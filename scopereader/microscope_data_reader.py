@@ -11,7 +11,7 @@ class MicroscopeDataReader:
     Reads data from microscope data sets. The folder can be a NDTiff data store or a MMStack data store.
     If the folder is a NDTiff datastore, the data is read using the ndtiff package else tifffile is used.
     """
-    def __init__(self, path: Union[Path,str], force_tifffile: bool = False, is_btf: bool = False, btf_num_slices: int = None):
+    def __init__(self, path: Union[Path,str], force_tifffile: bool = False, as_raw_tiff: bool = False, raw_tiff_num_slices: int = None):
         """
         Reads data from microscope data sets. The folder can be a NDTiff data store or a MMStack data store.
         If the folder is a NDTiff datastore, the data is read using the ndtiff package else tifffile is used.
@@ -25,8 +25,8 @@ class MicroscopeDataReader:
         Args:
             path (Path or str): Path to the file or directory containing the data
             force_tifffile (bool, optional): If True, the file is read with tifffile. Defaults to False.
-            is_btf (bool, optional): If True, the file is a BTF file. Defaults to False.
-            btf_num_slices (int, optional): If is_btf is True, the number of slices of the BTF file have to be specified. Defaults to None.
+            as_raw_tiff (bool, optional): If True, the file is read without metadata. Defaults to False.
+            raw_tiff_num_slices (int, optional): If as_raw_tiff is True, the number of slices of the file have to be specified. Defaults to None.
         """
         self._force_tifffile = force_tifffile
         self.logger = logger.bind(classname=self.__class__.__name__)
@@ -39,13 +39,13 @@ class MicroscopeDataReader:
         self.axis_string = 'PTCZYX'
         self._axis_string_tifffile = 'RTCZYX'
         self._check_directory_path(path)
-        self._btf_num_slices = btf_num_slices
-        self._is_btf: bool = is_btf
+        self._raw_tiff_num_slices = raw_tiff_num_slices
+        self._as_raw_tiff: bool = as_raw_tiff
         self._is_ndtiff: bool = False
         self._is_tiffile: bool = False
         self._data_store = None
-        if is_btf:
-            self._read_btf_tifffile()
+        if as_raw_tiff:
+            self._read_raw_tifffile()
         else:
             self._open_dataset()
         
@@ -73,7 +73,7 @@ class MicroscopeDataReader:
         self.axis_order = ['position', 'time', 'channel', 'z', 'y', 'x']
         self.axis_string = 'PTCZYX'
         self._axis_string_tifffile = 'RTCZYX'
-        self._is_btf: bool = False
+        self._as_raw_tiff: bool = False
         self._is_ndtiff: bool = False
         self._is_tiffile: bool = False
         if self._data_store is not None:
@@ -105,7 +105,7 @@ class MicroscopeDataReader:
         self.logger.info(f"Reading Dataset from: {self.directory_path}")
         if (self.directory_path/'NDTiff.index').exists():
             self.logger.info(f"Found NDTiff.index file in {self.directory_path}")
-            self._is_btf = False
+            self._as_raw_tiff = False
             self._is_tiffile = False
             self._is_ndtiff = True
             if self._force_tifffile:
@@ -120,7 +120,7 @@ class MicroscopeDataReader:
             self.first_tiff_file = self.directory_path.name + '_MMStack.ome.tif'
         if (self.directory_path / self.first_tiff_file).exists():
             self.logger.info(f"Found {self.directory_path}/{self.first_tiff_file} file in {self.directory_path}")
-            self._is_btf = False
+            self._as_raw_tiff = False
             self._is_tiffile = True
             self._is_ndtiff = False
             self._read_tifffile()
@@ -163,7 +163,7 @@ class MicroscopeDataReader:
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
     
-    def _read_btf_tifffile(self):
+    def _read_raw_tifffile(self):
         filepath = self.directory_path / self.first_tiff_file
         if not filepath.exists():
             self.logger.error(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
@@ -178,13 +178,13 @@ class MicroscopeDataReader:
         if not len(dask_array.shape) == 3:
             self.logger.error(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
             raise ValueError(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
-        if self._btf_num_slices is None:
-            self.logger.warning(f"Number of slices in BTF file is not specified")
+        if self._raw_tiff_num_slices is None:
+            self.logger.warning(f"Number of slices in raw tiff file is not specified")
             self._read_MMStack_metadata_file_num_slices()
-        if dask_array.shape[0] % self._btf_num_slices > 0:
-            self.logger.error(f"Number of slices doesen't mach the timepoints in the BTF file")
-            raise ValueError(f"Number of slices doesen't mach the timepoints in the BTF file")
-        dask_array = dask_array.reshape((dask_array.shape[0]//self._btf_num_slices, self._btf_num_slices, dask_array.shape[1], dask_array.shape[2]))
+        if dask_array.shape[0] % self._raw_tiff_num_slices > 0:
+            self.logger.error(f"Number of slices doesen't mach the timepoints in the raw tiff file")
+            raise ValueError(f"Number of slices doesen't mach the timepoints in the raw tiff file")
+        dask_array = dask_array.reshape((dask_array.shape[0]//self._raw_tiff_num_slices, self._raw_tiff_num_slices, dask_array.shape[1], dask_array.shape[2]))
         dask_array = dask.array.expand_dims(dask_array, axis=(0,2))
         self._dask_array = dask_array
         self._is_tiffile = True
@@ -213,8 +213,8 @@ class MicroscopeDataReader:
                             z_slices = new_z
                         else:
                             break
-            self._btf_num_slices = z_slices + 1
-            self.logger.info(f"Number of slices in {file.name}: {self._btf_num_slices}")
+            self._raw_tiff_num_slices = z_slices + 1
+            self.logger.info(f"Number of slices in {file.name}: {self._raw_tiff_num_slices}")
             return
         self.logger.error(f"Could not find number of slices in metadata file")
         raise FileNotFoundError(f"Could not find number of slices in metadata file")
