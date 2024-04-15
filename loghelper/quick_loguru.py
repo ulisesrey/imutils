@@ -17,21 +17,19 @@ class LoguruConfigurator:
             "<green>{time:YYYY-MM-DD HH:mm:ss.SSSS!UTC}</green> | "
             "<level>{level: <8}</level> | "
             "<level>{message}</level> | "
-            "<level>{extra}</level> | "
-            "<cyan>M_{module}</cyan>:<cyan>N_{name}</cyan>:<cyan>func_{function}</cyan>:<cyan>line_{line}</cyan> | "
-            "<m>t_{elapsed}</m>:<m>p_{process}</m>:<m>th_{thread}</m>:<m>ex_{exception}</m> | ")
+            "<cyan>M_{module}</cyan>:<cyan>N_{name}</cyan>:class_<cyan>{extra[classname]}</cyan>:<cyan>func_{function}</cyan>:<cyan>line_{line}</cyan> | "
+            "<m>t_{elapsed}</m>:<m>p_{process}</m>:<m>th_{thread}</m>:<m>ex_{exception}</m>")
         self._consol_logger_format_std = (
             "<green>{time:YYYY-MM-DD HH:mm:ss.SSSS!UTC}</green> | "
             "<level>{level: <8}</level> | "
-            "<cyan>N_{name}</cyan> | "
-            "<level>{message}</level> | "
-            "<level>{extra}</level> | ")
+            "<cyan>{extra[classname]}</cyan> | "
+            "<level>{message}</level>")
         self._file_logger_format_std = (
             "<green>{time:YYYY-MM-DD HH:mm:ss.SSSS!UTC}</green> | "
             "<level>{level: <8}</level> | "
-            "<cyan>N_{name}</cyan> | "
-            "<level>{message}</level> | "
-            "<level>{extra}</level> | ")
+            "<cyan>{extra[classname]}</cyan> | "
+            "<level>{message}</level>")
+        logger.configure(extra={"classname": "Unknown"})
         logger.remove()
         self.set_consol_logger(logg_level)
         self.set_consol_error_logger()
@@ -42,6 +40,17 @@ class LoguruConfigurator:
         self._json_file_sink_id = None
         self._json_file_output = False
         self.set_file_logger(logg_level, file, file_ouput)
+    
+    def formatter(self, record):
+        """Custom formatter for loguru logger."""
+        if record["level"].no > logger.level("WARNING").no:
+            return self._consol_logger_format_debug
+        keyname = "{name}" if record["extra"]["classname"] == "Unknown" else "{extra[classname]}"
+        return (
+            "<green>{time:YYYY-MM-DD HH:mm:ss.SSSS!UTC}</green> | "
+            "<level>{level: <8}</level> | "
+            "<cyan>%s</cyan> | " 
+            "<level>{message}</level>\n" % keyname)
     
     def set_consol_error_logger(self, active: bool = True):
         """Set the stderr logger for error messages.
@@ -55,7 +64,7 @@ class LoguruConfigurator:
         if active:
             self._consol_sink_id = logger.add(sys.stderr, colorize=True, format=self._consol_logger_format_debug, level="ERROR", enqueue=True)
     
-    def set_consol_logger(self, logg_level: str, active: bool = True):
+    def set_consol_logger(self, logg_level: str, active: bool = True, detailed_error: bool = True):
         """Set the console logger.
         
         Args:
@@ -70,7 +79,8 @@ class LoguruConfigurator:
             if logg_level == "DEBUG" or logg_level == "TRACE":
                 self._consol_sink_id = logger.add(sys.stdout, colorize=True, format=self._consol_logger_format_debug, level=logg_level, enqueue=True)
             else:
-                self._consol_sink_id = logger.add(sys.stdout, colorize=True, format=self._consol_logger_format_std, level=logg_level, enqueue=True)
+                format = self._consol_logger_format_std if not detailed_error else self.formatter
+                self._consol_sink_id = logger.add(sys.stdout, colorize=True, format=format, level=logg_level, enqueue=True)
     
     def set_json_file_logger(self, logg_level: str, file: Union[Path,str], active: bool = True):
         """Set the json file logger.

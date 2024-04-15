@@ -9,6 +9,7 @@ scipy
 skimage
 pandas
 packaging
+loguru
 # Packages in standard library (no need to install, would fail)
 # re in standard library
 # csv in standard library

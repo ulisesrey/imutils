@@ -1,5 +1,5 @@
 # Tools to read data from the microscopes
-import logging
+from loguru import logger
 from pathlib import Path
 import dask.array
 import numpy as np
@@ -29,11 +29,7 @@ class MicroscopeDataReader:
             btf_num_slices (int, optional): If is_btf is True, the number of slices of the BTF file have to be specified. Defaults to None.
         """
         self._force_tifffile = force_tifffile
-        self.logger = logging.getLogger(__name__)
-        # make sure logging works:
-        if not self.logger.hasHandlers():
-            log_format = '%(asctime)s.%(msecs)03d | %(levelname)-8s |\033[1;36m %(message)s\033[0m \033[5m | %(name)s \033[0m\033[3m- %(funcName)s -\033[0m \033[1mLine %(lineno)d\033[0m'
-            logging.basicConfig(level=logging.DEBUG, format=log_format, datefmt="%Y-%m-%d %H:%M:%S")
+        self.logger = logger.bind(classname=self.__class__.__name__)
         self._tifffile_version = '2023.7.10'
         self.directory_path: Path = None
         self.first_tiff_file: str = None
@@ -134,7 +130,7 @@ class MicroscopeDataReader:
             raise FileNotFoundError(f"Could not find {self.directory_path}/{self.first_tiff_file} file in {self.directory_path}")
             
     def _read_ndtiff(self):
-        self.logger.info(f"Reading data from {self.directory_path} as ndtiff file")
+        self.logger.info(f"Reading data from {self.directory_path} with ndtiff")
         from ndtiff import Dataset
         self._data_store = Dataset(str(self.directory_path))
         self._dask_array = self._data_store.as_array()
@@ -146,7 +142,7 @@ class MicroscopeDataReader:
         if not filepath.exists():
             self.logger.error(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
             raise FileNotFoundError(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
-        self.logger.info(f"Reading data from {self.directory_path} as MMStack file")
+        self.logger.info(f"Reading data from {self.directory_path} with tifffile")
         import tifffile as tff
         if version.parse(tff.__version__) < version.parse(self._tifffile_version):
             self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
@@ -172,7 +168,7 @@ class MicroscopeDataReader:
         if not filepath.exists():
             self.logger.error(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
             raise FileNotFoundError(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
-        self.logger.info(f"Reading data from {self.directory_path} as btf file")
+        self.logger.info(f"Reading data from {self.directory_path} with tifffile")
         import tifffile as tff
         if version.parse(tff.__version__) < version.parse(self._tifffile_version):
             self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
