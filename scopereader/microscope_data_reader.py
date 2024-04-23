@@ -173,7 +173,7 @@ class MicroscopeDataReader:
         if version.parse(tff.__version__) < version.parse(self._tifffile_version):
             self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
             raise ImportError(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
-        self._data_store = tff.TiffFile(filepath, mode='r', is_ome=False)
+        self._data_store = tff.TiffFile(filepath, mode='r', is_ome=False, is_shaped=False)
         dask_array = dask.array.from_zarr(self._data_store.aszarr())
         if not len(dask_array.shape) == 3:
             self.logger.error(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
