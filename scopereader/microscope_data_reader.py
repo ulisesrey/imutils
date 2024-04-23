@@ -3,7 +3,7 @@ from loguru import logger
 from pathlib import Path
 import dask.array
 import numpy as np
-from typing import Union # from pthon 3.10 it could be | instead of Union
+from typing import Union # from python 3.10 it could be | instead of Union
 from packaging import version
 
 class MicroscopeDataReader:
@@ -56,7 +56,7 @@ class MicroscopeDataReader:
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
-        self.logger.warning(f"I hope this was the only occation you needed this file ;-)")
+        self.logger.warning(f"I hope this was the only occasion you needed this file ;-)")
         self.close()
     
     def __del__(self):
@@ -182,8 +182,8 @@ class MicroscopeDataReader:
             self.logger.warning(f"Number of slices in raw tiff file is not specified")
             self._read_MMStack_metadata_file_num_slices()
         if dask_array.shape[0] % self._raw_tiff_num_slices > 0:
-            self.logger.error(f"Number of slices doesen't mach the timepoints in the raw tiff file")
-            raise ValueError(f"Number of slices doesen't mach the timepoints in the raw tiff file")
+            self.logger.error(f"Number of slices doesn't mach the timepoints in the raw tiff file")
+            raise ValueError(f"Number of slices doesn't mach the timepoints in the raw tiff file")
         dask_array = dask_array.reshape((dask_array.shape[0]//self._raw_tiff_num_slices, self._raw_tiff_num_slices, dask_array.shape[1], dask_array.shape[2]))
         dask_array = dask.array.expand_dims(dask_array, axis=(0,2))
         self._dask_array = dask_array
@@ -326,7 +326,7 @@ class MicroscopeDataReader:
     
     def get_axis_string(self) -> str:
         """
-        Returns the axis order of the daks array as string
+        Returns the axis order of the dask array as string
         
         Returns:
             str: axis order
