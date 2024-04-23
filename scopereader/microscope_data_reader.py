@@ -171,21 +171,34 @@ class MicroscopeDataReader:
         self._check_tiff_version()
         self._data_store = tff.TiffFile(filepath, mode='r', is_ome=False)
         dask_array = dask.array.from_zarr(self._data_store.aszarr())
-        axis_string = self._check_raw_tiff_shape(dask_array)
+        axis_string = self._check_raw_tiff_3d_or_4d(dask_array)
 
-        if self._raw_tiff_num_slices is None:
-            self.logger.warning(f"Number of slices in raw tiff file is not specified")
-            self._read_MMStack_metadata_file_num_slices()
-        if dask_array.shape[0] % self._raw_tiff_num_slices > 0:
-            self.logger.error(f"Number of slices doesn't mach the timepoints in the raw tiff file")
-            raise ValueError(f"Number of slices doesn't mach the timepoints in the raw tiff file")
-        dask_array = dask_array.reshape((dask_array.shape[0]//self._raw_tiff_num_slices, self._raw_tiff_num_slices, dask_array.shape[1], dask_array.shape[2]))
+        if axis_string == 'TYX':
+            dask_array = self._reshape_tyx_to_tzyx(dask_array)
+        elif axis_string == 'TZYX':
+            pass
+        else:
+            message = f"Expected 3D or 4D data [t,y,x] or [t, z, y, x], got {len(dask_array.shape)}D data"
+            self.logger.error(message)
+            raise ValueError(message)
+
         dask_array = dask.array.expand_dims(dask_array, axis=(0,2))
         self._dask_array = dask_array
         self._is_tiffile = True
         self._is_ndtiff = False
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
+
+    def _reshape_tyx_to_tzyx(self, dask_array):
+        if self._raw_tiff_num_slices is None:
+            self.logger.warning(f"Number of slices in raw tiff file is not specified")
+            self._read_MMStack_metadata_file_num_slices()
+        if dask_array.shape[0] % self._raw_tiff_num_slices > 0:
+            self.logger.error(f"Number of slices doesn't mach the timepoints in the raw tiff file")
+            raise ValueError(f"Number of slices doesn't mach the timepoints in the raw tiff file")
+        dask_array = dask_array.reshape((dask_array.shape[0] // self._raw_tiff_num_slices, self._raw_tiff_num_slices,
+                                         dask_array.shape[1], dask_array.shape[2]))
+        return dask_array
 
     def _check_tiff_version(self):
         import tifffile as tff
@@ -195,7 +208,7 @@ class MicroscopeDataReader:
             raise ImportError(
                 f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
 
-    def _check_raw_tiff_shape(self, dask_array):
+    def _check_raw_tiff_3d_or_4d(self, dask_array):
         """
         Checks for 3d or 4d data, and returns the axis string
 
