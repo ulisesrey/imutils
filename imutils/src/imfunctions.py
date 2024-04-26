@@ -754,7 +754,8 @@ def stack_z_projection(input_path, output_path, projection_type, dtype='uint16',
     :param axis:
     :return:
     """
-    stack = da.squeeze(MicroscopeDataReader(input_path).dask_array)
+    data_class = MicroscopeDataReader(input_path)
+    stack = da.squeeze(data_class.dask_array)
     projected_img = z_projection(stack, projection_type, axis)
     projected_img = projected_img.astype(dtype)
     tiff.imwrite(output_path, projected_img)
