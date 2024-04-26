@@ -3,12 +3,10 @@ import cv2
 import numpy as np
 import tifffile as tiff
 import glob
-import os
 # unet model is here (too)
-from natsort import natsorted
 import skimage.io as io
 import skimage.transform as trans
-from scopereader import MicroscopeDataReader
+from imutils.scopereader import MicroscopeDataReader
 from skimage import img_as_ubyte
 import dask.array as da
 import pandas as pd

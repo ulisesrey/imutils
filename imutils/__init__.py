@@ -1,2 +1,1 @@
-from scopereader.microscope_data_reader import MicroscopeDataReader
-from loghelper.quick_loguru import LoguruConfigurator
+from imutils.loghelper import LoguruConfigurator
