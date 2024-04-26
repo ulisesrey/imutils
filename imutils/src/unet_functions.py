@@ -8,9 +8,9 @@ import os
 from natsort import natsorted
 import skimage.io as io
 import skimage.transform as trans
+from scopereader import MicroscopeDataReader
 from skimage import img_as_ubyte
-from skimage import exposure
-
+import dask.array as da
 import pandas as pd
 from natsort import natsorted
 import matplotlib.image as mpimg
@@ -62,22 +62,21 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
     model=unet()
     print('loading weights..')
     model.load_weights(weights_path)
+    tif = da.squeeze(MicroscopeDataReader(input_filepath).dask_array)
 
-    with tiff.TiffFile(input_filepath) as tif,\
-            tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-        for i, page in enumerate(tif.pages):
-            img=page.asarray()
-            print(i)
+    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+        start = time.time()
+        for i, img in enumerate(tif):
             #run network
-            start = time.time()
             segmented_img = unet_segmentation(img, model)
             segmented_img = segmented_img*255
             segmented_img = segmented_img.astype('uint8')
-            end = time.time()
-            total_time = end - start
-            print('total time: ', total_time)
             # write
             tif_writer.write(segmented_img, contiguous=True)
+        end = time.time()
+        total_time = end - start
+        print('total time: ', total_time)
+
 
 def testGenerator(test_path, target_size = (256,256),flag_multi_class = False, as_gray = True):
     """this function is duplicated from unet-master/data.py"""
