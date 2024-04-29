@@ -59,11 +59,6 @@ class MicroscopeDataReader:
         self.logger.warning(f"I hope this was the only occation you needed this file ;-)")
         self.close()
     
-    def __del__(self):
-        self.logger.info(f"Closing Microscope Data Reader")
-        if self._data_store is not None:
-            self._data_store.close()
-    
     def close(self):
         self.logger.info(f"Closing Microscope Data Reader")
         self.directory_path: Path = None
