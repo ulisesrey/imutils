@@ -11,7 +11,8 @@ class MicroscopeDataReader:
     Reads data from microscope data sets. The folder can be a NDTiff data store or a MMStack data store.
     If the folder is a NDTiff datastore, the data is read using the ndtiff package else tifffile is used.
     """
-    def __init__(self, path: Union[Path,str], force_tifffile: bool = False, as_raw_tiff: bool = False, raw_tiff_num_slices: int = None):
+    def __init__(self, path: Union[Path,str], force_tifffile: bool = False, as_raw_tiff: bool = False,
+                 raw_tiff_num_slices: int = None, raw_tiff_is_2d: bool = False):
         """
         Reads data from microscope data sets. The folder can be a NDTiff data store or a MMStack data store.
         If the folder is a NDTiff datastore, the data is read using the ndtiff package else tifffile is used.
@@ -27,6 +28,7 @@ class MicroscopeDataReader:
             force_tifffile (bool, optional): If True, the file is read with tifffile. Defaults to False.
             as_raw_tiff (bool, optional): If True, the file is read without metadata. Defaults to False.
             raw_tiff_num_slices (int, optional): If as_raw_tiff is True, the number of slices of the file have to be specified. Defaults to None.
+            raw_tiff_is_2d (bool, optional): If True, the file is read as 2D data, and gives an error otherwise. Defaults to requiring 3D data.
         """
         self._force_tifffile = force_tifffile
         self.logger = logger.bind(classname=self.__class__.__name__)
@@ -41,6 +43,7 @@ class MicroscopeDataReader:
         self._check_directory_path(path)
         self._raw_tiff_num_slices = raw_tiff_num_slices
         self._as_raw_tiff: bool = as_raw_tiff
+        self._raw_tiff_is_2d = raw_tiff_is_2d
         self._is_ndtiff: bool = False
         self._is_tiffile: bool = False
         self._data_store = None
@@ -166,9 +169,7 @@ class MicroscopeDataReader:
         self._check_tifffile_version()
         self._data_store = tff.TiffFile(filepath, mode='r', is_ome=False, is_shaped=False)
         dask_array = dask.array.from_zarr(self._data_store.aszarr())
-        if not len(dask_array.shape) == 3:
-            self.logger.error(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
-            raise ValueError(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
+        dask_array = self._check_2d_or_3d(dask_array)
         if self._raw_tiff_num_slices is None:
             self.logger.warning(f"Number of slices in raw tiff file is not specified")
             self._read_MMStack_metadata_file_num_slices()
@@ -182,6 +183,19 @@ class MicroscopeDataReader:
         self._is_ndtiff = False
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
+
+    def _check_2d_or_3d(self, dask_array):
+        if self._raw_tiff_is_2d:
+            if not len(dask_array.shape) == 2:
+                self.logger.error(f"Expected 2D data [y,x], got {len(dask_array.shape)}D data")
+                raise ValueError(f"Expected 2D data [y,x], got {len(dask_array.shape)}D data")
+            # Expand dimensions to 3D data [t,y,x]
+            dask_array = dask.array.expand_dims(dask_array, axis=0)
+        else:
+            if not len(dask_array.shape) == 3:
+                self.logger.error(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
+                raise ValueError(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
+        return dask_array
 
     def _check_tifffile_version(self):
         import tifffile as tff
