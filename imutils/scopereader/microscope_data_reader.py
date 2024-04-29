@@ -139,9 +139,7 @@ class MicroscopeDataReader:
             raise FileNotFoundError(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
         self.logger.info(f"Reading data from {self.directory_path} with tifffile")
         import tifffile as tff
-        if version.parse(tff.__version__) < version.parse(self._tifffile_version):
-            self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
-            raise ImportError(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+        self._check_tifffile_version()
         self._data_store = tff.TiffFile(filepath, mode='r')
         if not self._data_store.is_micromanager:
             self.logger.error(f"File {filepath} is not a Micromanager file")
@@ -165,9 +163,7 @@ class MicroscopeDataReader:
             raise FileNotFoundError(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
         self.logger.info(f"Reading data from {self.directory_path} with tifffile")
         import tifffile as tff
-        if version.parse(tff.__version__) < version.parse(self._tifffile_version):
-            self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
-            raise ImportError(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+        self._check_tifffile_version()
         self._data_store = tff.TiffFile(filepath, mode='r', is_ome=False, is_shaped=False)
         dask_array = dask.array.from_zarr(self._data_store.aszarr())
         if not len(dask_array.shape) == 3:
@@ -186,7 +182,15 @@ class MicroscopeDataReader:
         self._is_ndtiff = False
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
-    
+
+    def _check_tifffile_version(self):
+        import tifffile as tff
+        if version.parse(tff.__version__) < version.parse(self._tifffile_version):
+            self.logger.error(
+                f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+            raise ImportError(
+                f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+
     def _read_MMStack_metadata_file_num_slices(self):
         import json
         my_path = Path(self.directory_path).glob("*_MMStack_metadata.txt")
