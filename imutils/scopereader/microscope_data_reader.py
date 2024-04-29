@@ -170,19 +170,27 @@ class MicroscopeDataReader:
         self._data_store = tff.TiffFile(filepath, mode='r', is_ome=False, is_shaped=False)
         dask_array = dask.array.from_zarr(self._data_store.aszarr())
         dask_array = self._check_2d_or_3d(dask_array)
-        if self._raw_tiff_num_slices is None:
-            self.logger.warning(f"Number of slices in raw tiff file is not specified")
-            self._read_MMStack_metadata_file_num_slices()
-        if dask_array.shape[0] % self._raw_tiff_num_slices > 0:
-            self.logger.error(f"Number of slices doesen't mach the timepoints in the raw tiff file")
-            raise ValueError(f"Number of slices doesen't mach the timepoints in the raw tiff file")
-        dask_array = dask_array.reshape((dask_array.shape[0]//self._raw_tiff_num_slices, self._raw_tiff_num_slices, dask_array.shape[1], dask_array.shape[2]))
+        dask_array = self._reshape_using_num_slices(dask_array)
         dask_array = dask.array.expand_dims(dask_array, axis=(0,2))
         self._dask_array = dask_array
         self._is_tiffile = True
         self._is_ndtiff = False
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
+
+    def _reshape_using_num_slices(self, dask_array):
+        """Reshapes the time dimension to t and z using the number of slices in the raw tiff file."""
+        if not self._raw_tiff_is_2d:
+            if self._raw_tiff_num_slices is None:
+                self.logger.warning(f"Number of slices in raw tiff file is not specified")
+                self._read_MMStack_metadata_file_num_slices()
+            if dask_array.shape[0] % self._raw_tiff_num_slices > 0:
+                self.logger.error(f"Number of slices doesen't mach the timepoints in the raw tiff file")
+                raise ValueError(f"Number of slices doesen't mach the timepoints in the raw tiff file")
+            dask_array = dask_array.reshape((
+                                            dask_array.shape[0] // self._raw_tiff_num_slices, self._raw_tiff_num_slices,
+                                            dask_array.shape[1], dask_array.shape[2]))
+        return dask_array
 
     def _check_2d_or_3d(self, dask_array):
         if self._raw_tiff_is_2d:
