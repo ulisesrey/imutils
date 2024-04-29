@@ -234,9 +234,10 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
     print("Do not use this function with a parser unless you are sure it works (See docstring)")
 
     # load background image
-    reader_obj = MicroscopeDataReader(background_img_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
-    bg_img = da.squeeze(reader_obj.dask_array)
-    tif = np.array(da.squeeze(MicroscopeDataReader(input_filepath).dask_array))
+    reader_obj_background = MicroscopeDataReader(background_img_filepath, as_raw_tiff=True, raw_tiff_is_2d=True)
+    bg_img = da.squeeze(reader_obj_background.dask_array)
+    reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = np.array(da.squeeze(reader_obj_video.dask_array))
 
     if invert:
         bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
