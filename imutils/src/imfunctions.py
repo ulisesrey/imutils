@@ -234,8 +234,9 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
     print("Do not use this function with a parser unless you are sure it works (See docstring)")
 
     # load background image
-    bg_img = da.squeeze(MicroscopeDataReader(background_img_filepath).dask_array)
-    tif = da.squeeze(MicroscopeDataReader(input_filepath).dask_array)
+    reader_obj = MicroscopeDataReader(background_img_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    bg_img = da.squeeze(reader_obj.dask_array)
+    tif = np.array(da.squeeze(MicroscopeDataReader(input_filepath).dask_array))
 
     if invert:
         bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
@@ -754,8 +755,8 @@ def stack_z_projection(input_path, output_path, projection_type, dtype='uint16',
     :param axis:
     :return:
     """
-    data_class = MicroscopeDataReader(input_path)
-    stack = da.squeeze(data_class.dask_array)
+    reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    stack = da.squeeze(reader_obj.dask_array)
     projected_img = z_projection(stack, projection_type, axis)
     projected_img = projected_img.astype(dtype)
     tiff.imwrite(output_path, projected_img)
