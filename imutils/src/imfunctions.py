@@ -44,7 +44,8 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     fps = float(fps)
 
     # tiff read object
-    tif = da.squeeze(MicroscopeDataReader(tiff_path).dask_array)
+    reader_obj = MicroscopeDataReader(tiff_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
     frame_size_unknown_len = tif[0].shape
     # if image has channels get height and width (ignore 3rd output)
     if len(frame_size_unknown_len) == 3:
@@ -60,7 +61,7 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
 
     for i, img in enumerate(tif):
         # img=cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
-        video_out.write(cv2.convertScaleAbs(img))  # if img is uint16 it can't save it
+        video_out.write(cv2.convertScaleAbs(np.array(img)))  # if img is uint16 it can't save it
         # if i>20: break
     video_out.release()
 
@@ -235,9 +236,9 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
 
     # load background image
     reader_obj_background = MicroscopeDataReader(background_img_filepath, as_raw_tiff=True, raw_tiff_is_2d=True)
-    bg_img = da.squeeze(reader_obj_background.dask_array)
+    bg_img = np.array(da.squeeze(reader_obj_background.dask_array))
     reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
-    tif = np.array(da.squeeze(reader_obj_video.dask_array))
+    tif = da.squeeze(reader_obj_video.dask_array)
 
     if invert:
         bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
@@ -247,6 +248,7 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         for i, img in enumerate(tif):
+            img = np.array(img)
             if invert:
                 img = cv2.bitwise_not(img)
             new_img = cv2.subtract(img, bg_img)
@@ -267,9 +269,11 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, thr
     -------------
     None
     """
-    tif = da.squeeze(MicroscopeDataReader(stack_input_filepath).dask_array)
+    reader_obj = MicroscopeDataReader(stack_input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
     with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
         for i, img in enumerate(tif):
+            img = np.array(img)
             # apply threshold
             ret, new_img = cv2.threshold(img, threshold, max_value, cv2.THRESH_BINARY)
             #convert matrix to np.uint
@@ -291,10 +295,11 @@ def stack_normalise(stack_input_filepath: str, stack_output_filepath: str, alpha
     -------------
     None
     """
-    tif = da.squeeze(MicroscopeDataReader(stack_input_filepath).dask_array)
+    reader_obj = MicroscopeDataReader(stack_input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
     with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
         for i, img in enumerate(tif):
-            normalised_img = cv2.normalize(img, None, alpha=alpha, beta=beta, norm_type=cv2.NORM_MINMAX)
+            normalised_img = cv2.normalize(np.array(img), None, alpha=alpha, beta=beta, norm_type=cv2.NORM_MINMAX)
             tif_writer.write(normalised_img, contiguous=True)
 
 
@@ -370,13 +375,16 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
     model = unet()
     model.load_weights(weights_path)
 
-    binary_tif = da.squeeze(MicroscopeDataReader(binary_input_filepath).dask_array)
-    raw_tif = da.squeeze(MicroscopeDataReader(raw_input_filepath).dask_array)
+    reader_obj_binary = MicroscopeDataReader(binary_input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    reader_obj_raw = MicroscopeDataReader(raw_input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    binary_tif = da.squeeze(reader_obj_binary.dask_array)
+    raw_tif = da.squeeze(reader_obj_raw.dask_array)
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
 
         for i, img in enumerate(binary_tif):
 
+            img = np.array(img)
             # find contours
             _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 

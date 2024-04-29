@@ -60,13 +60,14 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
     model=unet()
     print('loading weights..')
     model.load_weights(weights_path)
-    tif = da.squeeze(MicroscopeDataReader(input_filepath).dask_array)
+    reader_obj = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
         start = time.time()
         for i, img in enumerate(tif):
             #run network
-            segmented_img = unet_segmentation(img, model)
+            segmented_img = unet_segmentation(np.array(img), model)
             segmented_img = segmented_img*255
             segmented_img = segmented_img.astype('uint8')
             # write
