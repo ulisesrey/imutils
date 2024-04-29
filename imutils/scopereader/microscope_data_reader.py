@@ -11,7 +11,8 @@ class MicroscopeDataReader:
     Reads data from microscope data sets. The folder can be a NDTiff data store or a MMStack data store.
     If the folder is a NDTiff datastore, the data is read using the ndtiff package else tifffile is used.
     """
-    def __init__(self, path: Union[Path,str], force_tifffile: bool = False, as_raw_tiff: bool = False, raw_tiff_num_slices: int = None):
+    def __init__(self, path: Union[Path,str], force_tifffile: bool = False, as_raw_tiff: bool = False,
+                 raw_tiff_num_slices: int = None, raw_tiff_is_2d: bool = False):
         """
         Reads data from microscope data sets. The folder can be a NDTiff data store or a MMStack data store.
         If the folder is a NDTiff datastore, the data is read using the ndtiff package else tifffile is used.
@@ -27,6 +28,7 @@ class MicroscopeDataReader:
             force_tifffile (bool, optional): If True, the file is read with tifffile. Defaults to False.
             as_raw_tiff (bool, optional): If True, the file is read without metadata. Defaults to False.
             raw_tiff_num_slices (int, optional): If as_raw_tiff is True, the number of slices of the file have to be specified. Defaults to None.
+            raw_tiff_is_2d (bool, optional): If True, the file is read as 2D data, and gives an error otherwise. Defaults to requiring 3D data.
         """
         self._force_tifffile = force_tifffile
         self.logger = logger.bind(classname=self.__class__.__name__)
@@ -41,6 +43,7 @@ class MicroscopeDataReader:
         self._check_directory_path(path)
         self._raw_tiff_num_slices = raw_tiff_num_slices
         self._as_raw_tiff: bool = as_raw_tiff
+        self._raw_tiff_is_2d = raw_tiff_is_2d
         self._is_ndtiff: bool = False
         self._is_tiffile: bool = False
         self._data_store = None
@@ -58,11 +61,6 @@ class MicroscopeDataReader:
     def __exit__(self, exc_type, exc_value, traceback):
         self.logger.warning(f"I hope this was the only occation you needed this file ;-)")
         self.close()
-    
-    def __del__(self):
-        self.logger.info(f"Closing Microscope Data Reader")
-        if self._data_store is not None:
-            self._data_store.close()
     
     def close(self):
         self.logger.info(f"Closing Microscope Data Reader")
@@ -144,9 +142,7 @@ class MicroscopeDataReader:
             raise FileNotFoundError(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
         self.logger.info(f"Reading data from {self.directory_path} with tifffile")
         import tifffile as tff
-        if version.parse(tff.__version__) < version.parse(self._tifffile_version):
-            self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
-            raise ImportError(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+        self._check_tifffile_version()
         self._data_store = tff.TiffFile(filepath, mode='r')
         if not self._data_store.is_micromanager:
             self.logger.error(f"File {filepath} is not a Micromanager file")
@@ -164,34 +160,60 @@ class MicroscopeDataReader:
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
     
     def _read_raw_tifffile(self):
+        """Reads a tifffile without metadata, but using user-specified data, specifically the number of z slices."""
         filepath = self.directory_path / self.first_tiff_file
         if not filepath.exists():
             self.logger.error(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
             raise FileNotFoundError(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
         self.logger.info(f"Reading data from {self.directory_path} with tifffile")
         import tifffile as tff
-        if version.parse(tff.__version__) < version.parse(self._tifffile_version):
-            self.logger.error(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
-            raise ImportError(f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+        self._check_tifffile_version()
         self._data_store = tff.TiffFile(filepath, mode='r', is_ome=False, is_shaped=False)
         dask_array = dask.array.from_zarr(self._data_store.aszarr())
-        if not len(dask_array.shape) == 3:
-            self.logger.error(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
-            raise ValueError(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
-        if self._raw_tiff_num_slices is None:
-            self.logger.warning(f"Number of slices in raw tiff file is not specified")
-            self._read_MMStack_metadata_file_num_slices()
-        if dask_array.shape[0] % self._raw_tiff_num_slices > 0:
-            self.logger.error(f"Number of slices doesen't mach the timepoints in the raw tiff file")
-            raise ValueError(f"Number of slices doesen't mach the timepoints in the raw tiff file")
-        dask_array = dask_array.reshape((dask_array.shape[0]//self._raw_tiff_num_slices, self._raw_tiff_num_slices, dask_array.shape[1], dask_array.shape[2]))
+        dask_array = self._check_2d_or_3d(dask_array)
+        dask_array = self._reshape_t_and_z_using_num_slices(dask_array)
         dask_array = dask.array.expand_dims(dask_array, axis=(0,2))
         self._dask_array = dask_array
         self._is_tiffile = True
         self._is_ndtiff = False
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
-    
+
+    def _reshape_t_and_z_using_num_slices(self, dask_array):
+        """Reshapes the time dimension to t and z using the number of slices in the raw tiff file."""
+        if not self._raw_tiff_is_2d:
+            if self._raw_tiff_num_slices is None:
+                self.logger.warning(f"Number of slices in raw tiff file is not specified")
+                self._read_MMStack_metadata_file_num_slices()
+            if dask_array.shape[0] % self._raw_tiff_num_slices > 0:
+                self.logger.error(f"Number of slices doesen't mach the timepoints in the raw tiff file")
+                raise ValueError(f"Number of slices doesen't mach the timepoints in the raw tiff file")
+            dask_array = dask_array.reshape((
+                                            dask_array.shape[0] // self._raw_tiff_num_slices, self._raw_tiff_num_slices,
+                                            dask_array.shape[1], dask_array.shape[2]))
+        return dask_array
+
+    def _check_2d_or_3d(self, dask_array):
+        if self._raw_tiff_is_2d:
+            if not len(dask_array.shape) == 2:
+                self.logger.error(f"Expected 2D data [y,x], got {len(dask_array.shape)}D data")
+                raise ValueError(f"Expected 2D data [y,x], got {len(dask_array.shape)}D data")
+            # Expand dimensions to 3D data [t,y,x]
+            dask_array = dask.array.expand_dims(dask_array, axis=0)
+        else:
+            if not len(dask_array.shape) == 3:
+                self.logger.error(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
+                raise ValueError(f"Expected 3D data [t,y,x], got {len(dask_array.shape)}D data")
+        return dask_array
+
+    def _check_tifffile_version(self):
+        import tifffile as tff
+        if version.parse(tff.__version__) < version.parse(self._tifffile_version):
+            self.logger.error(
+                f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+            raise ImportError(
+                f"tifffile version {tff.__version__} is not supported. Please update to version {self._tifffile_version} or higher")
+
     def _read_MMStack_metadata_file_num_slices(self):
         import json
         my_path = Path(self.directory_path).glob("*_MMStack_metadata.txt")
