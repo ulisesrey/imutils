@@ -160,6 +160,7 @@ class MicroscopeDataReader:
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
     
     def _read_raw_tifffile(self):
+        """Reads a tifffile without metadata, but using user-specified data, specifically the number of z slices."""
         filepath = self.directory_path / self.first_tiff_file
         if not filepath.exists():
             self.logger.error(f"Could not find {self.first_tiff_file} file in {self.directory_path}")
@@ -170,7 +171,7 @@ class MicroscopeDataReader:
         self._data_store = tff.TiffFile(filepath, mode='r', is_ome=False, is_shaped=False)
         dask_array = dask.array.from_zarr(self._data_store.aszarr())
         dask_array = self._check_2d_or_3d(dask_array)
-        dask_array = self._reshape_using_num_slices(dask_array)
+        dask_array = self._reshape_t_and_z_using_num_slices(dask_array)
         dask_array = dask.array.expand_dims(dask_array, axis=(0,2))
         self._dask_array = dask_array
         self._is_tiffile = True
@@ -178,7 +179,7 @@ class MicroscopeDataReader:
         self.logger.info(f"Data store: {self._data_store}")
         self.logger.info(f"dask array dimensions: {self._dask_array.shape}")
 
-    def _reshape_using_num_slices(self, dask_array):
+    def _reshape_t_and_z_using_num_slices(self, dask_array):
         """Reshapes the time dimension to t and z using the number of slices in the raw tiff file."""
         if not self._raw_tiff_is_2d:
             if self._raw_tiff_num_slices is None:
