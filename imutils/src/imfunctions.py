@@ -337,10 +337,10 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
                 # loads the first frame
                 img = page.asarray()
 
+                print("substract_background:", substract_background)
+
                 if substract_background != 1:
                     img = 255 - img
-
-                    print("image inverted!")
 
                 # median Blur
                 if gaussian_blur != 0:
