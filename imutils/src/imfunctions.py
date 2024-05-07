@@ -340,6 +340,8 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
                 if substract_background != 1:
                     img = 255 - img
 
+                    print("image inverted!")
+
                 # median Blur
                 if gaussian_blur != 0:
                     img = cv2.GaussianBlur(img, (gaussian_blur, gaussian_blur), 0)
