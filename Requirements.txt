@@ -1,12 +1,20 @@
+# Install the required packages with: pip install -r requirements.txt
 matplotlib
 numpy
-cv2==3.4.2
-tifffile
-csv
-os
+dask
+cv2==3.4.2 # Version Matching. Must be version 3.4.2
+tifffile~=2023.7.10 # Compatible release. Same as >= 1.1, == 1.*
 natsort
-re
 scipy
 skimage
 pandas
-argparse
+packaging
+loguru
+# Packages in standard library (no need to install, would fail)
+# re in standard library
+# csv in standard library
+# os in standard library
+# argparse in standard library
+# logging in standard library
+# pathlib in standard library
+# typing in standard library
