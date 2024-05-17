@@ -125,7 +125,11 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
     print(f"And written to filename {output_filename}")
     total_num_frames = 0
     buffer = []
+
+    reader_obj = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
+        '''
         for i_file, file in enumerate(natsorted(os.listdir(path))):
             if not file.endswith('ome.tif') or 'bg' in file:
                 continue
@@ -133,24 +137,26 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
             print("Currently reading: ")
             print(this_ome_tiff)
             with tiff.TiffFile(this_ome_tiff) as tif:
-                for i, page in enumerate(tif.pages):
-                    print(f'Page {i}/{len(tif.pages)} in file {i_file}')
-                    # Bottleneck line
-                    img = page.asarray()
-                    # Convert to proper format, and write single frame
-                    # img = (alpha*img).astype('uint8')
-                    total_num_frames += 1
-                    if num_slices is None:
+        '''
+        for i, page in enumerate(tif):
+            #print(f'Page {i}/{len(tif.pages)} in file {i_file}')
+            # Bottleneck line
+            #img = page.asarray()
+            img = np.array(page)
+            # Convert to proper format, and write single frame
+            # img = (alpha*img).astype('uint8')
+            total_num_frames += 1
+            if num_slices is None:
+                if actually_write:
+                    output_tif.write(img, photometric='minisblack')
+            else:
+                buffer.append(img)
+                if len(buffer) >= num_slices:
+                    print(f"Writing {num_slices} frames from buffer...")
+                    for img in buffer:
                         if actually_write:
-                            output_tif.write(img, photometric='minisblack')
-                    else:
-                        buffer.append(img)
-                        if len(buffer) >= num_slices:
-                            print(f"Writing {num_slices} frames from buffer...")
-                            for img in buffer:
-                                if actually_write:
-                                    output_tif.write(img, photometric='minisblack', contiguous=True)
-                            buffer = []
+                            output_tif.write(img, photometric='minisblack', contiguous=True)
+                    buffer = []
             if len(buffer) > 0:
                 print(f"{len(buffer)} frames not written")
 
