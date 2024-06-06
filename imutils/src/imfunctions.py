@@ -81,22 +81,40 @@ def ometiff2bigtiff(path, output_filename=None):
     output_filename: str,
     if not defined it will be generated based on the path name.
     """
-
+    '''
     path = os.path.abspath(path)
     print(path)
     print(output_filename)
 
-    reader_obj = MicroscopeDataReader(path)
-    tif = da.squeeze(reader_obj.dask_array)
+    try:
+        path = os.path.abspath(path)
+        print("Input path:", path)
+        print("Output filename:", output_filename)
 
-    with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
+        reader_obj = MicroscopeDataReader(path)
+        tif = da.squeeze(reader_obj.dask_array)
 
-        for i, page in enumerate(tif):
+        with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
+            for i, page in enumerate(tif):
+                try:
+                    img = np.array(page)
+                    output_tif.write(img, photometric='minisblack')
+                except Exception as page_error:
+                    print(f"Error processing page {i}: {page_error}")
+                    # Optionally, handle individual page errors, log them, or continue
+                    continue
 
-            img = np.array(page)
-            output_tif.write(img, photometric='minisblack')
+    except TiffFileError as tiff_error:
+        print(f"TiffFileError occurred: {tiff_error}")
+        # Handle specific TIFF file errors, such as corrupted tags
+        # You may want to log this error or notify someone
 
-    '''
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        # Handle any other exceptions that might occur
+        # Again, logging and error notification can be done here
+
+
     data_reader = MicroscopeDataReader(path)
 
     total_frame_num = data_reader.get_total_number_of_frames()
@@ -110,34 +128,60 @@ def ometiff2bigtiff(path, output_filename=None):
             img = data_reader.get_frame(time=i)
 
             output_tif.write(img, photometric='minisblack', contiguous=True)
-
-
-    # find number of files in path that end with "ome.tif"
-    num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
-    if num_files == 0:
-        print("Aborted because no ome.tiff files found in path, therefore no bigtiff was created.")
-        return
-    if output_filename is None:
-        if path.endswith('/'):
-            output_filename = path + re.split('/', path)[-2] + 'bigtiff.btf'
-        else:
-            output_filename = path + '/' + re.split('/', path)[-1] + 'bigtiff.btf'
-
-    with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
-        # print(f'list of files is {os.listdir(path)}')
-        for file in natsorted(os.listdir(path)):
-            # print(os.path.join(path, file))
-            if file.endswith('ome.tif'):
-                # print(os.path.join(path, file))
-                with tiff.TiffFile(os.path.join(path, file)) as tif:
-                    # print('length of pages is: ', len(tif.pages))
-                    print('length of series is: ', len(tif.series))
-                    for idx, page in enumerate(tif.pages):
-                        # print(idx)
-                        img = page.asarray()
-                        output_tif.write(img, photometric='minisblack',
-                                         contiguous=True)  # , description=omexmlMetadataString)
+    
     '''
+
+    try:
+        # find number of files in path that end with "ome.tif"
+        num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
+        if num_files == 0:
+            print("Aborted because no ome.tiff files found in path, therefore no bigtiff was created.")
+            return
+
+        if output_filename is None:
+            if path.endswith('/'):
+                output_filename = path + re.split('/', path)[-2] + 'bigtiff.btf'
+            else:
+                output_filename = path + '/' + re.split('/', path)[-1] + 'bigtiff.btf'
+
+        with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
+            # print(f'list of files is {os.listdir(path)}')
+            for file in natsorted(os.listdir(path)):
+                # print(os.path.join(path, file))
+                if file.endswith('ome.tif'):
+                    # print(os.path.join(path, file))
+                    try:
+                        with tiff.TiffFile(os.path.join(path, file)) as tif:
+                            # print('length of pages is: ', len(tif.pages))
+                            print('length of series is: ', len(tif.series))
+                            for idx, page in enumerate(tif.pages):
+                                # print(idx)
+                                try:
+                                    img = page.asarray()
+                                    output_tif.write(img, photometric='minisblack',
+                                                     contiguous=True)  # , description=omexmlMetadataString)
+                                except Exception as page_error:
+                                    print(f"Error processing page {idx} in file {file}: {page_error}")
+                                    continue
+
+                    except Exception as file_error:
+                        print(f"Error reading or processing file {file}: {file_error}")
+                        # Handle any other exceptions that might occur with individual files
+                        # Log the error or notify someone
+
+    except FileNotFoundError as fnf_error:
+        print(f"File not found: {fnf_error}")
+        # Handle case where path does not exist
+
+    except PermissionError as perm_error:
+        print(f"Permission error: {perm_error}")
+        # Handle case where there are permission issues
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        # Handle any other exceptions that might occur
+        # Again, logging and error notification can be done here
+
 
 # , description=omexmlMetadataString)
 # path='/Users/ulises.rey/local_data/2022-02-23_11-28_immobilised_1_Ch0'
