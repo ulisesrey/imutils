@@ -92,7 +92,7 @@ def ometiff2bigtiff(path, output_filename=None):
             output_filename = path + re.split('/', path)[-2] + 'bigtiff.btf'
         else:
             output_filename = path + '/' + re.split('/', path)[-1] + 'bigtiff.btf'
-    
+
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
         # print(f'list of files is {os.listdir(path)}')
         for file in natsorted(os.listdir(path)):
@@ -101,13 +101,15 @@ def ometiff2bigtiff(path, output_filename=None):
                 # print(os.path.join(path, file))
 
                 with tiff.TiffFile(os.path.join(path, file)) as tif:
+                    print(f"...ometiff2btf: total number of frames: {len(tif.series)}, shape: {tif.pages[0].asarray().shape}")
                     # print('length of pages is: ', len(tif.pages))
                     # print('length of series is: ', len(tif.series))
                     for idx, page in enumerate(tif.pages):
                         # print(idx)
                         img = page.asarray()
                         output_tif.write(img, photometric='minisblack',
-                                         contiguous=True)  # , description=omexmlMetadataString)
+                                         contiguous=True)
+# , description=omexmlMetadataString)
 # path='/Users/ulises.rey/local_data/2022-02-23_11-28_immobilised_1_Ch0'
 # ometiff2bigtiff(path)
 
