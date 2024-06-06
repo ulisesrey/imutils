@@ -86,7 +86,7 @@ def ometiff2bigtiff(path, output_filename=None):
     print(path)
     print(output_filename)
 
-    data_reader = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    data_reader = MicroscopeDataReader(path)
 
     total_frame_num = data_reader.get_total_number_of_frames()
 
