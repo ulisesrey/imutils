@@ -86,21 +86,31 @@ def ometiff2bigtiff(path, output_filename=None):
     print(path)
     print(output_filename)
 
+    reader_obj = MicroscopeDataReader(path)
+    tif = da.squeeze(reader_obj.dask_array)
+
+    with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
+
+        for i, page in enumerate(tif):
+
+            img = np.array(page)
+            output_tif.write(img, photometric='minisblack')
+
+    '''
     data_reader = MicroscopeDataReader(path)
 
     total_frame_num = data_reader.get_total_number_of_frames()
 
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
 
-        for i, page in range(total_frame_num):
+        for i, page in range(int(total_frame_num)):
             #print(f'Page {i}/{len(tif.pages)} in file {i_file}')
             # Bottleneck line
             #img = page.asarray()
             img = data_reader.get_frame(time=i)
 
             output_tif.write(img, photometric='minisblack', contiguous=True)
-    
-    '''
+
 
     # find number of files in path that end with "ome.tif"
     num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
