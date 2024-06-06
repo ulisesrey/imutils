@@ -81,6 +81,8 @@ def ometiff2bigtiff(path, output_filename=None):
     output_filename: str,
     if not defined it will be generated based on the path name.
     """
+
+    '''
     path = os.path.abspath(path)
     print(path)
     print(output_filename)
@@ -97,8 +99,9 @@ def ometiff2bigtiff(path, output_filename=None):
             img = np.array(page)
 
             output_tif.write(img, photometric='minisblack', contiguous=True)
-
+    
     '''
+
     # find number of files in path that end with "ome.tif"
     num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
     if num_files == 0:
@@ -116,19 +119,15 @@ def ometiff2bigtiff(path, output_filename=None):
             # print(os.path.join(path, file))
             if file.endswith('ome.tif'):
                 # print(os.path.join(path, file))
-
                 with tiff.TiffFile(os.path.join(path, file)) as tif:
-                    print(f"...ometiff2btf: total number of frames: {len(tif.series)}, shape: {tif.pages[0].asarray().shape}")
                     # print('length of pages is: ', len(tif.pages))
-                    # print('length of series is: ', len(tif.series))
+                    print('length of series is: ', len(tif.series))
                     for idx, page in enumerate(tif.pages):
                         # print(idx)
                         img = page.asarray()
                         output_tif.write(img, photometric='minisblack',
-                                         contiguous=True)
-                                         
-                                         
-        '''
+                                         contiguous=True)  # , description=omexmlMetadataString)
+                        
 
 # , description=omexmlMetadataString)
 # path='/Users/ulises.rey/local_data/2022-02-23_11-28_immobilised_1_Ch0'
