@@ -82,21 +82,21 @@ def ometiff2bigtiff(path, output_filename=None):
     if not defined it will be generated based on the path name.
     """
 
-    '''
     path = os.path.abspath(path)
     print(path)
     print(output_filename)
 
-    reader_obj = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
-    tif = da.squeeze(reader_obj.dask_array)
+    data_reader = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
+
+    total_frame_num = data_reader.get_total_number_of_frames()
 
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
 
-        for i, page in enumerate(tif):
+        for i, page in range(total_frame_num):
             #print(f'Page {i}/{len(tif.pages)} in file {i_file}')
             # Bottleneck line
             #img = page.asarray()
-            img = np.array(page)
+            img = data_reader.get_frame(time=i)
 
             output_tif.write(img, photometric='minisblack', contiguous=True)
     
@@ -127,7 +127,7 @@ def ometiff2bigtiff(path, output_filename=None):
                         img = page.asarray()
                         output_tif.write(img, photometric='minisblack',
                                          contiguous=True)  # , description=omexmlMetadataString)
-                        
+    '''
 
 # , description=omexmlMetadataString)
 # path='/Users/ulises.rey/local_data/2022-02-23_11-28_immobilised_1_Ch0'
