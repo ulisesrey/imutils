@@ -82,6 +82,21 @@ def ometiff2bigtiff(path, output_filename=None):
     if not defined it will be generated based on the path name.
     """
     print(path)
+    print(output_filename)
+    reader_obj = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
+
+    with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
+
+        for i, page in enumerate(tif):
+            #print(f'Page {i}/{len(tif.pages)} in file {i_file}')
+            # Bottleneck line
+            #img = page.asarray()
+            img = np.array(page)
+
+            output_tif.write(img, photometric='minisblack', contiguous=True)
+
+    '''
     # find number of files in path that end with "ome.tif"
     num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
     if num_files == 0:
@@ -109,6 +124,10 @@ def ometiff2bigtiff(path, output_filename=None):
                         img = page.asarray()
                         output_tif.write(img, photometric='minisblack',
                                          contiguous=True)
+                                         
+                                         
+        '''
+
 # , description=omexmlMetadataString)
 # path='/Users/ulises.rey/local_data/2022-02-23_11-28_immobilised_1_Ch0'
 # ometiff2bigtiff(path)
