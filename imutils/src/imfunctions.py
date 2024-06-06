@@ -81,8 +81,10 @@ def ometiff2bigtiff(path, output_filename=None):
     output_filename: str,
     if not defined it will be generated based on the path name.
     """
+    path = os.path.abspath(path)
     print(path)
     print(output_filename)
+
     reader_obj = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
     tif = da.squeeze(reader_obj.dask_array)
 
