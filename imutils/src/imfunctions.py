@@ -82,7 +82,6 @@ def ometiff2bigtiff(path, output_filename=None):
     if not defined it will be generated based on the path name.
     """
     print(path)
-
     # find number of files in path that end with "ome.tif"
     num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
     if num_files == 0:
@@ -93,28 +92,14 @@ def ometiff2bigtiff(path, output_filename=None):
             output_filename = path + re.split('/', path)[-2] + 'bigtiff.btf'
         else:
             output_filename = path + '/' + re.split('/', path)[-1] + 'bigtiff.btf'
-
-    print(output_filename)
-    reader_obj = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
-
-    tif = da.squeeze(reader_obj.dask_array)
-
+    
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
         # print(f'list of files is {os.listdir(path)}')
-        for i, page in enumerate(tif):
-            #print(f'Page {i}/{len(tif.pages)} in file {i_file}')
-            # Bottleneck line
-            #img = page.asarray()
-            img = np.array(page)
-
-            output_tif.write(img, photometric='minisblack', contiguous=True)
-
-    '''
         for file in natsorted(os.listdir(path)):
             # print(os.path.join(path, file))
             if file.endswith('ome.tif'):
                 # print(os.path.join(path, file))
-                
+
                 with tiff.TiffFile(os.path.join(path, file)) as tif:
                     # print('length of pages is: ', len(tif.pages))
                     # print('length of series is: ', len(tif.series))
@@ -123,7 +108,6 @@ def ometiff2bigtiff(path, output_filename=None):
                         img = page.asarray()
                         output_tif.write(img, photometric='minisblack',
                                          contiguous=True)  # , description=omexmlMetadataString)
-    '''
 # path='/Users/ulises.rey/local_data/2022-02-23_11-28_immobilised_1_Ch0'
 # ometiff2bigtiff(path)
 
