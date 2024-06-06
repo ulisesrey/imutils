@@ -82,6 +82,7 @@ def ometiff2bigtiff(path, output_filename=None):
     if not defined it will be generated based on the path name.
     """
     print(path)
+
     # find number of files in path that end with "ome.tif"
     num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
     if num_files == 0:
@@ -93,7 +94,9 @@ def ometiff2bigtiff(path, output_filename=None):
         else:
             output_filename = path + '/' + re.split('/', path)[-1] + 'bigtiff.btf'
 
+    print(output_filename)
     reader_obj = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
+
     tif = da.squeeze(reader_obj.dask_array)
 
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
