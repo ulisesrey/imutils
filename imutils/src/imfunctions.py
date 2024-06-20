@@ -81,7 +81,7 @@ def ometiff2bigtiff(path, output_filename=None):
     output_filename: str,
     if not defined it will be generated based on the path name.
     """
-    '''
+
     path = os.path.abspath(path)
     print(path)
     print(output_filename)
@@ -129,8 +129,8 @@ def ometiff2bigtiff(path, output_filename=None):
 
             output_tif.write(img, photometric='minisblack', contiguous=True)
     
-    '''
 
+'''
     try:
         # find number of files in path that end with "ome.tif"
         num_files = len([name for name in os.listdir(path) if name.endswith("ome.tif")])
@@ -181,6 +181,7 @@ def ometiff2bigtiff(path, output_filename=None):
         print(f"An unexpected error occurred: {e}")
         # Handle any other exceptions that might occur
         # Again, logging and error notification can be done here
+'''
 
 
 # , description=omexmlMetadataString)
