@@ -43,7 +43,7 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     # make fps a float
     fps = float(fps)
 
-    print(tiff_path)
+    print('Path:', tiff_path)
     # Check if the input path is a directory or a BTF file
     if os.path.isdir(tiff_path):
         # Initialize for directory
