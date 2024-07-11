@@ -9,6 +9,8 @@ from natsort import natsorted
 from imutils.scopereader import MicroscopeDataReader
 import dask.array as da
 from skimage.morphology import binary_erosion
+import ndtiff
+
 
 
 def tiff2avi(tiff_path, avi_path, fourcc, fps):
