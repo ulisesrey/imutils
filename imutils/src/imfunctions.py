@@ -43,11 +43,21 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     # make fps a float
     fps = float(fps)
 
-    # tiff read object
-    reader_obj = MicroscopeDataReader(tiff_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    # Check if the input path is a directory or a BTF file
+    if os.path.isdir(tiff_path):
+        # Initialize for directory
+        reader_obj = MicroscopeDataReader(tiff_path)
+    elif tiff_path.lower().endswith('.btf'):
+        # Initialize for BTF file
+        reader_obj = MicroscopeDataReader(tiff_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    else:
+        raise ValueError("Invalid input file path. Please provide a directory or a .btf file.")
+
+
     tif = da.squeeze(reader_obj.dask_array)
     frame_size_unknown_len = tif[0].shape
     # if image has channels get height and width (ignore 3rd output)
+
     if len(frame_size_unknown_len) == 3:
         frame_height, frame_width, _ = frame_size_unknown_len
         video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
