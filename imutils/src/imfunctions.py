@@ -54,14 +54,15 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     print('Path absolute:', tiff_path)
 
     # Check if the input path is a directory or a BTF file
-    if os.path.isdir(tiff_path):
-        # Initialize for directory
+
+    try:
         reader_obj = MicroscopeDataReader(tiff_path)
-    elif tiff_path.lower().endswith('.btf'):
-        # Initialize for BTF file
-        reader_obj = MicroscopeDataReader(tiff_path, as_raw_tiff=True, raw_tiff_num_slices=1)
-    else:
-        raise ValueError("Invalid input file path. Please provide a directory or a .btf file.")
+    except:
+        if tiff_path.lower().endswith('.btf'):
+            # Initialize for BTF file
+            reader_obj = MicroscopeDataReader(tiff_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+        else:
+            raise ValueError("Invalid input file path. Please provide a directory or a .btf file.")
 
 
     tif = da.squeeze(reader_obj.dask_array)
