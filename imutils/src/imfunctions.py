@@ -120,7 +120,7 @@ def ometiff2bigtiff(path, output_filename=None):
             if file.endswith('ome.tif'):
                 # print(os.path.join(path, file))
                 with tiff.TiffFile(os.path.join(path, file)) as tif:
-                    # print('length of pages is: ', len(tif.pages))
+                    print('length of pages is: ', len(tif.pages))
                     # print('length of series is: ', len(tif.series))
                     for idx, page in enumerate(tif.pages):
                         # print(idx)
@@ -416,7 +416,7 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
 
             img = np.array(img)
             # find contours
-            _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
             # if there is None or less than 2 contours: write the binary and continue
             if cnts is None or len(cnts) < 2:
@@ -740,7 +740,7 @@ def contours_length(img):
     contains the perimeter of the contours
 
     """
-    _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours_peri = []
 
     for cnt in cnts:
@@ -854,7 +854,7 @@ def draw_some_contours(img, contour_size, tolerance, inner_contour_area_to_fill)
     # image has to be transformed to uint8 for the findContours
     img = img.astype(np.uint8)
     # get contours
-    _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # good contours index
     cnts_idx = []  # np.array([])
@@ -895,7 +895,7 @@ def extract_contours_with_children(img):
     """
 
     #important, findCountour() has different outputs depending on CV version! _, cnts, hierarchy or cnts, hierarchy
-    _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # print(len(cnts))
     # print(hierarchy)
     contours_with_children = []
@@ -971,7 +971,7 @@ def find_specific_contours_with_specific_children(img, external_contour_area, in
     """
 
     # important, findCountour() has different outputs depending on CV version! _, cnts, hierarchy or cnts, hierarchy
-    _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     specific_contours_with_specific_children = []
 

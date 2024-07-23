@@ -192,23 +192,23 @@ def compare_images_metrics(img_ground_truth_list, img_predicted_test_list, thres
             #threshold = 0.1
             test_predicted_img[test_predicted_img < threshold] = 0
             test_predicted_img[test_predicted_img >= threshold] = 255
+            # Convert images to binary (0 and 1)
+            ground_truth_img_binary = (ground_truth_img == 255).astype(int)
+            test_predicted_img_binary = (test_predicted_img == 255).astype(int)
+
+            tiff.imwrite(img_predicted_test_list[i].replace('.tif', '_binary.tif'), test_predicted_img)
 
             if metric == 'accuracy_score':
-                print('calculating score with metric: ', metric)
-                score = accuracy_score(ground_truth_img.flatten(),
-                                                                  test_predicted_img.flatten())
-                print(score)
-            if metric == 'jaccard_score':
-                print('calculating score with metric: ', metric)
-                score = jaccard_score(ground_truth_img.flatten(),
-                                                                test_predicted_img.flatten(), pos_label=255,
-                                                                average='binary')
-                print(score)
-            if metric == 'f1_score':
-                print('calculating score with metric: ', metric)
-                score = f1_score(ground_truth_img.flatten(), test_predicted_img.flatten(),
-                                                      pos_label=255, average='binary')
-            print(score)
+                print('Calculating score with metric:', metric)
+                score = accuracy_score(ground_truth_img_binary.flatten(), test_predicted_img_binary.flatten())
+            elif metric == 'jaccard_score':
+                print('Calculating score with metric:', metric)
+                score = jaccard_score(ground_truth_img_binary.flatten(), test_predicted_img_binary.flatten(),
+                                      average='binary')
+            elif metric == 'f1_score':
+                print('Calculating score with metric:', metric)
+                score = f1_score(ground_truth_img_binary.flatten(), test_predicted_img_binary.flatten(),
+                                 average='binary')
 
             score_list.append(score)
             print('score list is ', score_list)
