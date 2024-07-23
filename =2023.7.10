@@ -1,0 +1,2 @@
+Requirement already satisfied: tifffile in /lisc/scratch/neurobiology/zimmer/.conda/envs/unet_shared/lib/python3.8/site-packages (2023.4.12)
+Requirement already satisfied: numpy in /lisc/scratch/neurobiology/zimmer/.conda/envs/unet_shared/lib/python3.8/site-packages (from tifffile) (1.23.5)
