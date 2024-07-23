@@ -263,7 +263,13 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
     # load background image
     reader_obj_background = MicroscopeDataReader(background_img_filepath, as_raw_tiff=True, raw_tiff_is_2d=True)
     bg_img = np.array(da.squeeze(reader_obj_background.dask_array))
-    reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    try:
+        # Try to read the input file as a .btf
+        reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    except TypeError:
+        # Try to read as an ndtiff (input_filepath should be a folder)
+        reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=False)
+
     tif = da.squeeze(reader_obj_video.dask_array)
 
     if invert:
