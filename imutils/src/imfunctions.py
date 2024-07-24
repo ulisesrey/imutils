@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import tifffile as tiff
 from natsort import natsorted
+
 from imutils.scopereader import MicroscopeDataReader
 import dask.array as da
 from skimage.morphology import binary_erosion
@@ -800,7 +801,10 @@ def stack_z_projection(input_path, output_path, projection_type, dtype='uint16',
     :param axis:
     :return:
     """
-    reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    try:
+        reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    except TypeError:
+        reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=False)
     stack = da.squeeze(reader_obj.dask_array)
     projected_img = z_projection(stack, projection_type, axis)
     projected_img = projected_img.astype(dtype)
