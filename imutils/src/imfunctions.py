@@ -17,6 +17,9 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     Convert tiff file into avi file with the specified fourcc codec and fps
     The isColor parameter of the writer is harcoded set to False.
 
+    Update: Lukas Reader: Function can now also receive a source folder path with Lukas reader and directly convert
+    NDTif to Avi
+
     Parameters:
     -----------
     tiff_path: str,
