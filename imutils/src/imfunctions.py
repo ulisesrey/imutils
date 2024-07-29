@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import tifffile as tiff
 from natsort import natsorted
+
 from imutils.scopereader import MicroscopeDataReader
 import dask.array as da
 from skimage.morphology import binary_erosion
@@ -266,7 +267,13 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
     # load background image
     reader_obj_background = MicroscopeDataReader(background_img_filepath, as_raw_tiff=True, raw_tiff_is_2d=True)
     bg_img = np.array(da.squeeze(reader_obj_background.dask_array))
-    reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    try:
+        # Try to read the input file as a .btf
+        reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    except TypeError:
+        # Try to read as an ndtiff (input_filepath should be a folder)
+        reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=False)
+
     tif = da.squeeze(reader_obj_video.dask_array)
 
     if invert:
@@ -797,7 +804,10 @@ def stack_z_projection(input_path, output_path, projection_type, dtype='uint16',
     :param axis:
     :return:
     """
-    reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    try:
+        reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    except TypeError:
+        reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=False)
     stack = da.squeeze(reader_obj.dask_array)
     projected_img = z_projection(stack, projection_type, axis)
     projected_img = projected_img.astype(dtype)
