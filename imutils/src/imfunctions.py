@@ -426,7 +426,15 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
 
             img = np.array(img)
             # find contours
-            cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            output = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            if len(output) == 3:
+                # Older versions of cv2 return 3 values
+                _, cnts, hierarchy = output
+            elif len(output) == 2:
+                cnts, hierarchy = output
+            else:
+                raise ValueError("The output of cv2.findContours is not the expected length "
+                                 f"(2 or 3), but instead: {len(output)}; Full output: {output}")
 
             # if there is None or less than 2 contours: write the binary and continue
             if cnts is None or len(cnts) < 2:
