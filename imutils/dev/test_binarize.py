@@ -3,8 +3,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, lower_threshold: float,
-                      higher_threshold: float):
+def test_stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, lower_threshold: float,
+                           higher_threshold: float):
     """
     write a binary stack based on lower and higher threshold
     Parameters:
@@ -35,4 +35,4 @@ if __name__ == "__main__":
     lower_threshold = 0.05
     higher_threshold = 1
 
-    stack_make_binary(stack_input_filepath, stack_output_filepath, lower_threshold, higher_threshold)
+    test_stack_make_binary(stack_input_filepath, stack_output_filepath, lower_threshold, higher_threshold)

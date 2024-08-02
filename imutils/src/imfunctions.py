@@ -6,6 +6,9 @@ import numpy as np
 import pandas as pd
 import tifffile as tiff
 from natsort import natsorted
+
+from imutils.scopereader import MicroscopeDataReader
+import dask.array as da
 from skimage.morphology import binary_erosion
 
 
@@ -13,6 +16,9 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     """
     Convert tiff file into avi file with the specified fourcc codec and fps
     The isColor parameter of the writer is harcoded set to False.
+
+    Update: Lukas Reader: Function can now also receive a source folder path with Lukas reader and directly convert
+    NDTif to Avi
 
     Parameters:
     -----------
@@ -41,30 +47,48 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
     # make fps a float
     fps = float(fps)
 
-    # tiff read object
-    with tiff.TiffFile(tiff_path) as tif:
-        # print(tif)
-        frameSize = tif.pages[0].shape
-        # if image has channels get height and width (ignore 3rd output)
-        if len(frameSize) == 3:
-            frame_height, frame_width, _ = tif.pages[0].shape
-            video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
-                                        frameSize=(frame_width, frame_height), isColor=False)
+    print('Path:', tiff_path)
 
-        # if image is single channel get height and width
-        if len(frameSize) == 2:
-            frame_height, frame_width = tif.pages[0].shape
-            video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
-                                        frameSize=(frame_width, frame_height), isColor=False)
+    tiff_path = os.path.normpath(tiff_path)
 
-        for i, page in enumerate(tif.pages):
-            # print(i)
-            img = page.asarray()
-            # img=cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
-            video_out.write(cv2.convertScaleAbs(img))  # if img is uint16 it can't save it
-            # if i>20: break
+    print('Path resolved:', tiff_path)
+
+    tiff_path = os.path.abspath(tiff_path)
+
+    print('Path absolute:', tiff_path)
+
+    # Check if the input path is a directory or a BTF file
+
+    try:
+        reader_obj = MicroscopeDataReader(tiff_path)
+    except:
+        if tiff_path.lower().endswith('.btf'):
+            # Initialize for BTF file
+            reader_obj = MicroscopeDataReader(tiff_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+        else:
+            raise ValueError("Invalid input file path. Please provide a directory or a .btf file.")
+
+
+    tif = da.squeeze(reader_obj.dask_array)
+    frame_size_unknown_len = tif[0].shape
+    # if image has channels get height and width (ignore 3rd output)
+
+    if len(frame_size_unknown_len) == 3:
+        frame_height, frame_width, _ = frame_size_unknown_len
+        video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
+                                    frameSize=(frame_width, frame_height), isColor=False)
+
+    # if image is single channel get height and width
+    if len(frame_size_unknown_len) == 2:
+        frame_height, frame_width = frame_size_unknown_len
+        video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
+                                    frameSize=(frame_width, frame_height), isColor=False)
+
+    for i, img in enumerate(tif):
+        # img=cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
+        video_out.write(cv2.convertScaleAbs(np.array(img)))  # if img is uint16 it can't save it
+        # if i>20: break
     video_out.release()
-
 
 def ometiff2bigtiff(path, output_filename=None):
     """
@@ -100,7 +124,7 @@ def ometiff2bigtiff(path, output_filename=None):
             if file.endswith('ome.tif'):
                 # print(os.path.join(path, file))
                 with tiff.TiffFile(os.path.join(path, file)) as tif:
-                    # print('length of pages is: ', len(tif.pages))
+                    print('length of pages is: ', len(tif.pages))
                     # print('length of series is: ', len(tif.series))
                     for idx, page in enumerate(tif.pages):
                         # print(idx)
@@ -125,7 +149,11 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
     print(f"And written to filename {output_filename}")
     total_num_frames = 0
     buffer = []
+
+    reader_obj = MicroscopeDataReader(path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
     with tiff.TiffWriter(output_filename, bigtiff=True) as output_tif:
+        '''
         for i_file, file in enumerate(natsorted(os.listdir(path))):
             if not file.endswith('ome.tif') or 'bg' in file:
                 continue
@@ -133,24 +161,26 @@ def ometiff2bigtiffZ(path, output_dir=None, actually_write=True, num_slices=None
             print("Currently reading: ")
             print(this_ome_tiff)
             with tiff.TiffFile(this_ome_tiff) as tif:
-                for i, page in enumerate(tif.pages):
-                    print(f'Page {i}/{len(tif.pages)} in file {i_file}')
-                    # Bottleneck line
-                    img = page.asarray()
-                    # Convert to proper format, and write single frame
-                    # img = (alpha*img).astype('uint8')
-                    total_num_frames += 1
-                    if num_slices is None:
+        '''
+        for i, page in enumerate(tif):
+            #print(f'Page {i}/{len(tif.pages)} in file {i_file}')
+            # Bottleneck line
+            #img = page.asarray()
+            img = np.array(page)
+            # Convert to proper format, and write single frame
+            # img = (alpha*img).astype('uint8')
+            total_num_frames += 1
+            if num_slices is None:
+                if actually_write:
+                    output_tif.write(img, photometric='minisblack')
+            else:
+                buffer.append(img)
+                if len(buffer) >= num_slices:
+                    print(f"Writing {num_slices} frames from buffer...")
+                    for img in buffer:
                         if actually_write:
-                            output_tif.write(img, photometric='minisblack')
-                    else:
-                        buffer.append(img)
-                        if len(buffer) >= num_slices:
-                            print(f"Writing {num_slices} frames from buffer...")
-                            for img in buffer:
-                                if actually_write:
-                                    output_tif.write(img, photometric='minisblack', contiguous=True)
-                            buffer = []
+                            output_tif.write(img, photometric='minisblack', contiguous=True)
+                    buffer = []
             if len(buffer) > 0:
                 print(f"{len(buffer)} frames not written")
 
@@ -235,7 +265,16 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
     print("Do not use this function with a parser unless you are sure it works (See docstring)")
 
     # load background image
-    bg_img = tiff.imread(background_img_filepath)
+    reader_obj_background = MicroscopeDataReader(background_img_filepath, as_raw_tiff=True, raw_tiff_is_2d=True)
+    bg_img = np.array(da.squeeze(reader_obj_background.dask_array))
+    try:
+        # Try to read the input file as a .btf
+        reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    except TypeError:
+        # Try to read as an ndtiff (input_filepath should be a folder)
+        reader_obj_video = MicroscopeDataReader(input_filepath, as_raw_tiff=False)
+
+    tif = da.squeeze(reader_obj_video.dask_array)
 
     if invert:
         bg_img = cv2.bitwise_not(bg_img) # .astype(dtype=np.uint8)
@@ -244,13 +283,12 @@ def stack_subtract_background(input_filepath, output_filepath, background_img_fi
         print("using background as it is")
 
     with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-        with tiff.TiffFile(input_filepath) as tif:
-            for i, page in enumerate(tif.pages):
-                img = page.asarray()
-                if invert:
-                    img = cv2.bitwise_not(img)
-                new_img = cv2.subtract(img, bg_img)
-                tif_writer.write(new_img, photometric='minisblack',  contiguous=True)
+        for i, img in enumerate(tif):
+            img = np.array(img)
+            if invert:
+                img = cv2.bitwise_not(img)
+            new_img = cv2.subtract(img, bg_img)
+            tif_writer.write(new_img, photometric='minisblack',  contiguous=True)
 
 
 def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, threshold: float,
@@ -267,9 +305,11 @@ def stack_make_binary(stack_input_filepath: str, stack_output_filepath: str, thr
     -------------
     None
     """
-    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath) as tif:
-        for i, page in enumerate(tif.pages):
-            img = page.asarray()
+    reader_obj = MicroscopeDataReader(stack_input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
+        for i, img in enumerate(tif):
+            img = np.array(img)
             # apply threshold
             ret, new_img = cv2.threshold(img, threshold, max_value, cv2.THRESH_BINARY)
             #convert matrix to np.uint
@@ -291,10 +331,11 @@ def stack_normalise(stack_input_filepath: str, stack_output_filepath: str, alpha
     -------------
     None
     """
-    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer, tiff.TiffFile(stack_input_filepath) as tif:
-        for i, page in enumerate(tif.pages):
-            img = page.asarray()
-            normalised_img = cv2.normalize(img, None, alpha=alpha, beta=beta, norm_type=cv2.NORM_MINMAX)
+    reader_obj = MicroscopeDataReader(stack_input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
+    with tiff.TiffWriter(stack_output_filepath, bigtiff=True) as tif_writer:
+        for i, img in enumerate(tif):
+            normalised_img = cv2.normalize(np.array(img), None, alpha=alpha, beta=beta, norm_type=cv2.NORM_MINMAX)
             tif_writer.write(normalised_img, contiguous=True)
 
 
@@ -311,7 +352,7 @@ def stack_subsample(stack_input_filepath, stack_output_filepath, range):
 
 
 def make_contour_based_binary(stack_input_filepath, stack_output_filepath, median_blur, threshold,
-                              max_value, contour_size, tolerance, inner_contour_area_to_fill, gaussian_blur=0):
+                              max_value, contour_size, tolerance, inner_contour_area_to_fill, gaussian_blur=0, substract_background=1):
 
     """
     Produce a binary image based on contour and inner contour sizes, by calling draw_some_contours()
@@ -336,6 +377,10 @@ def make_contour_based_binary(stack_input_filepath, stack_output_filepath, media
             for i, page in enumerate(tif.pages):
                 # loads the first frame
                 img = page.asarray()
+
+                if substract_background != 1:
+                    img = 255 - img
+
                 # median Blur
                 if gaussian_blur != 0:
                     img = cv2.GaussianBlur(img, (gaussian_blur, gaussian_blur), 0)
@@ -370,15 +415,26 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
     model = unet()
     model.load_weights(weights_path)
 
-    with tiff.TiffFile(binary_input_filepath) as binary_tif, \
-            tiff.TiffFile(raw_input_filepath) as raw_tif, \
-            tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+    reader_obj_binary = MicroscopeDataReader(binary_input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    reader_obj_raw = MicroscopeDataReader(raw_input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    binary_tif = da.squeeze(reader_obj_binary.dask_array)
+    raw_tif = da.squeeze(reader_obj_raw.dask_array)
 
-        for i, page in enumerate(binary_tif.pages):
-            img = page.asarray()
+    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
 
+        for i, img in enumerate(binary_tif):
+
+            img = np.array(img)
             # find contours
-            _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            output = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            if len(output) == 3:
+                # Older versions of cv2 return 3 values
+                _, cnts, hierarchy = output
+            elif len(output) == 2:
+                cnts, hierarchy = output
+            else:
+                raise ValueError("The output of cv2.findContours is not the expected length "
+                                 f"(2 or 3), but instead: {len(output)}; Full output: {output}")
 
             # if there is None or less than 2 contours: write the binary and continue
             if cnts is None or len(cnts) < 2:
@@ -395,7 +451,8 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
 
             # make a copy of the original image here in order to paste more than one contour with children
             #TODO: Is this copy needed?
-            new_img = raw_tif.pages[i].asarray()
+            # new_img = raw_tif.pages[i].asarray()
+            new_img = raw_tif[i].compute().copy()
             for cnt_idx, cnt in enumerate(contours_with_children):
                 x, y, w, h = cv2.boundingRect(cnt)
                 # make the crop
@@ -701,7 +758,7 @@ def contours_length(img):
     contains the perimeter of the contours
 
     """
-    _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours_peri = []
 
     for cnt in cnts:
@@ -755,7 +812,11 @@ def stack_z_projection(input_path, output_path, projection_type, dtype='uint16',
     :param axis:
     :return:
     """
-    stack = tiff.imread(input_path)
+    try:
+        reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    except TypeError:
+        reader_obj = MicroscopeDataReader(input_path, as_raw_tiff=False)
+    stack = da.squeeze(reader_obj.dask_array)
     projected_img = z_projection(stack, projection_type, axis)
     projected_img = projected_img.astype(dtype)
     tiff.imwrite(output_path, projected_img)
@@ -814,7 +875,7 @@ def draw_some_contours(img, contour_size, tolerance, inner_contour_area_to_fill)
     # image has to be transformed to uint8 for the findContours
     img = img.astype(np.uint8)
     # get contours
-    _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # good contours index
     cnts_idx = []  # np.array([])
@@ -855,7 +916,7 @@ def extract_contours_with_children(img):
     """
 
     #important, findCountour() has different outputs depending on CV version! _, cnts, hierarchy or cnts, hierarchy
-    _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # print(len(cnts))
     # print(hierarchy)
     contours_with_children = []
@@ -931,7 +992,7 @@ def find_specific_contours_with_specific_children(img, external_contour_area, in
     """
 
     # important, findCountour() has different outputs depending on CV version! _, cnts, hierarchy or cnts, hierarchy
-    _, cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     specific_contours_with_specific_children = []
 

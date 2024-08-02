@@ -3,14 +3,12 @@ import cv2
 import numpy as np
 import tifffile as tiff
 import glob
-import os
 # unet model is here (too)
-from natsort import natsorted
 import skimage.io as io
 import skimage.transform as trans
+from imutils.scopereader import MicroscopeDataReader
 from skimage import img_as_ubyte
-from skimage import exposure
-
+import dask.array as da
 import pandas as pd
 from natsort import natsorted
 import matplotlib.image as mpimg
@@ -62,22 +60,22 @@ def unet_segmentation_stack(input_filepath, output_filepath, weights_path):
     model=unet()
     print('loading weights..')
     model.load_weights(weights_path)
+    reader_obj = MicroscopeDataReader(input_filepath, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
 
-    with tiff.TiffFile(input_filepath) as tif,\
-            tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
-        for i, page in enumerate(tif.pages):
-            img=page.asarray()
-            print(i)
+    with tiff.TiffWriter(output_filepath, bigtiff=True) as tif_writer:
+        start = time.time()
+        for i, img in enumerate(tif):
             #run network
-            start = time.time()
-            segmented_img = unet_segmentation(img, model)
+            segmented_img = unet_segmentation(np.array(img), model)
             segmented_img = segmented_img*255
             segmented_img = segmented_img.astype('uint8')
-            end = time.time()
-            total_time = end - start
-            print('total time: ', total_time)
             # write
             tif_writer.write(segmented_img, contiguous=True)
+        end = time.time()
+        total_time = end - start
+        print('total time: ', total_time)
+
 
 def testGenerator(test_path, target_size = (256,256),flag_multi_class = False, as_gray = True):
     """this function is duplicated from unet-master/data.py"""
@@ -194,23 +192,23 @@ def compare_images_metrics(img_ground_truth_list, img_predicted_test_list, thres
             #threshold = 0.1
             test_predicted_img[test_predicted_img < threshold] = 0
             test_predicted_img[test_predicted_img >= threshold] = 255
+            # Convert images to binary (0 and 1)
+            ground_truth_img_binary = (ground_truth_img == 255).astype(int)
+            test_predicted_img_binary = (test_predicted_img == 255).astype(int)
+
+            tiff.imwrite(img_predicted_test_list[i].replace('.tif', '_binary.tif'), test_predicted_img)
 
             if metric == 'accuracy_score':
-                print('calculating score with metric: ', metric)
-                score = accuracy_score(ground_truth_img.flatten(),
-                                                                  test_predicted_img.flatten())
-                print(score)
-            if metric == 'jaccard_score':
-                print('calculating score with metric: ', metric)
-                score = jaccard_score(ground_truth_img.flatten(),
-                                                                test_predicted_img.flatten(), pos_label=255,
-                                                                average='binary')
-                print(score)
-            if metric == 'f1_score':
-                print('calculating score with metric: ', metric)
-                score = f1_score(ground_truth_img.flatten(), test_predicted_img.flatten(),
-                                                      pos_label=255, average='binary')
-            print(score)
+                print('Calculating score with metric:', metric)
+                score = accuracy_score(ground_truth_img_binary.flatten(), test_predicted_img_binary.flatten())
+            elif metric == 'jaccard_score':
+                print('Calculating score with metric:', metric)
+                score = jaccard_score(ground_truth_img_binary.flatten(), test_predicted_img_binary.flatten(),
+                                      average='binary')
+            elif metric == 'f1_score':
+                print('Calculating score with metric:', metric)
+                score = f1_score(ground_truth_img_binary.flatten(), test_predicted_img_binary.flatten(),
+                                 average='binary')
 
             score_list.append(score)
             print('score list is ', score_list)

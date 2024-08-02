@@ -86,6 +86,7 @@ def main(arg_list=None):
     parser_g.add_argument("-t", "--tolerance", required=True, type=float, help="tolerance, percentage from which the contours can deviate from contour size")
     parser_g.add_argument("-ics", "--inner_contour_area_to_fill", required=True, type=float, help="inner_contour_area_to_fill")
     parser_g.add_argument("-blur_gaussian", "--gaussian_blur", required=False, type=int, default=0, help="apply gaussian blur")
+    parser_g.add_argument("-sb", "--substract_background", type=int, default=1, help="If background is not substracted before asign 0 ! , default is 1 which means it is")
 
     #parser for unet_segmentation_stack
     parser_h= subparsers.add_parser('unet_segmentation_stack', help='unet_segmentation_stack')

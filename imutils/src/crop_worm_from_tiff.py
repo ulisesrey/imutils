@@ -8,6 +8,9 @@ import argparse
 import pandas as pd
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
+from imutils.scopereader import MicroscopeDataReader
+import dask.array as da
+import tifffile as tiff
 
 def process_frame(frame, crop_size):
     crop_width, crop_height = crop_size
@@ -41,27 +44,30 @@ def crop_tiff(path, output_path, crop_size):
     x_roi_data = []
     y_roi_data = []
 
-    with tifffile.TiffFile(path) as tif:
-        total_frames = len(tif.pages)
+    reader_obj = MicroscopeDataReader(args.input_file_path, as_raw_tiff=True, raw_tiff_num_slices=1)
+    tif = da.squeeze(reader_obj.dask_array)
+
+    with tiff.TiffWriter(args.output_file_path, bigtiff=True) as tif_writer:
+
         cropped_data = []
 
-        for i in range(total_frames):
-            frame = tif.asarray(key=i)
+        for i, img in enumerate(tif):
+
+            frame =  np.array(img)
             result = process_frame(frame, crop_size)
+
             if result is None:
                 # Handle empty frame case - e.g., skip or use a blank frame
                 blank_frame = np.zeros(crop_size, dtype=np.uint8)
-                cropped_data.append(blank_frame)
+                tif_writer.write(blank_frame, contiguous=True)
                 continue
+
             cropped_frame, start_x, start_y = result
-            cropped_data.append(cropped_frame)
+
+            tif_writer.write(cropped_frame, contiguous=True)
+
             x_roi_data.append(start_x)
             y_roi_data.append(start_y)
-
-        # Ensuring all frames have the same size and type
-        uniform_cropped_data = np.stack([np.asarray(frame, dtype=np.uint8) for frame in cropped_data])
-
-        tifffile.imsave(output_path, uniform_cropped_data, bigtiff=True)
 
     return x_roi_data, y_roi_data
 
@@ -110,3 +116,5 @@ if __name__ == "__main__":
 
     print("Shell commands passed:", sys.argv)
     main(sys.argv[1:])  # exclude the script name from the args when called from shell
+
+
