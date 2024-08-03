@@ -426,15 +426,7 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
 
             img = np.array(img)
             # find contours
-            output = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            if len(output) == 3:
-                # Older versions of cv2 return 3 values
-                _, cnts, hierarchy = output
-            elif len(output) == 2:
-                cnts, hierarchy = output
-            else:
-                raise ValueError("The output of cv2.findContours is not the expected length "
-                                 f"(2 or 3), but instead: {len(output)}; Full output: {output}")
+            cnts, hierarchy = cv2_find_contours_compatibility_mode(img)
 
             # if there is None or less than 2 contours: write the binary and continue
             if cnts is None or len(cnts) < 2:
@@ -444,8 +436,8 @@ def unet_segmentation_contours_with_children(binary_input_filepath, raw_input_fi
             # find contours with children
             contours_with_children = extract_contours_with_children(img)
 
-            #If there are no contours_with_children (empty list), write binary too
-            if contours_with_children==[]:
+            # If there are no contours_with_children (empty list), write binary too
+            if contours_with_children == []:
                 tif_writer.write(img, contiguous=True)
                 continue
 
@@ -758,7 +750,7 @@ def contours_length(img):
     contains the perimeter of the contours
 
     """
-    cnts, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2_find_contours_compatibility_mode(img)
     contours_peri = []
 
     for cnt in cnts:
@@ -875,7 +867,7 @@ def draw_some_contours(img, contour_size, tolerance, inner_contour_area_to_fill)
     # image has to be transformed to uint8 for the findContours
     img = img.astype(np.uint8)
     # get contours
-    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2_find_contours_compatibility_mode(img)
 
     # good contours index
     cnts_idx = []  # np.array([])
@@ -916,9 +908,7 @@ def extract_contours_with_children(img):
     """
 
     #important, findCountour() has different outputs depending on CV version! _, cnts, hierarchy or cnts, hierarchy
-    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # print(len(cnts))
-    # print(hierarchy)
+    cnts, hierarchy = cv2_find_contours_compatibility_mode(img)
     contours_with_children = []
     for cnt_idx, cnt in enumerate(cnts):
         # draw contours with children: last column in the array is -1 if an external contour, column 2 is different than -1 meaning it has children
@@ -930,6 +920,19 @@ def extract_contours_with_children(img):
             # make the crop
             # cnt_img=img[y:y+h,x:x+w]
     return contours_with_children
+
+
+def cv2_find_contours_compatibility_mode(img):
+    output = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    if len(output) == 3:
+        # Older versions of cv2 return 3 values
+        _, cnts, hierarchy = output
+    elif len(output) == 2:
+        cnts, hierarchy = output
+    else:
+        raise ValueError("The output of cv2.findContours is not the expected length "
+                         f"(2 or 3), but instead: {len(output)}; Full output: {output}")
+    return cnts, hierarchy
 
 
 def crop_image_from_contour(img, contour):
@@ -985,6 +988,7 @@ def stack_extract_and_save_contours_with_children(binary_input_filepath, raw_inp
                 tiff.imwrite(output_filepath, raw_img)
     return None
 
+
 def find_specific_contours_with_specific_children(img, external_contour_area, internal_contour_area):
     """
     Inspired by imutils.src.imfunctions.extract_contours_with_children()
@@ -992,15 +996,12 @@ def find_specific_contours_with_specific_children(img, external_contour_area, in
     """
 
     # important, findCountour() has different outputs depending on CV version! _, cnts, hierarchy or cnts, hierarchy
-    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
+    cnts, hierarchy = cv2_find_contours_compatibility_mode(img)
     specific_contours_with_specific_children = []
 
     for cnt_idx, cnt in enumerate(cnts):
         # draw contours with children: last column in the array is -1 if an external contour, column 2 is different than -1 meaning it has children
         if hierarchy[0][cnt_idx][3] == -1 and hierarchy[0][cnt_idx][2] != -1:
-            #contours_with_children.append(cnt)
-
             area = cv2.contourArea(cnt)
 
             # check if the contours with children have an area between the external_cnt_area

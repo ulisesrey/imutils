@@ -20,7 +20,8 @@ def extract_contours_with_children_local(img):
     """
 
     #important, findCountour() has different outputs depending on CV version!
-    cnts, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    from imutils.src.imfunctions import cv2_find_contours_compatibility_mode
+    cnts, hierarchy = cv2_find_contours_compatibility_mode(img)
     # print(len(cnts))
     # print(hierarchy)
     contours_with_children = []
