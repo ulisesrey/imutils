@@ -46,19 +46,15 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
 
     # make fps a float
     fps = float(fps)
-
     print('Path:', tiff_path)
 
     tiff_path = os.path.normpath(tiff_path)
-
     print('Path resolved:', tiff_path)
 
     tiff_path = os.path.abspath(tiff_path)
-
     print('Path absolute:', tiff_path)
 
     # Check if the input path is a directory or a BTF file
-
     try:
         reader_obj = MicroscopeDataReader(tiff_path)
     except:
@@ -68,27 +64,28 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
         else:
             raise ValueError("Invalid input file path. Please provide a directory or a .btf file.")
 
-
     tif = da.squeeze(reader_obj.dask_array)
     frame_size_unknown_len = tif[0].shape
     # if image has channels get height and width (ignore 3rd output)
 
+    print(f"Opening video writer with frame size {frame_size_unknown_len}")
     if len(frame_size_unknown_len) == 3:
         frame_height, frame_width, _ = frame_size_unknown_len
-        video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
-                                    frameSize=(frame_width, frame_height), isColor=False)
-
-    # if image is single channel get height and width
-    if len(frame_size_unknown_len) == 2:
+    elif len(frame_size_unknown_len) == 2:
         frame_height, frame_width = frame_size_unknown_len
-        video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
-                                    frameSize=(frame_width, frame_height), isColor=False)
+    else:
+        raise ValueError(f"Invalid frame size, expected 2 or 3 dimensions, got {frame_size_unknown_len}")
+
+    video_out = cv2.VideoWriter(avi_path, apiPreference=0, fourcc=fourcc, fps=fps,
+                                frameSize=(frame_width, frame_height), isColor=False)
 
     for i, img in enumerate(tif):
         # img=cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
         video_out.write(cv2.convertScaleAbs(np.array(img)))  # if img is uint16 it can't save it
         # if i>20: break
     video_out.release()
+    print(f'Finished! Video saved at: {avi_path}')
+
 
 def ometiff2bigtiff(path, output_filename=None):
     """
