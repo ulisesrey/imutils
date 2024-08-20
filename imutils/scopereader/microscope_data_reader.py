@@ -276,8 +276,21 @@ class MicroscopeDataReader:
         # fix axis order to be PTCZYX
         if self.verbose >= 1:
             self.logger.debug(f"Original dask shape: {dask_array.shape}")
-            self.logger.info(f"Fixing axis order")
+            self.logger.info(f"Fixing axis order with original metadata: {axes}")
         org_axis_position = [None, None, None, None, None, None]
+
+        # First check to see if any of the axes letters are unknown, and assume they should be time
+        axes_mapping = {}
+        for orig_axis in axes:
+            if orig_axis not in self._axis_string_tifffile:
+                if self.verbose >= 1:
+                    self.logger.warning(f"Unknown axis {orig_axis} in metadata; assuming it should be time")
+                axes_mapping[orig_axis] = 'T'
+        if len(axes_mapping) > 0:
+            axes = ''.join([axes_mapping.get(orig_axis, orig_axis) for orig_axis in axes])
+            if self.verbose >= 1:
+                self.logger.info(f"New original axis metadata: {axes}")
+
         # checking for axis order RTCZYX:
         for i, org in enumerate(self._axis_string_tifffile):
             org_axis_position[i] = axes.find(org)
