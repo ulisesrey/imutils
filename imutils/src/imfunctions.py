@@ -70,7 +70,8 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
 
     print(f"Opening video writer with frame size {frame_size_unknown_len}")
     if len(frame_size_unknown_len) == 3:
-        frame_height, frame_width, _ = frame_size_unknown_len
+        # Time should be first
+        _, frame_height, frame_width = frame_size_unknown_len
     elif len(frame_size_unknown_len) == 2:
         frame_height, frame_width = frame_size_unknown_len
     else:
