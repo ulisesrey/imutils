@@ -32,6 +32,8 @@ class MicroscopeDataReader:
             verbose (int, optional): Verbosity level of logger messages. Defaults to 1.
         """
         self._force_tifffile = force_tifffile
+        self.verbose = verbose
+
         self.logger = logger.bind(classname=self.__class__.__name__)
         self._tifffile_version = '2023.7.10'
         self.directory_path: Path = None
@@ -48,7 +50,6 @@ class MicroscopeDataReader:
         self._is_ndtiff: bool = False
         self._is_tiffile: bool = False
         self._data_store = None
-        self.verbose = verbose
         if as_raw_tiff:
             self._read_raw_tifffile()
         else:
@@ -274,14 +275,15 @@ class MicroscopeDataReader:
     def _fix_axis_order_and_shape(self, axes: str, dask_array: dask.array):
         # fix axis order to be PTCZYX
         if self.verbose >= 1:
+            self.logger.debug(f"Original dask shape: {dask_array.shape}")
             self.logger.info(f"Fixing axis order")
-        org_axis_position = [None,None,None,None,None,None]
+        org_axis_position = [None, None, None, None, None, None]
         # checking for axis order RTCZYX:
         for i, org in enumerate(self._axis_string_tifffile):
             org_axis_position[i] = axes.find(org)
             self.logger.debug(f"Axis {i}, {org}, is at position {org_axis_position[i]}")
         if self.verbose >= 1:
-            self.logger.info(f"Org axis order, position of PTCZYX: {org_axis_position}")
+            self.logger.info(f"Original axis order, position of PTCZYX: {org_axis_position}")
         # reorder axis to PTCZYX
         for i in range(len(org_axis_position)):
             self.logger.debug(f"Axis {i}, {self.axis_order[i]}, is at position {org_axis_position[i]}")
