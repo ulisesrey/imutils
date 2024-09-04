@@ -71,6 +71,8 @@ def tiff2avi(tiff_path, avi_path, fourcc, fps):
 
     tif = da.squeeze(reader_obj.dask_array)
     frame_size_unknown_len = tif[0].shape
+
+    print(frame_size_unknown_len)
     # if image has channels get height and width (ignore 3rd output)
 
     if len(frame_size_unknown_len) == 3:
