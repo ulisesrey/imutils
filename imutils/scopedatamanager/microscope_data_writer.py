@@ -59,15 +59,30 @@ class MicroscopeDataWriter:
         self.close()
     
     def close(self):
+        self.finish()
         if self.verbose >= 1:
             self.logger.info(f"Closing Microscope Data Writer")
         self.directory_path: Path = None
-        self.axis_order = ['position', 'time', 'channel', 'z', 'y', 'x']
-        self.axis_string = 'PTCZYX'
-        self._axis_string_tifffile = 'RTCZYX'
         if self._data_store is not None:
             self._data_store.close()
         self._data_store = None
+    
+    def finish(self):
+        if self.verbose >= 1:
+            self.logger.info(f"Finishing Microscope Data Writer")
+        self._data_store.finish()
+    
+    def get_image_coordinates_list(self):
+        return self._data_store.get_image_coordinates_list()
+    
+    def read_image(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
+        return self._data_store.read_image(channel=channel, z=z, time=time, position=position)
+    
+    def read_image_metadata(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
+        return self._data_store.read_metadata(channel=channel, z=z, time=time, position=position)
+    
+    def get_summary_metadata(self):
+        return self.summary_metadata
     
     def _check_directory_path(self, directory_path: Union[Path,str], overwrite: bool) -> None:
          # Check if file_path is of type pathlib.Path
@@ -96,7 +111,7 @@ class MicroscopeDataWriter:
         self._data_store = NDTiffDataset(dataset_path=self.directory_path, name=self.dataset_name,
                                          summary_metadata=self.summary_metadata, writable=True)
         
-    def write_image(self, image: np.array, position: int = 0, time: int = 0, channel: int = 0, z: int = 0) -> None:
+    def write_image(self, image: np.array, position: int = 0, time: int = 0, channel: int = 0, z: int = 0, image_metadata: dict = None) -> None:
         """
         Writes a single y,x image to the data set. The image is selected by the position, time, channel and z values.
         
@@ -108,29 +123,18 @@ class MicroscopeDataWriter:
             z (int, optional): z-axis. Defaults to 0.
         """
         image_coordinates = {'position': position, 'time': time, 'channel': channel, 'z': z}
-        basic_metadata = {'WriteTime_µs': time.time()}
-        image_metadata = {'ImageCoordinates': image_coordinates}
+        
+        basic_metadata = {'ElapsedTimeWriter_ms': (datetime.time() - self.init_date_time).total_seconds() * 1000}
+        if image_metadata is None:
+            if self.verbose >= 1:
+                self.logger.warning("No metadata provided!")
+            basic_metadata['MicroscopeDataWriter'] = 'no metadata provided!'
+            image_metadata = basic_metadata
+        else:
+            image_metadata = basic_metadata | image_metadata
+        
         self._data_store.put_image(image_coordinates, image, image_metadata)
-        
-    def read_image(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0) -> np.array:
-        """
-        Reads a single y,x image from the data set. The image is selected by the position, time, channel and z values.
-        
-        Args:
-            position (int, optional): position. Defaults to 0.
-            time (int, optional): time. Defaults to 0.
-            channel (int, optional): channel. Defaults to 0.
-            z (int, optional): z-axis. Defaults to 0.
-            
-        Returns:
-            np.array: xy image
-        """
-        if self._is_ndtiff:
-            return self._data_store.read_image(position = position, time = time, channel=channel, z=z)
-        if self._is_tiffile:
-            return self._dask_array[position, time, channel, z, :, :].compute()
-        return None
-    
+         
     def get_frame(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0) -> np.array:
         """
         Reads a single y,x image from the data set.
@@ -147,158 +151,4 @@ class MicroscopeDataWriter:
         """
         return self.read_image(position, time, channel, z)
     
-    def read_single_volume(self, position: int = 0, time: int = 0, channel: int = 0) -> np.array:
-        """
-        Read a single volume from the data set
-            The volume is selected by the position, time and channel values.
-        
-        Args:
-            position (int, optional): position. Defaults to 0.
-            time (int, optional): time. Defaults to 0.
-            channel (int, optional): channel. Defaults to 0.
-            
-        Returns:
-            np.array: volume[z,y,x]
-        """
-        return self._dask_array[position, time, channel, :, :, :].compute()
     
-    def get_single_volume(self, position: int = 0, time: int = 0, channel: int = 0) -> np.array:
-        """
-        Read a single volume from the data set
-            The volume is selected by the position, time and channel values.
-        
-        Args:
-            position (int, optional): position. Defaults to 0.
-            time (int, optional): time. Defaults to 0.
-            channel (int, optional): channel. Defaults to 0.
-            
-        Returns:
-            np.array: volume[z,y,x]
-        """
-        return self.read_single_volume(position, time, channel)
-    
-    def get_axis_order(self) -> list:
-        """
-        Returns the axis order of the dask array
-
-        Returns:
-            list: axis order
-        """
-        return self.axis_order
-    
-    def get_axis_string(self) -> str:
-        """
-        Returns the axis order of the daks array as string
-        
-        Returns:
-            str: axis order
-        """
-        return self.axis_string
-    
-    def get_data_shape(self) -> tuple:
-        """
-        Returns the shape of the data set [position, time, channel, z, y, x]
-        
-        Returns:
-            tuple: shape
-        """
-        return self._dask_array.shape
-    
-    def get_image_shape(self) -> tuple:
-        """
-        Returns the shape of the images [y, x]
-        
-        Returns:
-            tuple: shape
-        """
-        return self._dask_array.shape[-2:]
-    
-    def get_volume_shape(self) -> tuple:
-        """
-        Returns the shape of the volumes [z, y, x]
-        
-        Returns:
-            tuple: shape
-        """
-        return self._dask_array.shape[-3:]
-    
-    def get_number_of_positions(self) -> int:
-        """
-        Returns the amount of positions
-        
-        Returns:
-            int: amount of positions
-        """
-        return self._dask_array.shape[0]
-    
-    def get_number_of_timepoints(self) -> int:
-        """
-        Returns the amount of timepoints
-        
-        Returns:
-            int: amount of timepoints
-        """
-        return self._dask_array.shape[1]
-    
-    def get_number_of_channels(self) -> int:
-        """
-        Returns the amount of channels
-        
-        Returns:
-            int: amount of channels
-        """
-        return self._dask_array.shape[2]
-    
-    def get_number_of_z_slices(self) -> int:
-        """
-        Returns the amount of slices
-        
-        Returns:
-            int: amount of slices
-        """
-        return self._dask_array.shape[3]
-    
-    def get_total_number_of_frames(self) -> int:
-        """
-        Returns the total amount of frames
-        
-        Returns:
-            int: total amount of frames
-        """
-        return self.dask_array.shape[0] * self.dask_array.shape[1] * self.dask_array.shape[2] * self.dask_array.shape[3]
-    
-    def get_number_of_volumes(self) -> int:
-        """
-        Returns the amount of volumes
-        
-        Returns:
-            int: amount of volumes
-        """
-        return self._dask_array.shape[0] * self._dask_array.shape[1] * self._dask_array.shape[2]
-    
-    def get_data_type(self) -> str:
-        """
-        Returns the data type of the data set
-        
-        Returns:
-            str: data type
-        """
-        return self._dask_array.dtype
-    
-    def open_in_napari(self):
-        """
-        Opens the data set in napari using view_image. This assumes the image is floats (not ints, like segmentation)
-        """
-        import napari
-        viewer = napari.view_image(self._dask_array, multiscale=False, rgb=False, axis_labels=self.axis_order)
-        return viewer
-
-    def _generate_ome_metadata(self):
-        from omexmlClass import OMEXML
-        my_ome_mxl = OMEXML()
-        my_ome_mxl.set_image_count(1000)
-        my_ome_mxl.Plane
-        
-    @property
-    def dask_array(self):
-        return self._dask_array
