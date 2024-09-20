@@ -1,8 +1,6 @@
 # Installation
-To install this as package you should check
-https://bitbucket.vbc.ac.at/projects/ZL/repos/protocols/browse/Installing_personal_Python_packages.md
+To install this as package you should be familiar with the process. But briefly these are the main steps using anaconda:
 
-Shortly:
 1. Open Terminal and activate your environment (example your_env)
 	```
 	conda activate your_env
