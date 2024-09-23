@@ -1,3 +1,3 @@
-from imutils.loghelper import LoguruConfigurator
-from imutils.scopedatamanager.microscope_data_reader import MicroscopeDataReader
-from imutils.scopedatamanager.microscope_data_writer import MicroscopeDataWriter
+from .loghelper import LoguruConfigurator
+from .scopedatamanager.microscope_data_writer import MicroscopeDataWriter
+from .scopedatamanager.microscope_data_reader import MicroscopeDataReader
