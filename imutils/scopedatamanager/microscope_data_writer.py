@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 import dask.array
 import numpy as np
+import json
 from typing import Union # from pthon 3.10 it could be | instead of Union
 from packaging import version
 from ndstorage import NDTiffDataset
@@ -11,17 +12,17 @@ from ndstorage import NDTiffDataset
 class MicroscopeDataWriter:
     """
     Writes data for microscope data sets as ndtiff.
-    Metadata is stored in a header and as seperate files.
+    Metadata is stored in a header and as seperate files (_Metadata.json).
     Trys to keep the micromanager metadata schema.
     """
     def __init__(self, dataset_path: Union[Path,str], dataset_name: str, add_date_time: bool = True, summary_metadata: dict = None, verbose: int = 1, **kwargs):
         """
         Writes data for microscope data sets as ndtiff.
-        Metadata is stored in a header and as seperate files.
+        Metadata is stored in a header and as seperate files (_Metadata.json).
         Trys to keep the micromanager metadata schema.
         
         Args:
-            dataset_path (Path or str): Path to the file or directory containing the data
+            dataset_path (Path or str): Path to the file or directory writing the data
             dataset_name (str): Name of the dataset (folder name)
             add_date_time (bool, optional): Add date and time to the dataset name. Defaults to True.
             summary_metadata (dict, optional): Summary metadata for the dataset. Defaults to None.
@@ -30,7 +31,7 @@ class MicroscopeDataWriter:
         """
         self.verbose = verbose # set the verbosity level
         self.logger = logger.bind(classname=self.__class__.__name__) # create a logger for the class
-        self.init_date_time = datetime.now() # store the time when the class was initialized
+        self.init_date_time = datetime.now() # keep the time when the class was initialized
         
         # add date and time to the dataset name
         if add_date_time:
@@ -48,21 +49,20 @@ class MicroscopeDataWriter:
         else:
             self._summary_metadata = basic_metadata | summary_metadata
         
-        # call the parent class constructor
-        self._data_store = NDTiffDataset(dataset_path=self.directory_path, name=dataset_name,
+        # call the NDTiffDataset class constructor
+        self._data_store = NDTiffDataset(dataset_path=dataset_path, name=dataset_name,
                                          summary_metadata=self._summary_metadata, writable=True, **kwargs)
         
     def __enter__(self):
-        if self.verbose >= 1:
-            self.logger.warning("Use the build in methods to write data and metadata to file")
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
         if self.verbose >= 1:
-            self.logger.warning(f"Your file is written and cant be changed anymore!")
+            self.logger.warning(f"Your file is written and can't be changed anymore!")
         self.close()
     
     def close(self):
+        """Close the data store and write the metadata file"""
         self.finish()
         if self.verbose >= 1:
             self.logger.info(f"Closing Microscope Data Writer")
@@ -71,36 +71,56 @@ class MicroscopeDataWriter:
         self._data_store = None
     
     def finish(self):
+        """Finish the data store and write the metadata file"""
         if self.verbose >= 1:
             self.logger.info(f"Finishing Microscope Data Writer")
         self._data_store.finish()
         self._write_metadata_file()
         
     def _write_metadata_file(self):
-        metadata_file = self._data_store.path / f"{self._data_store.name}_metadata.txt"
+        # write the metadata file
+        if self.verbose >= 1:
+            self.logger.info(f"Writing metadata file")
+        metadata_file = Path(self._data_store.path) / f"{self._data_store.name}_Metadata.json"
+        metadata = self._create_complete_metadata()
         with open(metadata_file, 'w') as file:
-            for key, value in self.summary_metadata.items():
-                file.write(f"{key}: {value}\n")
+            json.dump(metadata, file, indent=4)
+        
+    
+    def _create_complete_metadata(self):
+        # create the complete metadata for the metadata file
+        metadata = self._data_store._summary_metadata
+        metadata['image_key'] = 'Str(position, time, channel, z)'
+        for coordinates in self._data_store.get_image_coordinates_list():
+            key = f"{coordinates['position']},{coordinates['time']},{coordinates['channel']},{coordinates['z']}"
+            metadata[key] = self._data_store.read_metadata(channel=coordinates['channel'], z=coordinates['z'], time=coordinates['time'], position=coordinates['position'])
+        return metadata
     
     def block_until_finished(self):
+        """Block until the dataset is finished and all images have been written"""
         self._data_store.block_until_finished()
         
-    def get_channel_names(self):
+    def get_channel_names(self) -> list:
+        """list of channel names (strings)"""
         return self._data_store.get_channel_names()
     
-    def get_image_coordinates_list(self):
+    def get_image_coordinates_list(self) -> list:
+        """Return a list of the coordinates (e.g. {'channel': 'DAPI', 'z': 0, 'time': 0}) of every image in the dataset"""
         return self._data_store.get_image_coordinates_list()
     
-    def get_index_keys(self):
+    def get_index_keys(self) -> list:
+        """Return a list of every combination of axes that has a imagein this  dataset"""
         return self._data_store.get_index_keys()
     
     def has_image(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
+        """Check if this image is present in the dataset."""
         return self._data_store.has_image(channel=channel, z=z, time=time, position=position)
     
-    def is_finished(self):
+    def is_finished(self) -> bool:
+        """Check if the dataset is finished and no more images will be added"""
         return self._data_store.is_finished()
     
-    def put_image(self, image: np.array, position: int = 0, time: int = 0, channel: int = 0, z: int = 0, image_metadata: dict = None) -> None:
+    def put_image(self, image: np.array, position: int = 0, time: int = 0, channel: int = 0, z: int = 0, stage_xyz_pos: tuple = None, timestamp: int = None, image_metadata: dict = None) -> None:
         """
         Writes a single y,x image to the data set. The image is selected by the position, time, channel and z values.
         
@@ -110,6 +130,9 @@ class MicroscopeDataWriter:
             time (int, optional): time. Defaults to 0.
             channel (int, optional): channel. Defaults to 0.
             z (int, optional): z-axis. Defaults to 0.
+            stage_xyz_pos (tuple, optional): stage position in mm. Defaults to None.
+            timestamp (int, optional): timestamp in ms. Defaults to None.
+            metadata (dict, optional): metadata for the image. Defaults to None.
         """
         image_coordinates = {'position': position, 'time': time, 'channel': channel, 'z': z}
         
@@ -122,7 +145,15 @@ class MicroscopeDataWriter:
         else:
             image_metadata = basic_metadata | image_metadata
         
-        super().put_image(image_coordinates, image, image_metadata)
+        if not stage_xyz_pos is None:
+            image_metadata['StageXPos_mm'] = stage_xyz_pos[0]
+            image_metadata['StageYPos_mm'] = stage_xyz_pos[1]
+            image_metadata['StageZPos_mm'] = stage_xyz_pos[2]
+        
+        if not timestamp is None:
+            image_metadata['TimeStamp_ms'] = timestamp
+        
+        self._data_store.put_image(image_coordinates, image, image_metadata)
     
     def read_image(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
         """
@@ -141,10 +172,12 @@ class MicroscopeDataWriter:
         return self._data_store.read_image(channel=channel, z=z, time=time, position=position)
     
     def read_image_metadata(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
+        """Read the metadata of a single image"""
         return self._data_store.read_metadata(channel=channel, z=z, time=time, position=position)
     
     def get_summary_metadata(self):
-        return self.summary_metadata
+        """Return the summary metadata"""
+        return self._summary_metadata
     
     # Properties to access the ndstore properties and usefull other properties
     
@@ -205,120 +238,120 @@ class MicroscopeDataWriter:
         return self._summary_metadata
     
 
-# A ndtiff writer implementation which inherits from the NDTiffDataset class
-class MicroscopeDataWriterInherited(NDTiffDataset):
-    """
-    Writes data for microscope data sets as ndtiff.
-    Metadata is stored in a header and as seperate files.
-    Trys to keep the micromanager metadata schema.
-    """
-    def __init__(self, dataset_path: Union[Path,str], dataset_name: str, add_date_time: bool = True, summary_metadata: dict = None, verbose: int = 1,**kwargs):
-        """
-        Writes data for microscope data sets as ndtiff.
-        Metadata is stored in a header and as seperate files.
-        Trys to keep the micromanager metadata schema.
+# # A ndtiff writer implementation which inherits from the NDTiffDataset class
+# class MicroscopeDataWriterInherited(NDTiffDataset):
+#     """
+#     Writes data for microscope data sets as ndtiff.
+#     Metadata is stored in a header and as seperate files.
+#     Trys to keep the micromanager metadata schema.
+#     """
+#     def __init__(self, dataset_path: Union[Path,str], dataset_name: str, add_date_time: bool = True, summary_metadata: dict = None, verbose: int = 1,**kwargs):
+#         """
+#         Writes data for microscope data sets as ndtiff.
+#         Metadata is stored in a header and as seperate files.
+#         Trys to keep the micromanager metadata schema.
         
-        Args:
-            dataset_path (Path or str): Path to the file or directory containing the data
-            dataset_name (str): Name of the dataset (folder name)
-            add_date_time (bool, optional): Add date and time to the dataset name. Defaults to True.
-            summary_metadata (dict, optional): Summary metadata for the dataset. Defaults to None.
-            verbose (int, optional): Verbosity level of logger messages. Defaults to 1.
-            **kwargs: Additional arguments for the NDTiffDataset class
-        """
-        self.verbose = verbose # set the verbosity level
-        self.logger = logger.bind(classname=self.__class__.__name__) # create a logger for the class
-        self.init_date_time = datetime.now() # store the time when the class was initialized
+#         Args:
+#             dataset_path (Path or str): Path to the file or directory containing the data
+#             dataset_name (str): Name of the dataset (folder name)
+#             add_date_time (bool, optional): Add date and time to the dataset name. Defaults to True.
+#             summary_metadata (dict, optional): Summary metadata for the dataset. Defaults to None.
+#             verbose (int, optional): Verbosity level of logger messages. Defaults to 1.
+#             **kwargs: Additional arguments for the NDTiffDataset class
+#         """
+#         self.verbose = verbose # set the verbosity level
+#         self.logger = logger.bind(classname=self.__class__.__name__) # create a logger for the class
+#         self.init_date_time = datetime.now() # store the time when the class was initialized
         
-        # add date and time to the dataset name
-        if add_date_time:
-            dataset_name = f"{self.init_date_time.strftime('%Y-%m-%d_%H-%M')}_{dataset_name}"
+#         # add date and time to the dataset name
+#         if add_date_time:
+#             dataset_name = f"{self.init_date_time.strftime('%Y-%m-%d_%H-%M')}_{dataset_name}"
         
-        # add basic metadata
-        basic_metadata = {'MicroscopeDataWriter': 'metadata provided', 'Package': 'imutils',
-                          'Library': 'ndstorage', 'Date': self.init_date_time.strftime("%d.%m.%Y"),
-                          'TimeCreated': self.init_date_time.strftime("%H:%M:%S")}
-        if summary_metadata is None:
-            if self.verbose >= 1:
-                self.logger.warning("No metadata provided!")
-            basic_metadata['MicroscopeDataWriter'] = 'no metadata provided!'
-            summary_metadata = basic_metadata
-        else:
-            summary_metadata = basic_metadata | summary_metadata
+#         # add basic metadata
+#         basic_metadata = {'MicroscopeDataWriter': 'metadata provided', 'Package': 'imutils',
+#                           'Library': 'ndstorage', 'Date': self.init_date_time.strftime("%d.%m.%Y"),
+#                           'TimeCreated': self.init_date_time.strftime("%H:%M:%S")}
+#         if summary_metadata is None:
+#             if self.verbose >= 1:
+#                 self.logger.warning("No metadata provided!")
+#             basic_metadata['MicroscopeDataWriter'] = 'no metadata provided!'
+#             summary_metadata = basic_metadata
+#         else:
+#             summary_metadata = basic_metadata | summary_metadata
         
-        # call the parent class constructor
-        super().__init__(dataset_path=dataset_path, summary_metadata=summary_metadata,
-                 name=dataset_name, writable=True, **kwargs)
+#         # call the parent class constructor
+#         super().__init__(dataset_path=dataset_path, summary_metadata=summary_metadata,
+#                  name=dataset_name, writable=True, **kwargs)
     
-    def __enter__(self):
-        if self.verbose >= 1:
-            self.logger.warning("Use the build in methods to write data and metadata to file")
-        super().__enter__()
+#     def __enter__(self):
+#         if self.verbose >= 1:
+#             self.logger.warning("Use the build in methods to write data and metadata to file")
+#         super().__enter__()
     
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self.verbose >= 1:
-            self.logger.warning(f"Your file is written and cant be changed anymore!")
-        super().__exit__(exc_type, exc_value, traceback)
+#     def __exit__(self, exc_type, exc_value, traceback):
+#         if self.verbose >= 1:
+#             self.logger.warning(f"Your file is written and cant be changed anymore!")
+#         super().__exit__(exc_type, exc_value, traceback)
     
-    def close(self):
-        self.finish()
-        if self.verbose >= 1:
-            self.logger.info(f"Closing Microscope Data Writer")
-        super().close()
+#     def close(self):
+#         self.finish()
+#         if self.verbose >= 1:
+#             self.logger.info(f"Closing Microscope Data Writer")
+#         super().close()
 
-    def finish(self):
-        if self.verbose >= 1:
-            self.logger.info(f"Finishing Microscope Data Writer")
-        super().finish()
-        self._write_metadata_file()
+#     def finish(self):
+#         if self.verbose >= 1:
+#             self.logger.info(f"Finishing Microscope Data Writer")
+#         super().finish()
+#         self._write_metadata_file()
 
-    def _write_metadata_file(self):
-        metadata_file = Path(self.path) / f"{self.name}_metadata.txt"
-        # TODO: write summary_metadata and image metadata to file
-        with open(metadata_file, 'w') as file:
-            for key, value in self.summary_metadata.items():
-                file.write(f"{key}: {value}\n")
+#     def _write_metadata_file(self):
+#         metadata_file = Path(self.path) / f"{self.name}_metadata.txt"
+#         # TODO: write summary_metadata and image metadata to file
+#         with open(metadata_file, 'w') as file:
+#             for key, value in self.summary_metadata.items():
+#                 file.write(f"{key}: {value}\n")
                 
-    def put_image(self, image: np.array, position: int = 0, time: int = 0, channel: int = 0, z: int = 0, image_metadata: dict = None) -> None:
-        """
-        Writes a single y,x image to the data set. The image is selected by the position, time, channel and z values.
+#     def put_image(self, image: np.array, position: int = 0, time: int = 0, channel: int = 0, z: int = 0, image_metadata: dict = None) -> None:
+#         """
+#         Writes a single y,x image to the data set. The image is selected by the position, time, channel and z values.
         
-        Args:
-            image (np.array): xy image
-            position (int, optional): position. Defaults to 0.
-            time (int, optional): time. Defaults to 0.
-            channel (int, optional): channel. Defaults to 0.
-            z (int, optional): z-axis. Defaults to 0.
-        """
-        image_coordinates = {'position': position, 'time': time, 'channel': channel, 'z': z}
+#         Args:
+#             image (np.array): xy image
+#             position (int, optional): position. Defaults to 0.
+#             time (int, optional): time. Defaults to 0.
+#             channel (int, optional): channel. Defaults to 0.
+#             z (int, optional): z-axis. Defaults to 0.
+#         """
+#         image_coordinates = {'position': position, 'time': time, 'channel': channel, 'z': z}
         
-        basic_metadata = {'ElapsedTimeWriter_ms': '%.3f'%((datetime.now() - self.init_date_time).total_seconds() * 1000)}
-        if image_metadata is None:
-            if self.verbose >= 1:
-                self.logger.warning("No metadata provided!")
-            basic_metadata['MicroscopeDataWriter'] = 'no metadata provided!'
-            image_metadata = basic_metadata
-        else:
-            image_metadata = basic_metadata | image_metadata
+#         basic_metadata = {'ElapsedTimeWriter_ms': '%.3f'%((datetime.now() - self.init_date_time).total_seconds() * 1000)}
+#         if image_metadata is None:
+#             if self.verbose >= 1:
+#                 self.logger.warning("No metadata provided!")
+#             basic_metadata['MicroscopeDataWriter'] = 'no metadata provided!'
+#             image_metadata = basic_metadata
+#         else:
+#             image_metadata = basic_metadata | image_metadata
         
-        super().put_image(image_coordinates, image, image_metadata)
+#         super().put_image(image_coordinates, image, image_metadata)
 
-    def read_image(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
-        """
-        Reads a single y,x image from the data set.
-            The image is selected by the position, time, channel and z values.
+#     def read_image(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
+#         """
+#         Reads a single y,x image from the data set.
+#             The image is selected by the position, time, channel and z values.
         
-        Args:
-            position (int, optional): position. Defaults to 0.
-            time (int, optional): time. Defaults to 0.
-            channel (int, optional): channel. Defaults to 0.
-            z (int, optional): z-axis. Defaults to 0.
+#         Args:
+#             position (int, optional): position. Defaults to 0.
+#             time (int, optional): time. Defaults to 0.
+#             channel (int, optional): channel. Defaults to 0.
+#             z (int, optional): z-axis. Defaults to 0.
             
-        Returns:
-            np.array: xy image
-        """
-        return super().read_image(channel=channel, z=z, time=time, position=position)
+#         Returns:
+#             np.array: xy image
+#         """
+#         return super().read_image(channel=channel, z=z, time=time, position=position)
     
-    def read_metadata(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
-        return super().read_metadata(channel=channel, z=z, time=time, position=position)
+#     def read_metadata(self, position: int = 0, time: int = 0, channel: int = 0, z: int = 0):
+#         return super().read_metadata(channel=channel, z=z, time=time, position=position)
 
