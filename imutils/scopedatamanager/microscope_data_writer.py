@@ -1,12 +1,9 @@
 from loguru import logger
 from pathlib import Path
 from datetime import datetime
-import time
-import dask.array
 import numpy as np
 import json
 from typing import Union # from pthon 3.10 it could be | instead of Union
-from packaging import version
 from ndstorage import NDTiffDataset
 
 class MicroscopeDataWriter:
@@ -14,6 +11,14 @@ class MicroscopeDataWriter:
     Writes data for microscope data sets as ndtiff.
     Metadata is stored in a header and as seperate files (_Metadata.json).
     Trys to keep the micromanager metadata schema.
+    
+    Args:
+            dataset_path (Path or str): Path to the file or directory writing the data
+            dataset_name (str): Name of the dataset (folder name)
+            add_date_time (bool, optional): Add date and time to the dataset name. Defaults to True.
+            summary_metadata (dict, optional): Summary metadata for the dataset. Defaults to None.
+            verbose (int, optional): Verbosity level of logger messages. Defaults to 1.
+            **kwargs: Additional arguments for the NDTiffDataset class
     """
     def __init__(self, dataset_path: Union[Path,str], dataset_name: str, add_date_time: bool = True, summary_metadata: dict = None, verbose: int = 1, **kwargs):
         """
@@ -47,6 +52,7 @@ class MicroscopeDataWriter:
             basic_metadata['MicroscopeDataWriter'] = 'no metadata provided!'
             self._summary_metadata = basic_metadata
         else:
+            self._check_metadata_format(summary_metadata)
             self._summary_metadata = basic_metadata | summary_metadata
         
         # call the NDTiffDataset class constructor
@@ -79,13 +85,22 @@ class MicroscopeDataWriter:
         
     def _write_metadata_file(self):
         # write the metadata file
-        if self.verbose >= 1:
-            self.logger.info(f"Writing metadata file")
         metadata_file = Path(self._data_store.path) / f"{self._data_store.name}_Metadata.json"
+        if self.verbose >= 1:
+            self.logger.info(f"Writing metadata file: {metadata_file}")
         metadata = self._create_complete_metadata()
         with open(metadata_file, 'w') as file:
             json.dump(metadata, file, indent=4)
         
+    def _check_metadata_format(metadata: dict):
+        # check if the metadata is in the correct format
+        if not isinstance(metadata, dict):
+            raise TypeError("metadata must be a dictionary")
+        for key, value in metadata.items():
+            if not isinstance(key, (str, int, float, bool, None)):
+                raise TypeError("metadata keys unsupported type")
+            if not isinstance(value, (str, int, float, bool, None)):
+                raise TypeError("metadata values unsupported type")
     
     def _create_complete_metadata(self):
         # create the complete metadata for the metadata file
