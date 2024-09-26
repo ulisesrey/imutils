@@ -92,7 +92,7 @@ class MicroscopeDataWriter:
         with open(metadata_file, 'w') as file:
             json.dump(metadata, file, indent=4)
         
-    def _check_metadata_format(metadata: dict):
+    def _check_metadata_format(self, metadata: dict):
         # check if the metadata is in the correct format
         if not isinstance(metadata, dict):
             raise TypeError("metadata must be a dictionary")
