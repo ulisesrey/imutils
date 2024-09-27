@@ -529,11 +529,25 @@ class MicroscopeDataReader:
         viewer = napari.view_image(self._dask_array, multiscale=False, rgb=False, axis_labels=self.axis_order)
         return viewer
 
-    def _generate_ome_metadata(self):
-        from omexmlClass import OMEXML
-        my_ome_mxl = OMEXML()
-        my_ome_mxl.set_image_count(1000)
-        my_ome_mxl.Plane
+    def extract_metadata_to_json(self):
+        """ Extracts metadata to a json file """
+        if self._is_ndtiff:
+            import json
+            metadata_file = Path(self._data_store.path) / f"{self.directory_path.name}_Metadata.json"
+            if self.verbose >= 1:
+                self.logger.info(f"Writing metadata file: {metadata_file}")
+            metadata = self._create_complete_metadata()
+            with open(metadata_file, 'w') as file:
+                json.dump(metadata, file, indent=4)
+    
+    def _create_complete_metadata(self):
+        # create the complete metadata for the metadata file
+        metadata = self._data_store.summary_metadata
+        metadata['image_key'] = 'Str(position, time, channel, z)'
+        for coordinates in self._data_store.get_image_coordinates_list():
+            key = f"{coordinates['position']},{coordinates['time']},{coordinates['channel']},{coordinates['z']}"
+            metadata[key] = self._data_store.read_metadata(channel=coordinates['channel'], z=coordinates['z'], time=coordinates['time'], position=coordinates['position'])
+        return metadata
         
     @property
     def dask_array(self):
